@@ -29,7 +29,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />
+              {siteSettings.logo ? <img src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
               <span className="text-xl font-bold" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
             </div>
             <div className="hidden md:flex items-center gap-6 text-sm">
@@ -304,7 +304,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />
+                {siteSettings.logo ? <img src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
                 <span className="text-xl font-bold" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
               </div>
               <p className="text-white/60 text-sm">{siteSettings.tagline}</p>

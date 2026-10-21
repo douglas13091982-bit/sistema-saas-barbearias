@@ -8,11 +8,52 @@ export default function AdminSettings() {
   const { siteSettings, updateSiteSettings, holidays, addHoliday, deleteHoliday } = useData();
   const [form, setForm] = useState(siteSettings);
   const [saved, setSaved] = useState(false);
+  const [logoError, setLogoError] = useState('');
+  const [readingLogo, setReadingLogo] = useState(false);
+
+  const handleLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setLogoError('');
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setLogoError('Escolha uma imagem PNG, JPG ou WebP.'); return;
+    }
+    if (file.size > 1024 * 1024) {
+      setLogoError('A imagem deve ter até 1 MB.'); return;
+    }
+    setReadingLogo(true);
+    try {
+      const logo = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Falha ao ler a imagem.'));
+        reader.onload = () => resolve(String(reader.result));
+        reader.readAsDataURL(file);
+      });
+      await new Promise<void>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error('Imagem inválida.'));
+        image.src = logo;
+      });
+      setForm(prev => ({ ...prev, logo }));
+      setSaved(false);
+    } catch {
+      setLogoError('Não foi possível abrir a imagem. Escolha outro arquivo.');
+    } finally { setReadingLogo(false); }
+  };
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [holidayForm, setHolidayForm] = useState({ name: '', date: '', active: true });
 
   const handleSave = () => {
-    updateSiteSettings(form);
+    try {
+      localStorage.setItem('siteSettings', JSON.stringify(form));
+      updateSiteSettings(form);
+      setLogoError('');
+    } catch {
+      setLogoError('Não foi possível salvar. O armazenamento do navegador está cheio ou indisponível.');
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -31,12 +72,27 @@ export default function AdminSettings() {
           <h1 className="text-2xl font-bold text-white">Configurações</h1>
           <p className="text-white/50 text-sm">Configurações gerais do sistema</p>
         </div>
-        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
+        <button onClick={handleSave} disabled={readingLogo} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
           <Save className="w-4 h-4" /> {saved ? 'Salvo!' : 'Salvar'}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
+          <h3 className="font-semibold text-white">Logo da Barbearia</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="w-32 h-24 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center p-2">
+              {form.logo ? <img src={form.logo} alt="Prévia da logo" className="max-w-full max-h-full object-contain" /> : <span className="text-sm text-white/50">Sem logo</span>}
+            </div>
+            <div className="space-y-2 min-w-0">
+              <label htmlFor="barbershop-logo" className="block text-sm text-white/70">Enviar logo</label>
+              <input id="barbershop-logo" type="file" accept="image/png,image/jpeg,image/webp" disabled={readingLogo} onChange={handleLogo} className="block w-full text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white" />
+              <p className="text-xs text-white/50">{readingLogo ? 'Lendo imagem...' : 'PNG, JPG ou WebP, até 1 MB. Clique em Salvar para aplicar.'}</p>
+              {form.logo && <button type="button" disabled={readingLogo} onClick={() => { setForm(prev => ({ ...prev, logo: '' })); setSaved(false); }} className="text-sm text-red-400 hover:underline">Remover logo</button>}
+            </div>
+          </div>
+          {logoError && <p role="alert" className="text-sm text-red-400">{logoError}</p>}
+        </div>
         {/* Business Info */}
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4">
           <h3 className="font-semibold text-white">Informações do Negócio</h3>
