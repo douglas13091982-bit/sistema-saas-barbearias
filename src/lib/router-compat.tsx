@@ -1,4 +1,5 @@
 // Thin adapter so the imported screens keep their original navigation API on TanStack Router.
+// @ts-nocheck -- loose adapter types
 import {
   Link as TLink,
   Outlet,

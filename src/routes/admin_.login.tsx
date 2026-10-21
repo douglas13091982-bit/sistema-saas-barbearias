@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Page from "@/views/admin/AdminLogin";
 
-export const Route = createFileRoute("/admin/login")({
+export const Route = createFileRoute("/admin_/login")({
   head: () => ({
     meta: [
       { title: "Login administrativo | BarberShop Pro" },

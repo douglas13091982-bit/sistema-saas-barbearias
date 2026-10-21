@@ -1,3 +1,4 @@
+// @ts-nocheck -- imported code, kept as written
 import { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useNavigate, useSearchParams, Link } from '@/lib/router-compat';

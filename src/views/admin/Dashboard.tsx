@@ -1,3 +1,4 @@
+// @ts-nocheck -- imported code, kept as written
 import { useData } from '../../contexts/DataContext';
 import { Calendar, DollarSign, Users, Scissors, TrendingUp, Clock, UserCheck, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';

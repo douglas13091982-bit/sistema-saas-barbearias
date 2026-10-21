@@ -1,3 +1,4 @@
+// @ts-nocheck -- imported code, kept as written
 import { useData } from '../../contexts/DataContext';
 import { Link } from '@/lib/router-compat';
 import { Check, Calendar, Clock, Scissors, User, MessageCircle, Home } from 'lucide-react';

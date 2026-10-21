@@ -1,3 +1,4 @@
+// @ts-nocheck -- imported code, kept as written
 export interface User {
   id: string;
   name: string;

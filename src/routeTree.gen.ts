@@ -22,11 +22,11 @@ import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminDepoimentosRouteImport } from './routes/admin.depoimentos'
 import { Route as AdminGaleriaRouteImport } from './routes/admin.galeria'
-import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminServicosRouteImport } from './routes/admin.servicos'
 import { Route as AdminTemaRouteImport } from './routes/admin.tema'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as ConfirmacaoIdRouteImport } from './routes/confirmacao.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -94,11 +94,6 @@ const AdminGaleriaRoute = AdminGaleriaRouteImport.update({
   path: '/galeria',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -119,6 +114,11 @@ const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin_/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfirmacaoIdRoute = ConfirmacaoIdRouteImport.update({
   id: '/confirmacao/$id',
   path: '/confirmacao/$id',
@@ -138,11 +138,11 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/depoimentos': typeof AdminDepoimentosRoute
   '/admin/galeria': typeof AdminGaleriaRoute
-  '/admin/login': typeof AdminLoginRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/servicos': typeof AdminServicosRoute
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/login': typeof AdminLoginRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -158,11 +158,11 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/depoimentos': typeof AdminDepoimentosRoute
   '/admin/galeria': typeof AdminGaleriaRoute
-  '/admin/login': typeof AdminLoginRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/servicos': typeof AdminServicosRoute
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/login': typeof AdminLoginRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -180,11 +180,11 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/depoimentos': typeof AdminDepoimentosRoute
   '/admin/galeria': typeof AdminGaleriaRoute
-  '/admin/login': typeof AdminLoginRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/servicos': typeof AdminServicosRoute
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin_/login': typeof AdminLoginRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -203,11 +203,11 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/depoimentos'
     | '/admin/galeria'
-    | '/admin/login'
     | '/admin/relatorios'
     | '/admin/servicos'
     | '/admin/tema'
     | '/admin/usuarios'
+    | '/admin/login'
     | '/confirmacao/$id'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -223,11 +223,11 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/depoimentos'
     | '/admin/galeria'
-    | '/admin/login'
     | '/admin/relatorios'
     | '/admin/servicos'
     | '/admin/tema'
     | '/admin/usuarios'
+    | '/admin/login'
     | '/confirmacao/$id'
     | '/admin'
   id:
@@ -244,11 +244,11 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/depoimentos'
     | '/admin/galeria'
-    | '/admin/login'
     | '/admin/relatorios'
     | '/admin/servicos'
     | '/admin/tema'
     | '/admin/usuarios'
+    | '/admin_/login'
     | '/confirmacao/$id'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -257,6 +257,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AgendarRoute: typeof AgendarRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   ConfirmacaoIdRoute: typeof ConfirmacaoIdRoute
 }
 
@@ -353,13 +354,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGaleriaRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/relatorios': {
       id: '/admin/relatorios'
       path: '/relatorios'
@@ -388,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin_/login': {
+      id: '/admin_/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirmacao/$id': {
       id: '/confirmacao/$id'
       path: '/confirmacao/$id'
@@ -408,7 +409,6 @@ interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDepoimentosRoute: typeof AdminDepoimentosRoute
   AdminGaleriaRoute: typeof AdminGaleriaRoute
-  AdminLoginRoute: typeof AdminLoginRoute
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminServicosRoute: typeof AdminServicosRoute
   AdminTemaRoute: typeof AdminTemaRoute
@@ -426,7 +426,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDepoimentosRoute: AdminDepoimentosRoute,
   AdminGaleriaRoute: AdminGaleriaRoute,
-  AdminLoginRoute: AdminLoginRoute,
   AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminServicosRoute: AdminServicosRoute,
   AdminTemaRoute: AdminTemaRoute,
@@ -440,6 +439,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AgendarRoute: AgendarRoute,
+  AdminLoginRoute: AdminLoginRoute,
   ConfirmacaoIdRoute: ConfirmacaoIdRoute,
 }
 export const routeTree = rootRouteImport

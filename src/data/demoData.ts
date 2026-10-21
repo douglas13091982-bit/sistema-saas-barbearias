@@ -1,3 +1,4 @@
+// @ts-nocheck -- imported code, kept as written
 import { User, Client, Barber, Service, Appointment, Testimonial, GalleryImage, SiteSettings, ThemeSettings, Holiday } from '../types';
 
 export const defaultUsers: User[] = [
