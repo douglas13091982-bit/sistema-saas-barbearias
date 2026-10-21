@@ -1,6 +1,7 @@
 // @ts-nocheck -- compatibility with imported screens
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useServerFn } from '@tanstack/react-start';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { manageStaff } from '@/lib/staff.functions';
 import { defaultSiteSettings, defaultThemeSettings } from '../data/demoData';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 
 const DataContext = createContext<any>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [records, setRecords] = useState([]);
   const [busy, setBusy] = useState([]);
   const [users, setUsers] = useState([]);
@@ -77,7 +79,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if(!role?.active) { await supabase.auth.signOut(); return false; }
     await refresh(); return true;
   };
-  const logout = async () => { ++generation.current; setRecords([]); setUsers([]); setCurrentUser(null); await supabase.auth.signOut(); await refresh(); };
+  const logout = async () => { await queryClient.cancelQueries(); queryClient.clear(); ++generation.current; setRecords([]); setUsers([]); setCurrentUser(null); await supabase.auth.signOut(); await refresh(); };
   if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
   if(error) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-background text-foreground"><p role="alert">{error}</p><Button onClick={()=>void refresh()}>Tentar novamente</Button></div>;
   return <DataContext.Provider value={{...actions,users,currentUser,isAuthenticated:!!currentUser,login,logout,refresh,

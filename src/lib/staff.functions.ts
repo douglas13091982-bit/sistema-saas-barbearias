@@ -27,7 +27,7 @@ export const manageStaff = createServerFn({ method: 'POST' })
     if (!user) throw new Error('Dados incompletos.');
     const attributes = { email: user.email, ...(user.password ? { password: user.password } : {}), user_metadata: { name: user.name } };
     const result = data.action === 'create'
-      ? await supabaseAdmin.auth.admin.createUser({ ...attributes, email_confirm: true })
+      ? await supabaseAdmin.auth.admin.createUser(attributes)
       : await supabaseAdmin.auth.admin.updateUserById(data.id ?? '', attributes);
     if (result.error || !result.data.user) throw new Error('Não foi possível salvar o usuário. Verifique o e-mail e a senha.');
     const { error } = await supabaseAdmin.from('user_roles').upsert({ user_id: result.data.user.id, role: user.role, active: user.active }, { onConflict: 'user_id' });

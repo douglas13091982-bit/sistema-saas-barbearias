@@ -12,12 +12,24 @@ export default function BookingConfirmation() {
   const { id } = useParams({ strict: false });
   const [receipt,setReceipt] = useState(null);
   const [loading,setLoading] = useState(true);
-  useEffect(()=> { setLoading(true); supabase.rpc('booking_receipt',{receipt_token:id}).then(({data})=> {setReceipt(data);setLoading(false);}); },[id]);
+  const [error,setError] = useState('');
+  useEffect(()=> {
+    let active = true;
+    setLoading(true); setError('');
+    supabase.rpc('booking_receipt',{receipt_token:id}).then(({data,error})=> {
+      if (!active) return;
+      setReceipt(data);
+      if (error) setError('Não foi possível consultar o agendamento. Tente novamente.');
+      setLoading(false);
+    });
+    return () => { active = false; };
+  },[id]);
   const lastAppointment = receipt?.appointment;
   const service = services.find(s => s.id === lastAppointment?.serviceId);
   const barber = barbers.find(b => b.id === lastAppointment?.barberId);
   const client = receipt?.client;
   if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
+  if(error) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><p role="alert">{error}</p></div>;
   if(!receipt) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><p>Agendamento não encontrado.</p><Link to="/">Voltar ao início</Link></div>;
 
   const cssVars = {
