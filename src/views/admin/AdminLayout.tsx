@@ -108,7 +108,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="ba-content flex-1 p-4 lg:p-6 overflow-y-auto">
+        <main id="admin-main" className="ba-content flex-1 p-4 lg:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>
