@@ -12,7 +12,7 @@ export default function AdminLayout() {
 
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
 
-  const handleLogout = () => { logout(); navigate('/admin/login'); };
+  const handleLogout = async () => { await logout(); navigate('/admin/login', {replace:true}); };
 
   const navItems = [
     { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },

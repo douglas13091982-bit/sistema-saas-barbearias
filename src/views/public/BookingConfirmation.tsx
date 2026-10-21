@@ -1,4 +1,7 @@
 // @ts-nocheck -- imported code, kept as written
+import { useState, useEffect } from 'react';
+import { useParams } from '@tanstack/react-router';
+import { supabase } from '@/integrations/supabase/client';
 import { useData } from '../../contexts/DataContext';
 import { Link } from '@/lib/router-compat';
 import { Check, Calendar, Clock, Scissors, User, MessageCircle, Home } from 'lucide-react';
@@ -6,10 +9,16 @@ import { Check, Calendar, Clock, Scissors, User, MessageCircle, Home } from 'luc
 export default function BookingConfirmation() {
   const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
   const theme = themeSettings;
-  const lastAppointment = appointments[appointments.length - 1];
+  const { id } = useParams({ strict: false });
+  const [receipt,setReceipt] = useState(null);
+  const [loading,setLoading] = useState(true);
+  useEffect(()=> { setLoading(true); supabase.rpc('booking_receipt',{receipt_token:id}).then(({data})=> {setReceipt(data);setLoading(false);}); },[id]);
+  const lastAppointment = receipt?.appointment;
   const service = services.find(s => s.id === lastAppointment?.serviceId);
   const barber = barbers.find(b => b.id === lastAppointment?.barberId);
-  const client = clients.find(c => c.id === lastAppointment?.clientId);
+  const client = receipt?.client;
+  if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
+  if(!receipt) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><p>Agendamento não encontrado.</p><Link to="/">Voltar ao início</Link></div>;
 
   const cssVars = {
     '--color-primary': theme.primaryColor,
