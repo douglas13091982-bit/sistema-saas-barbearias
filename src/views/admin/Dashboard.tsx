@@ -1,10 +1,11 @@
 // @ts-nocheck -- imported code, kept as written
+import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
 import { Calendar, DollarSign, Users, Scissors, TrendingUp, Clock, UserCheck, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Dashboard() {
-  const { appointments, services, barbers, clients, siteSettings } = useData();
+  const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
   const today = new Date().toISOString().split('T')[0];
 
   const todayAppointments = appointments.filter(a => a.date === today && a.status !== 'cancelled');
@@ -45,29 +46,29 @@ export default function Dashboard() {
     appointments: appointments.filter(a => a.barberId === b.id && a.status !== 'cancelled').length
   })).sort((a, b) => b.appointments - a.appointments);
 
-  const COLORS = ['#c9a96e', '#6366f1', '#22c55e', '#f59e0b', '#ef4444'];
+  const COLORS = [themeSettings.accentColor || '#c9a96e', '#9e8864', '#d8c49c', '#746c5c', '#eee1c4'];
 
   // Recent clients
   const recentClients = [...clients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
 
   const stats = [
-    { label: 'Agendamentos Hoje', value: todayAppointments.length, icon: Calendar, color: '#6366f1' },
-    { label: 'Faturamento Total', value: `${siteSettings.currency} ${totalRevenue.toFixed(0)}`, icon: DollarSign, color: '#22c55e' },
-    { label: 'Faturamento Semanal', value: `${siteSettings.currency} ${weekRevenue.toFixed(0)}`, icon: TrendingUp, color: '#f59e0b' },
-    { label: 'Total Clientes', value: clients.length, icon: Users, color: '#8b5cf6' },
-    { label: 'Agendamentos Semana', value: weekAppointments.length, icon: Clock, color: '#06b6d4' },
+    { label: 'Agendamentos Hoje', value: todayAppointments.length, icon: Calendar, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Faturamento Total', value: `${siteSettings.currency} ${totalRevenue.toFixed(0)}`, icon: DollarSign, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Faturamento Semanal', value: `${siteSettings.currency} ${weekRevenue.toFixed(0)}`, icon: TrendingUp, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Total Clientes', value: clients.length, icon: Users, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Agendamentos Semana', value: weekAppointments.length, icon: Clock, color: themeSettings.accentColor || '#c9a96e' },
     { label: 'Taxa Cancelamento', value: `${cancelRate}%`, icon: AlertTriangle, color: '#ef4444' },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-white/50 text-sm">Visão geral do seu negócio</p>
+    <div className="ba-dashboard space-y-6">
+      <div className="ba-welcome">
+        <div><p className="ba-eyebrow">VISÃO GERAL</p><h1 className="text-2xl font-bold text-white">Seu negócio, em boas mãos.</h1><p className="text-white/50 text-sm">Acompanhe os atendimentos e cuide de cada detalhe da sua barbearia.</p></div>
+        <div className="ba-quick-actions"><Link to="/admin/agenda">Ver agenda</Link><Link to="/admin/agendamentos">Gerenciar agendamentos</Link></div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid ba-stats grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat, idx) => (
           <div key={idx} className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
             <div className="flex items-center justify-between mb-3">
@@ -92,8 +93,8 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 12 }} />
                 <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} labelStyle={{ color: '#fff' }} />
-                <Bar dataKey="count" fill="#c9a96e" radius={[4, 4, 0, 0]} name="Agendamentos" />
+                <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} labelStyle={{ color: '#fff' }} />
+                <Bar dataKey="count" fill={themeSettings.accentColor || '#c9a96e'} radius={[4, 4, 0, 0]} name="Agendamentos" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -112,7 +113,7 @@ export default function Dashboard() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
