@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Imported barbershop screens live in src/views and navigate via src/lib/router-compat (TanStack adapter); app data is browser-only, so __root renders DataProvider after hydration.
