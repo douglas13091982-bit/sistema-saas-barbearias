@@ -1,5 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState, useEffect } from 'react';
+import { AdminPanelSwitcher } from '@/components/AdminPanelSwitcher';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import '@/styles/barbershop-admin.css';
@@ -111,6 +112,7 @@ export default function AdminLayout() {
 
         {/* Page Content */}
         <main id="admin-main" className="ba-content flex-1 p-4 lg:p-6 overflow-y-auto">
+          <AdminPanelSwitcher active="shop" />
           {tenant && <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/70"><span>Site da barbearia: <a className="underline" href={'/'+tenant.slug} target="_blank" rel="noopener noreferrer">/{tenant.slug}</a></span><a href="/admin/mensalidade" className="text-[#c9a96e]">{new Date(tenant.trial_ends_at)>new Date() ? 'Teste grátis até '+new Date(tenant.trial_ends_at).toLocaleDateString('pt-BR') : 'Consultar agendas e mensalidades'}</a></div>}
           <Outlet />
         </main>

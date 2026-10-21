@@ -76,7 +76,7 @@ export default function AdminLogin() {
                 <p className="mt-3 text-sm leading-relaxed text-white/55">Entre na sua conta para gerenciar a barbearia.</p>
               </div>
 
-              {currentUser ? <Button className="h-12 w-full rounded-xl bg-white text-black hover:bg-white/90" onClick={() => navigate(isPlatformAdmin ? '/super-admin' : '/admin')}>{isPlatformAdmin ? 'Abrir Super Admin' : 'Abrir painel'} <ArrowRight className="ml-2 size-4" /></Button> :
+              {currentUser ? <div className="space-y-3"><Button className="h-12 w-full rounded-xl bg-white text-black hover:bg-white/90" onClick={() => navigate(isPlatformAdmin ? '/super-admin' : '/admin')}>{isPlatformAdmin ? 'Abrir Super Admin' : 'Abrir painel'} <ArrowRight className="ml-2 size-4" /></Button>{isPlatformAdmin && <Button variant="outline" className="h-12 w-full rounded-xl border-white/20 bg-transparent text-white hover:bg-white/10" onClick={() => navigate('/admin/dashboard')}>Abrir minha barbearia</Button>}</div> :
                 <form onSubmit={handleSubmit} className="space-y-5" aria-busy={pending}>
                   {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-400/25 bg-red-500/10 p-3 text-sm text-red-200"><AlertCircle className="mt-0.5 size-4 shrink-0" />{error}</p>}
                   <div>
