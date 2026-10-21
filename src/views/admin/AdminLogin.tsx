@@ -10,16 +10,21 @@ import { Link } from '@/lib/router-compat';
 import { SiteImage } from '@/components/SiteImage';
 
 export default function AdminLogin() {
-  const { login, currentUser, siteSettings, themeSettings } = useData();
+  const { login, currentUser, siteSettings, themeSettings, isPlatformAdmin } = useData();
   const accent = themeSettings.accentColor || '#c9a96e';
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const openAccountPanel = async () => {
+    const { data: platform, error: permissionError } = await supabase.rpc('is_platform_admin');
+    if (permissionError) throw permissionError;
+    navigate(platform ? '/super-admin' : '/admin');
+  };
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault(); setPending(true); setError('');
-    try { if(await login(email,password)) navigate('/admin'); else setError('E-mail, senha ou permissão de acesso inválidos.'); }
+    try { if(await login(email,password)) await openAccountPanel(); else setError('E-mail, senha ou permissão de acesso inválidos.'); }
     catch { setError('Não foi possível entrar. Tente novamente.'); }
     finally { setPending(false); }
   };
@@ -32,7 +37,7 @@ export default function AdminLogin() {
       const {data:{user}} = await supabase.auth.getUser();
       if(!user) return;
       const {data:role} = await supabase.from('user_roles').select('active').eq('user_id',user.id).maybeSingle();
-      if(role?.active) navigate('/admin'); else setError('Esta conta não tem permissão para acessar o painel.');
+      if(role?.active) await openAccountPanel(); else setError('Esta conta não tem permissão para acessar o painel.');
     } finally { setPending(false); }
   };
   return (
@@ -71,7 +76,7 @@ export default function AdminLogin() {
                 <p className="mt-3 text-sm leading-relaxed text-white/55">Entre na sua conta para gerenciar a barbearia.</p>
               </div>
 
-              {currentUser ? <Button className="h-12 w-full rounded-xl bg-white text-black hover:bg-white/90" onClick={() => navigate('/admin')}>Abrir painel <ArrowRight className="ml-2 size-4" /></Button> :
+              {currentUser ? <Button className="h-12 w-full rounded-xl bg-white text-black hover:bg-white/90" onClick={() => navigate(isPlatformAdmin ? '/super-admin' : '/admin')}>{isPlatformAdmin ? 'Abrir Super Admin' : 'Abrir painel'} <ArrowRight className="ml-2 size-4" /></Button> :
                 <form onSubmit={handleSubmit} className="space-y-5" aria-busy={pending}>
                   {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-400/25 bg-red-500/10 p-3 text-sm text-red-200"><AlertCircle className="mt-0.5 size-4 shrink-0" />{error}</p>}
                   <div>
