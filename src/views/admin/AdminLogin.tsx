@@ -1,8 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useNavigate } from '@/lib/router-compat';
-import { lovable } from '@/integrations/lovable/index';
-import '@lovable.dev/cloud-auth-js/styles.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Scissors, Lock, Mail, AlertCircle, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
@@ -27,18 +25,6 @@ export default function AdminLogin() {
     try { if(await login(email,password)) await openAccountPanel(); else setError('E-mail, senha ou permissão de acesso inválidos.'); }
     catch { setError('Não foi possível entrar. Tente novamente.'); }
     finally { setPending(false); }
-  };
-  const social = async (provider: 'google'|'lovable') => {
-    setPending(true); setError('');
-    try {
-      const result = await lovable.auth.signInWithOAuth(provider,{redirect_uri:`${window.location.origin}/admin/login`});
-      if(result.error) { setError('Não foi possível entrar. Tente novamente.'); return; }
-      if(result.redirected) return;
-      const {data:{user}} = await supabase.auth.getUser();
-      if(!user) return;
-      const {data:role} = await supabase.from('user_roles').select('active').eq('user_id',user.id).maybeSingle();
-      if(role?.active) await openAccountPanel(); else setError('Esta conta não tem permissão para acessar o painel.');
-    } finally { setPending(false); }
   };
   return (
     <div className="relative isolate min-h-screen min-h-dvh overflow-x-hidden bg-[#0d0d0d] text-white" style={{ fontFamily: themeSettings.fontFamily }}>
@@ -73,7 +59,7 @@ export default function AdminLogin() {
                 <span className="mb-5 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5"><Lock className="size-5" style={{ color: accent }} aria-hidden="true" /></span>
                 <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.22em]" style={{ color: accent }}>Painel administrativo</p>
                 <h2 id="login-heading" className="text-3xl font-semibold" style={{ fontFamily: 'Playfair Display' }}>Bem-vindo de volta</h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/55">Entre na sua conta para gerenciar a barbearia.</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/55">Entre com seu e-mail e senha para acessar seu painel.</p>
               </div>
 
               {currentUser ? <div className="space-y-3"><Button className="h-12 w-full rounded-xl bg-white text-black hover:bg-white/90" onClick={() => navigate(isPlatformAdmin ? '/super-admin' : '/admin')}>{isPlatformAdmin ? 'Abrir Super Admin' : 'Abrir painel'} <ArrowRight className="ml-2 size-4" /></Button>{isPlatformAdmin && <Button variant="outline" className="h-12 w-full rounded-xl border-white/20 bg-transparent text-white hover:bg-white/10" onClick={() => navigate('/admin/dashboard')}>Abrir minha barbearia</Button>}</div> :
@@ -94,13 +80,7 @@ export default function AdminLogin() {
                     </div>
                   </div>
                   <Button disabled={pending} type="submit" className="h-12 w-full rounded-xl border border-white/20 bg-[#c9a96e] font-semibold text-black transition hover:bg-[#ddc398] disabled:opacity-50">{pending ? 'Entrando...' : 'Entrar no painel'} <ArrowRight className="ml-2 size-4" aria-hidden="true" /></Button>
-                  <div className="flex items-center gap-3 py-1" aria-hidden="true"><span className="h-px flex-1 bg-white/10" /><span className="text-xs text-white/35">ou continue com</span><span className="h-px flex-1 bg-white/10" /></div>
-                  <div className="space-y-3">
-                    <Button disabled={pending} type="button" variant="outline" className="h-12 w-full rounded-xl border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => void social('google')}>
-                      <span aria-hidden="true" className="mr-2 flex size-5 items-center justify-center rounded-full bg-white text-sm font-bold text-[#4285f4]">G</span> Entrar com Google
-                    </Button>
-                    <Button disabled={pending} type="button" className="lovable-auth-button w-full" onClick={() => void social('lovable')}>Sign in with Lovable</Button>
-                  </div>
+                  <p className="text-center text-sm"><Link to="/admin/recuperar-senha" className="text-[#c9a96e] underline">Esqueci ou preciso definir minha senha</Link></p>
                 </form>}
               <p className="mt-6 text-center text-sm text-white/60">Quer cadastrar sua barbearia? <Link to="/cadastro" className="text-[#c9a96e] underline">Começar teste grátis</Link></p>
               <p className="mt-7 flex items-center justify-center gap-2 text-center text-xs text-white/40"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" /> Acesso exclusivo para a equipe autorizada</p>

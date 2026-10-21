@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export const manageStaff = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ action: z.enum(['list','create','update','delete']), id: z.string().optional(), user: z.object({ name: z.string(), email: z.string().email(), password: z.string().optional(), role: z.enum(['admin','attendant','barber']), active: z.boolean() }).optional() }))
+  .inputValidator(z.object({ action: z.enum(['list','create','update','delete']), id: z.string().optional(), user: z.object({ name: z.string(), email: z.string().email(), password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres.').optional(), role: z.enum(['admin','attendant','barber']), active: z.boolean() }).optional() }))
   .handler(async ({ data, context }) => {
     const { data: membership } = await context.supabase.from('user_roles').select('tenant_id').eq('user_id',context.userId).maybeSingle();
     const { data: admin } = await context.supabase.rpc('tenant_admin',{tid:membership?.tenant_id || '00000000-0000-0000-0000-000000000000'});
@@ -30,6 +30,7 @@ export const manageStaff = createServerFn({ method: 'POST' })
       return [];
     }
     const user = data.user;
+    if (data.action === 'create' && !user?.password) throw new Error('Informe uma senha para o novo usuário.');
     if (!user) throw new Error('Dados incompletos.');
     const attributes = { email: user.email, ...(user.password ? { password: user.password } : {}), user_metadata: { name: user.name } };
     const result = data.action === 'create'

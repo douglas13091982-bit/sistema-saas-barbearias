@@ -33,6 +33,7 @@ import { Route as AdminServicosRouteImport } from './routes/admin.servicos'
 import { Route as AdminTemaRouteImport } from './routes/admin.tema'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
+import { Route as AdminRecuperarSenhaRouteImport } from './routes/admin_.recuperar-senha'
 import { Route as ConfirmacaoIdRouteImport } from './routes/confirmacao.$id'
 import { Route as SlugConfirmacaoIdRouteImport } from './routes/$slug.confirmacao.$id'
 import { Route as ApiMercadopagoWebhookRouteImport } from './routes/api.mercadopago.webhook'
@@ -157,6 +158,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRecuperarSenhaRoute = AdminRecuperarSenhaRouteImport.update({
+  id: '/admin_/recuperar-senha',
+  path: '/admin/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfirmacaoIdRoute = ConfirmacaoIdRouteImport.update({
   id: '/confirmacao/$id',
   path: '/confirmacao/$id',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/recuperar-senha': typeof AdminRecuperarSenhaRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
   '/$slug/': typeof SlugIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/recuperar-senha': typeof AdminRecuperarSenhaRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
   '/$slug': typeof SlugIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin_/login': typeof AdminLoginRoute
+  '/admin_/recuperar-senha': typeof AdminRecuperarSenhaRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
   '/$slug/': typeof SlugIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin/tema'
     | '/admin/usuarios'
     | '/admin/login'
+    | '/admin/recuperar-senha'
     | '/confirmacao/$id'
     | '/$slug/'
     | '/admin/'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/admin/tema'
     | '/admin/usuarios'
     | '/admin/login'
+    | '/admin/recuperar-senha'
     | '/confirmacao/$id'
     | '/$slug'
     | '/admin'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/admin/tema'
     | '/admin/usuarios'
     | '/admin_/login'
+    | '/admin_/recuperar-senha'
     | '/confirmacao/$id'
     | '/$slug/'
     | '/admin/'
@@ -355,6 +367,7 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   SuperAdminRoute: typeof SuperAdminRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminRecuperarSenhaRoute: typeof AdminRecuperarSenhaRoute
   ConfirmacaoIdRoute: typeof ConfirmacaoIdRoute
   ApiMercadopagoWebhookRoute: typeof ApiMercadopagoWebhookRoute
 }
@@ -529,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_/recuperar-senha': {
+      id: '/admin_/recuperar-senha'
+      path: '/admin/recuperar-senha'
+      fullPath: '/admin/recuperar-senha'
+      preLoaderRoute: typeof AdminRecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirmacao/$id': {
       id: '/confirmacao/$id'
       path: '/confirmacao/$id'
@@ -613,6 +633,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   SuperAdminRoute: SuperAdminRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminRecuperarSenhaRoute: AdminRecuperarSenhaRoute,
   ConfirmacaoIdRoute: ConfirmacaoIdRoute,
   ApiMercadopagoWebhookRoute: ApiMercadopagoWebhookRoute,
 }

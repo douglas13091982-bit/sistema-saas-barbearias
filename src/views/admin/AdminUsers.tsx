@@ -94,7 +94,7 @@ export default function AdminUsers() {
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-1">Senha {editing ? '(deixe vazio para manter)' : '*'}</label>
-                <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
+                <input type="password" autoComplete="new-password" minLength={8} required={!editing} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
               </div>
               <div>
                 <label className="block text-sm text-white/70 mb-1">Perfil</label>
