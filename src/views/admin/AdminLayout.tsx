@@ -7,7 +7,7 @@ import { Outlet, NavLink, useNavigate, Navigate } from '@/lib/router-compat';
 import { LayoutDashboard, Calendar, CalendarDays, Scissors, Users, UserCircle, Clock, Palette, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { currentUser, isAuthenticated, logout, siteSettings, themeSettings } = useData();
+  const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin } = useData();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const theme = themeSettings;
@@ -36,6 +36,8 @@ export default function AdminLayout() {
     { to: '/admin/tema', icon: Palette, label: 'Personalização' },
     { to: '/admin/usuarios', icon: Shield, label: 'Usuários' },
     { to: '/admin/relatorios', icon: BarChart3, label: 'Relatórios' },
+    { to: '/admin/mensalidade', icon: Calendar, label: 'Mensalidade' },
+    ...(isPlatformAdmin ? [{ to: '/super-admin', icon: Shield, label: 'Superadministrador' }] : []),
     { to: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
   ];
 
@@ -100,7 +102,7 @@ export default function AdminLayout() {
             </button>
             <div className="ba-topbar-label"><span>Painel administrativo</span><p>{siteSettings.barbershopName}</p></div>
             <div className="flex items-center gap-3">
-              <a href="/" target="_blank" rel="noopener noreferrer" className="text-xs text-white/50 hover:text-white transition flex items-center gap-1">
+              <a href={tenant ? `/${tenant.slug}` : "/"} target="_blank" rel="noopener noreferrer" className="text-xs text-white/50 hover:text-white transition flex items-center gap-1">
                 <Home className="w-3 h-3" /> Ver Site
               </a>
             </div>
@@ -109,6 +111,7 @@ export default function AdminLayout() {
 
         {/* Page Content */}
         <main id="admin-main" className="ba-content flex-1 p-4 lg:p-6 overflow-y-auto">
+          {tenant && <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/70"><span>Site da barbearia: <a className="underline" href={'/'+tenant.slug} target="_blank" rel="noopener noreferrer">/{tenant.slug}</a></span><a href="/admin/mensalidade" className="text-[#c9a96e]">{new Date(tenant.trial_ends_at)>new Date() ? 'Teste grátis até '+new Date(tenant.trial_ends_at).toLocaleDateString('pt-BR') : 'Consultar agendas e mensalidades'}</a></div>}
           <Outlet />
         </main>
       </div>

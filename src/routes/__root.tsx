@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -145,11 +146,12 @@ function RootComponent() {
 
 // The imported app keeps its data in the browser, so it renders only after hydration.
 function ClientData() {
+  const scope = useRouterState({select:s=>s.location.pathname.split('/')[1] || 'root'});
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   if (!ready) return <div className="min-h-screen" style={{ backgroundColor: "#111827" }} />;
   return (
-    <DataProvider>
+    <DataProvider key={scope}>
       <Outlet />
     </DataProvider>
   );

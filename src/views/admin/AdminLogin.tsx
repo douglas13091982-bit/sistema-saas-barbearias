@@ -97,6 +97,7 @@ export default function AdminLogin() {
                     <Button disabled={pending} type="button" className="lovable-auth-button w-full" onClick={() => void social('lovable')}>Sign in with Lovable</Button>
                   </div>
                 </form>}
+              <p className="mt-6 text-center text-sm text-white/60">Quer cadastrar sua barbearia? <Link to="/cadastro" className="text-[#c9a96e] underline">Começar teste grátis</Link></p>
               <p className="mt-7 flex items-center justify-center gap-2 text-center text-xs text-white/40"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" /> Acesso exclusivo para a equipe autorizada</p>
             </div>
           </section>

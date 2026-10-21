@@ -24,7 +24,7 @@ export function PhotoUpload({ id, label, value, onChange, onBusyChange, disabled
     const current = ++request.current;
     setError(''); setBusy(true); onBusyChange(true);
     try {
-      const photo = await preparePhoto(file, { maxEdge });
+      const photo = await preparePhoto(file, { ...(maxEdge === undefined ? {} : { maxEdge }) });
       if (request.current === current) onChange(photo);
     } catch (cause) {
       if (request.current === current) setError(cause instanceof Error ? cause.message : 'Não foi possível abrir a foto. Escolha outro arquivo.');

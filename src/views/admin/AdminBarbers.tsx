@@ -7,7 +7,7 @@ import { Plus, Edit, Trash2, X, Users } from 'lucide-react';
 import { Barber } from '../../types';
 
 export default function AdminBarbers() {
-  const { barbers, services, addBarber, updateBarber, deleteBarber } = useData();
+  const { bookingAccess, barbers, services, addBarber, updateBarber, deleteBarber } = useData();
   const [showModal, setShowModal] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,7 +79,7 @@ export default function AdminBarbers() {
             <p className="text-white/50 text-sm mb-3 line-clamp-2">{barber.bio}</p>
             <div className="flex items-center justify-between">
               <span className={`text-xs px-2 py-1 rounded-full ${barber.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                {barber.active ? 'Ativo' : 'Inativo'}
+                {barber.active ? 'Ativo' : 'Inativo'} · {bookingAccess[barber.id] ? 'Agenda liberada' : 'Pagamento pendente'}
               </span>
               <div className="flex items-center gap-1">
                 <button onClick={() => openEdit(barber)} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition"><Edit className="w-4 h-4" /></button>

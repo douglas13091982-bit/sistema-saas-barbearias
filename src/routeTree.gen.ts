@@ -10,8 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AgendarRouteImport } from './routes/agendar'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as SuperAdminRouteImport } from './routes/super-admin'
+import { Route as SlugIndexRouteImport } from './routes/$slug.index'
+import { Route as SlugAgendarRouteImport } from './routes/$slug.agendar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAgendaRouteImport } from './routes/admin.agenda'
 import { Route as AdminAgendamentosRouteImport } from './routes/admin.agendamentos'
@@ -22,16 +27,24 @@ import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminDepoimentosRouteImport } from './routes/admin.depoimentos'
 import { Route as AdminGaleriaRouteImport } from './routes/admin.galeria'
+import { Route as AdminMensalidadeRouteImport } from './routes/admin.mensalidade'
 import { Route as AdminRelatoriosRouteImport } from './routes/admin.relatorios'
 import { Route as AdminServicosRouteImport } from './routes/admin.servicos'
 import { Route as AdminTemaRouteImport } from './routes/admin.tema'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as ConfirmacaoIdRouteImport } from './routes/confirmacao.$id'
+import { Route as SlugConfirmacaoIdRouteImport } from './routes/$slug.confirmacao.$id'
+import { Route as ApiMercadopagoWebhookRouteImport } from './routes/api.mercadopago.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -43,6 +56,26 @@ const AgendarRoute = AgendarRouteImport.update({
   id: '/agendar',
   path: '/agendar',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperAdminRoute = SuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugIndexRoute = SlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SlugRoute,
+} as any)
+const SlugAgendarRoute = SlugAgendarRouteImport.update({
+  id: '/agendar',
+  path: '/agendar',
+  getParentRoute: () => SlugRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -94,6 +127,11 @@ const AdminGaleriaRoute = AdminGaleriaRouteImport.update({
   path: '/galeria',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMensalidadeRoute = AdminMensalidadeRouteImport.update({
+  id: '/mensalidade',
+  path: '/mensalidade',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -124,11 +162,25 @@ const ConfirmacaoIdRoute = ConfirmacaoIdRouteImport.update({
   path: '/confirmacao/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlugConfirmacaoIdRoute = SlugConfirmacaoIdRouteImport.update({
+  id: '/confirmacao/$id',
+  path: '/confirmacao/$id',
+  getParentRoute: () => SlugRoute,
+} as any)
+const ApiMercadopagoWebhookRoute = ApiMercadopagoWebhookRouteImport.update({
+  id: '/api/mercadopago/webhook',
+  path: '/api/mercadopago/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/agendar': typeof AgendarRoute
+  '/cadastro': typeof CadastroRoute
+  '/super-admin': typeof SuperAdminRoute
+  '/$slug/agendar': typeof SlugAgendarRoute
   '/admin/agenda': typeof AdminAgendaRoute
   '/admin/agendamentos': typeof AdminAgendamentosRoute
   '/admin/barbeiros': typeof AdminBarbeirosRoute
@@ -138,17 +190,24 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/depoimentos': typeof AdminDepoimentosRoute
   '/admin/galeria': typeof AdminGaleriaRoute
+  '/admin/mensalidade': typeof AdminMensalidadeRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/servicos': typeof AdminServicosRoute
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/login': typeof AdminLoginRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
+  '/$slug/': typeof SlugIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/$slug/confirmacao/$id': typeof SlugConfirmacaoIdRoute
+  '/api/mercadopago/webhook': typeof ApiMercadopagoWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agendar': typeof AgendarRoute
+  '/cadastro': typeof CadastroRoute
+  '/super-admin': typeof SuperAdminRoute
+  '/$slug/agendar': typeof SlugAgendarRoute
   '/admin/agenda': typeof AdminAgendaRoute
   '/admin/agendamentos': typeof AdminAgendamentosRoute
   '/admin/barbeiros': typeof AdminBarbeirosRoute
@@ -158,19 +217,27 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/depoimentos': typeof AdminDepoimentosRoute
   '/admin/galeria': typeof AdminGaleriaRoute
+  '/admin/mensalidade': typeof AdminMensalidadeRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/servicos': typeof AdminServicosRoute
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/login': typeof AdminLoginRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
+  '/$slug': typeof SlugIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/$slug/confirmacao/$id': typeof SlugConfirmacaoIdRoute
+  '/api/mercadopago/webhook': typeof ApiMercadopagoWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/agendar': typeof AgendarRoute
+  '/cadastro': typeof CadastroRoute
+  '/super-admin': typeof SuperAdminRoute
+  '/$slug/agendar': typeof SlugAgendarRoute
   '/admin/agenda': typeof AdminAgendaRoute
   '/admin/agendamentos': typeof AdminAgendamentosRoute
   '/admin/barbeiros': typeof AdminBarbeirosRoute
@@ -180,20 +247,28 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/depoimentos': typeof AdminDepoimentosRoute
   '/admin/galeria': typeof AdminGaleriaRoute
+  '/admin/mensalidade': typeof AdminMensalidadeRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/servicos': typeof AdminServicosRoute
   '/admin/tema': typeof AdminTemaRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin_/login': typeof AdminLoginRoute
   '/confirmacao/$id': typeof ConfirmacaoIdRoute
+  '/$slug/': typeof SlugIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/$slug/confirmacao/$id': typeof SlugConfirmacaoIdRoute
+  '/api/mercadopago/webhook': typeof ApiMercadopagoWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$slug'
     | '/admin'
     | '/agendar'
+    | '/cadastro'
+    | '/super-admin'
+    | '/$slug/agendar'
     | '/admin/agenda'
     | '/admin/agendamentos'
     | '/admin/barbeiros'
@@ -203,17 +278,24 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/depoimentos'
     | '/admin/galeria'
+    | '/admin/mensalidade'
     | '/admin/relatorios'
     | '/admin/servicos'
     | '/admin/tema'
     | '/admin/usuarios'
     | '/admin/login'
     | '/confirmacao/$id'
+    | '/$slug/'
     | '/admin/'
+    | '/$slug/confirmacao/$id'
+    | '/api/mercadopago/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/agendar'
+    | '/cadastro'
+    | '/super-admin'
+    | '/$slug/agendar'
     | '/admin/agenda'
     | '/admin/agendamentos'
     | '/admin/barbeiros'
@@ -223,18 +305,26 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/depoimentos'
     | '/admin/galeria'
+    | '/admin/mensalidade'
     | '/admin/relatorios'
     | '/admin/servicos'
     | '/admin/tema'
     | '/admin/usuarios'
     | '/admin/login'
     | '/confirmacao/$id'
+    | '/$slug'
     | '/admin'
+    | '/$slug/confirmacao/$id'
+    | '/api/mercadopago/webhook'
   id:
     | '__root__'
     | '/'
+    | '/$slug'
     | '/admin'
     | '/agendar'
+    | '/cadastro'
+    | '/super-admin'
+    | '/$slug/agendar'
     | '/admin/agenda'
     | '/admin/agendamentos'
     | '/admin/barbeiros'
@@ -244,21 +334,29 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/depoimentos'
     | '/admin/galeria'
+    | '/admin/mensalidade'
     | '/admin/relatorios'
     | '/admin/servicos'
     | '/admin/tema'
     | '/admin/usuarios'
     | '/admin_/login'
     | '/confirmacao/$id'
+    | '/$slug/'
     | '/admin/'
+    | '/$slug/confirmacao/$id'
+    | '/api/mercadopago/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SlugRoute: typeof SlugRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AgendarRoute: typeof AgendarRoute
+  CadastroRoute: typeof CadastroRoute
+  SuperAdminRoute: typeof SuperAdminRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ConfirmacaoIdRoute: typeof ConfirmacaoIdRoute
+  ApiMercadopagoWebhookRoute: typeof ApiMercadopagoWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -268,6 +366,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -283,6 +388,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/agendar'
       preLoaderRoute: typeof AgendarRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug/': {
+      id: '/$slug/'
+      path: '/'
+      fullPath: '/$slug/'
+      preLoaderRoute: typeof SlugIndexRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/$slug/agendar': {
+      id: '/$slug/agendar'
+      path: '/agendar'
+      fullPath: '/$slug/agendar'
+      preLoaderRoute: typeof SlugAgendarRouteImport
+      parentRoute: typeof SlugRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -354,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGaleriaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/mensalidade': {
+      id: '/admin/mensalidade'
+      path: '/mensalidade'
+      fullPath: '/admin/mensalidade'
+      preLoaderRoute: typeof AdminMensalidadeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/relatorios': {
       id: '/admin/relatorios'
       path: '/relatorios'
@@ -396,8 +536,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfirmacaoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$slug/confirmacao/$id': {
+      id: '/$slug/confirmacao/$id'
+      path: '/confirmacao/$id'
+      fullPath: '/$slug/confirmacao/$id'
+      preLoaderRoute: typeof SlugConfirmacaoIdRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/api/mercadopago/webhook': {
+      id: '/api/mercadopago/webhook'
+      path: '/api/mercadopago/webhook'
+      fullPath: '/api/mercadopago/webhook'
+      preLoaderRoute: typeof ApiMercadopagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface SlugRouteChildren {
+  SlugAgendarRoute: typeof SlugAgendarRoute
+  SlugIndexRoute: typeof SlugIndexRoute
+  SlugConfirmacaoIdRoute: typeof SlugConfirmacaoIdRoute
+}
+
+const SlugRouteChildren: SlugRouteChildren = {
+  SlugAgendarRoute: SlugAgendarRoute,
+  SlugIndexRoute: SlugIndexRoute,
+  SlugConfirmacaoIdRoute: SlugConfirmacaoIdRoute,
+}
+
+const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
 
 interface AdminRouteChildren {
   AdminAgendaRoute: typeof AdminAgendaRoute
@@ -409,6 +577,7 @@ interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDepoimentosRoute: typeof AdminDepoimentosRoute
   AdminGaleriaRoute: typeof AdminGaleriaRoute
+  AdminMensalidadeRoute: typeof AdminMensalidadeRoute
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminServicosRoute: typeof AdminServicosRoute
   AdminTemaRoute: typeof AdminTemaRoute
@@ -426,6 +595,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDepoimentosRoute: AdminDepoimentosRoute,
   AdminGaleriaRoute: AdminGaleriaRoute,
+  AdminMensalidadeRoute: AdminMensalidadeRoute,
   AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminServicosRoute: AdminServicosRoute,
   AdminTemaRoute: AdminTemaRoute,
@@ -437,10 +607,14 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SlugRoute: SlugRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AgendarRoute: AgendarRoute,
+  CadastroRoute: CadastroRoute,
+  SuperAdminRoute: SuperAdminRoute,
   AdminLoginRoute: AdminLoginRoute,
   ConfirmacaoIdRoute: ConfirmacaoIdRoute,
+  ApiMercadopagoWebhookRoute: ApiMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

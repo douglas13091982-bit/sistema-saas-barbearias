@@ -24,8 +24,15 @@ function split(to: string) {
   return { path, search };
 }
 
+function scopedPath(to: string, pathname: string) {
+  const segment=pathname.split('/')[1];
+  const reserved=['admin','super-admin','cadastro','agendar','confirmacao','api',''];
+  if(!reserved.includes(segment) && (to==='/' || to.startsWith('/agendar') || to.startsWith('/confirmacao/'))) return '/'+segment+(to==='/'?'':to);
+  return to;
+}
 export function Link({ to, ...rest }: LinkProps) {
-  const { path, search } = split(to);
+  const pathname=useRouterState({select:s=>s.location.pathname});
+  const { path, search } = split(scopedPath(to,pathname));
   return <TLink to={path as never} search={search as never} {...rest} />;
 }
 
@@ -44,8 +51,9 @@ export function NavLink({
 
 export function useNavigate() {
   const nav = useTNavigate();
+  const pathname=useRouterState({select:s=>s.location.pathname});
   return (to: string, opts?: { replace?: boolean }) => {
-    const { path, search } = split(to);
+    const { path, search } = split(scopedPath(to,pathname));
     nav({ to: path as never, search: search as never, replace: opts?.replace });
   };
 }

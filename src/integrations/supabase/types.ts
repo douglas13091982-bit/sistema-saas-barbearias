@@ -6,6 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+type SaasTable<T> = { Row: T; Insert: Partial<T>; Update: Partial<T>; Relationships: [] };
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -14,20 +15,28 @@ export type Database = {
   }
   public: {
     Tables: {
+      tenants: SaasTable<{id:string;owner_id:string|null;slug:string;name:string;status:string;trial_ends_at:string;created_at:string}>;
+      saas_settings: SaasTable<{id:boolean;name:string;price_per_barber_cents:number|null;trial_days:number;updated_at:string}>;
+      platform_admins: SaasTable<{user_id:string}>;
+      barber_subscriptions: SaasTable<{id:string;tenant_id:string;barber_id:string;amount_cents:number|null;provider_id:string|null;checkout_url:string|null;state:string;paid_until:string|null;archived_at:string|null;created_at:string}>;
+      subscription_payments: SaasTable<{provider_payment_id:string;subscription_id:string;approved:boolean;amount_cents:number;period_end:string;updated_at:string}>;
       barbershop_records: {
         Row: {
+          tenant_id: string
           created_at: string
           data: Json
           id: string
           kind: string
         }
         Insert: {
+          tenant_id?: string
           created_at?: string
           data: Json
           id: string
           kind: string
         }
         Update: {
+          tenant_id?: string
           created_at?: string
           data?: Json
           id?: string
@@ -37,18 +46,21 @@ export type Database = {
       }
       booking_receipts: {
         Row: {
+          tenant_id: string
           appointment_id: string
           client_id: string
           created_at: string | null
           token: string
         }
         Insert: {
+          tenant_id?: string
           appointment_id: string
           client_id: string
           created_at?: string | null
           token?: string
         }
         Update: {
+          tenant_id?: string
           appointment_id?: string
           client_id?: string
           created_at?: string | null
@@ -58,18 +70,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          tenant_id: string
           active: boolean
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          tenant_id?: string
           active?: boolean
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          tenant_id?: string
           active?: boolean
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
@@ -82,6 +97,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_platform_admin: {Args: never;Returns:boolean};
+      tenant_admin: {Args:{tid:string};Returns:boolean};
+      public_shop: {Args:{shop_slug?:string|null};Returns:Json};
+      create_shop: {Args:{shop_name:string;shop_slug:string};Returns:string};
+      shop_booking_access: {Args:{tid:string};Returns:Json};
+      busy_slots_for_shop: {Args:{tid:string};Returns:Json};
+      claim_barber_checkout: {Args:{bid:string};Returns:Json};
       book_appointment: { Args: { input: Json }; Returns: Json }
       booking_receipt: { Args: { receipt_token: string }; Returns: Json }
       busy_slots: { Args: never; Returns: Json }

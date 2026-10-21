@@ -8,13 +8,13 @@ import { getServiceImage } from '@/lib/service-images';
 import type { Service, Barber, Testimonial, GalleryImage, SiteSettings, ThemeSettings } from '@/types';
 
 export default function Home() {
-  const { services, barbers, testimonials, gallery, siteSettings: site, themeSettings: theme }: {
-    services: Service[]; barbers: Barber[]; testimonials: Testimonial[]; gallery: GalleryImage[]; siteSettings: SiteSettings; themeSettings: ThemeSettings;
+  const { services, barbers, testimonials, gallery, bookingAccess, siteSettings: site, themeSettings: theme }: {
+    bookingAccess: Record<string,boolean>; services: Service[]; barbers: Barber[]; testimonials: Testimonial[]; gallery: GalleryImage[]; siteSettings: SiteSettings; themeSettings: ThemeSettings;
   } = useData();
   const [menuOpen, setMenuOpen] = useState(false);
   const [allPhotos, setAllPhotos] = useState(false);
   const activeServices = services.filter(s => s.active);
-  const activeBarbers = barbers.filter(b => b.active).sort((a, b) => a.order - b.order);
+  const activeBarbers = barbers.filter(b => b.active && bookingAccess[b.id]).sort((a, b) => a.order - b.order);
   const activeTestimonials = testimonials.filter(t => t.active);
   const photos = [...gallery].sort((a, b) => a.order - b.order);
   const configured = site.sections || [];
@@ -28,7 +28,7 @@ export default function Home() {
   const colorOn = (hex: string) => {
     const value = hex?.replace('#', '');
     if (!/^[0-9a-f]{6}$/i.test(value || '')) return '#111111';
-    const [r, g, b] = [0, 2, 4].map(start => parseInt(value.slice(start, start + 2), 16));
+    const [r = 0, g = 0, b = 0] = [0, 2, 4].map(start => parseInt(value.slice(start, start + 2), 16));
     return r * .299 + g * .587 + b * .114 > 155 ? '#15120d' : '#ffffff';
   };
   const css = {

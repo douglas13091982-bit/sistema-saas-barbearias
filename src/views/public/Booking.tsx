@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams, Link } from '@/lib/router-compat';
 import { Scissors, Clock, ChevronLeft, ChevronRight, Calendar, User, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function Booking() {
-  const { services, barbers, appointments, siteSettings, themeSettings, holidays, addClient, addAppointment, clients } = useData();
+  const { tenant, bookingAccess, services, barbers, appointments, siteSettings, themeSettings, holidays, addClient, addAppointment, clients } = useData();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const theme = themeSettings;
@@ -25,7 +25,7 @@ export default function Booking() {
   const [clientNotes, setClientNotes] = useState('');
 
   const activeServices = services.filter(s => s.active);
-  const activeBarbers = barbers.filter(b => b.active).sort((a, b) => a.order - b.order);
+  const activeBarbers = barbers.filter(b => b.active && bookingAccess[b.id]).sort((a, b) => a.order - b.order);
 
   const filteredBarbers = useMemo(() => {
     if (!selectedService) return activeBarbers;
@@ -34,7 +34,7 @@ export default function Booking() {
 
   const availableTimes = useMemo(() => {
     if (!selectedDate || !selectedBarber) return [];
-    const barber = selectedBarber === 'any' ? filteredBarbers[0] : barbers.find(b => b.id === selectedBarber);
+    const barber = selectedBarber === 'any' ? filteredBarbers[0] : activeBarbers.find(b => b.id === selectedBarber);
     if (!barber) return [];
 
     const date = new Date(selectedDate + 'T12:00:00');
@@ -112,10 +112,11 @@ export default function Booking() {
 
   const handleSubmit = async () => {
     if(submitting) return;
+    if(!tenant || !filteredBarbers.some(b=>b.id===(selectedBarber==='any'?filteredBarbers[0]?.id:selectedBarber))) {setSubmitError('Este barbeiro não está disponível para agendamento.');return;}
     setSubmitting(true); setSubmitError('');
     try {
       const { data, error } = await supabase.rpc('book_appointment', { input: {
-        name:clientName,phone:clientPhone,email:clientEmail,notes:clientNotes,
+        tenantId:tenant.id,name:clientName,phone:clientPhone,email:clientEmail,notes:clientNotes,
         serviceId:selectedService,barberId:selectedBarber === 'any' ? filteredBarbers[0]?.id : selectedBarber,
         date:selectedDate,time:selectedTime
       }});
@@ -138,7 +139,7 @@ export default function Booking() {
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   const selectedServiceData = services.find(s => s.id === selectedService);
-  const selectedBarberData = barbers.find(b => b.id === selectedBarber);
+  const selectedBarberData = activeBarbers.find(b => b.id === selectedBarber);
 
   return (
     <div className="min-h-screen" style={{ ...cssVars, fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
