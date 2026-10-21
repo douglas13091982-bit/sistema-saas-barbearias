@@ -45,13 +45,12 @@ export default function AdminSettings() {
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [holidayForm, setHolidayForm] = useState({ name: '', date: '', active: true });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      localStorage.setItem('siteSettings', JSON.stringify(form));
-      updateSiteSettings(form);
+      await updateSiteSettings(form);
       setLogoError('');
     } catch {
-      setLogoError('Não foi possível salvar. O armazenamento do navegador está cheio ou indisponível.');
+      setLogoError('Não foi possível salvar. Verifique sua conexão e tente novamente.');
       return;
     }
     setSaved(true);

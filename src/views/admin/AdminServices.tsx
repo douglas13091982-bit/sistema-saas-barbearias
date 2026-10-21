@@ -13,14 +13,16 @@ export default function AdminServices() {
   const openNew = () => { setEditing(null); setForm({ name: '', description: '', price: 0, duration: 30, category: 'Cortes', active: true, featured: false, image: '' }); setShowModal(true); };
   const openEdit = (s: Service) => { setEditing(s); setForm({ name: s.name, description: s.description, price: s.price, duration: s.duration, category: s.category, active: s.active, featured: s.featured, image: s.image }); setShowModal(true); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
     if (!form.name) return;
     if (editing) {
-      updateService(editing.id, form);
+      await updateService(editing.id, form);
     } else {
-      addService(form);
+      await addService(form);
     }
     setShowModal(false);
+    } catch {}
   };
 
   const handleDelete = (id: string) => {

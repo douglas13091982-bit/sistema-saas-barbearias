@@ -13,17 +13,19 @@ export default function AdminUsers() {
   const openNew = () => { setEditing(null); setForm({ name: '', email: '', password: '', role: 'attendant', active: true, barberId: '' }); setShowModal(true); };
   const openEdit = (u: User) => { setEditing(u); setForm({ name: u.name, email: u.email, password: '', role: u.role, active: u.active, barberId: u.barberId || '' }); setShowModal(true); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
     if (!form.name || !form.email) return;
     if (editing) {
       const data: Partial<User> = { name: form.name, email: form.email, role: form.role, active: form.active };
       if (form.password) data.password = form.password;
-      updateUser(editing.id, data);
+      await updateUser(editing.id, data);
     } else {
       if (!form.password) return;
-      addUser({ ...form });
+      await addUser({ ...form });
     }
     setShowModal(false);
+    } catch {}
   };
 
   const roleLabels = { admin: 'Administrador', attendant: 'Atendente', barber: 'Barbeiro' };

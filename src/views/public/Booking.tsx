@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { supabase } from '@/integrations/supabase/client';
 import { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useNavigate, useSearchParams, Link } from '@/lib/router-compat';
@@ -10,6 +11,8 @@ export default function Booking() {
   const [searchParams] = useSearchParams();
   const theme = themeSettings;
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState(searchParams.get('service') || '');
   const [selectedBarber, setSelectedBarber] = useState(searchParams.get('barber') || 'any');
@@ -30,7 +33,7 @@ export default function Booking() {
 
   const availableTimes = useMemo(() => {
     if (!selectedDate || !selectedBarber) return [];
-    const barber = selectedBarber === 'any' ? activeBarbers[0] : barbers.find(b => b.id === selectedBarber);
+    const barber = selectedBarber === 'any' ? filteredBarbers[0] : barbers.find(b => b.id === selectedBarber);
     if (!barber) return [];
 
     const date = new Date(selectedDate + 'T12:00:00');
@@ -106,31 +109,19 @@ export default function Booking() {
     return dates;
   }, [holidays]);
 
-  const handleSubmit = () => {
-    // Find or create client
-    let client = clients.find(c => c.phone === clientPhone);
-    if (!client) {
-      addClient({ name: clientName, phone: clientPhone, email: clientEmail, notes: clientNotes, blocked: false });
-      client = { id: Date.now().toString(), name: clientName, phone: clientPhone, email: clientEmail, notes: clientNotes, blocked: false, totalSpent: 0, totalVisits: 0, createdAt: new Date().toISOString() };
-    }
-
-    const barberId = selectedBarber === 'any' ? activeBarbers[0]?.id || '' : selectedBarber;
-
-    addAppointment({
-      clientId: client.id,
-      barberId,
-      serviceId: selectedService,
-      date: selectedDate,
-      time: selectedTime,
-      status: 'pending',
-      notes: clientNotes,
-      paymentStatus: 'pending',
-      paymentMethod: '',
-      amountPaid: 0,
-      cancelReason: ''
-    });
-
-    navigate(`/confirmacao/last`);
+  const handleSubmit = async () => {
+    if(submitting) return;
+    setSubmitting(true); setSubmitError('');
+    try {
+      const { data, error } = await supabase.rpc('book_appointment', { input: {
+        name:clientName,phone:clientPhone,email:clientEmail,notes:clientNotes,
+        serviceId:selectedService,barberId:selectedBarber === 'any' ? filteredBarbers[0]?.id : selectedBarber,
+        date:selectedDate,time:selectedTime
+      }});
+      if(error) throw error;
+      navigate(`/confirmacao/${data.token}`);
+    } catch(e) { setSubmitError(e.message || 'Não foi possível reservar o horário.'); }
+    finally { setSubmitting(false); }
   };
 
   const cssVars = {
@@ -170,6 +161,7 @@ export default function Booking() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {submitError && <p role="alert" className="text-destructive mb-4">{submitError}</p>}
         {/* Step 1: Choose Service */}
         {step === 1 && (
           <div>
@@ -409,11 +401,11 @@ export default function Booking() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={!clientName || !clientPhone}
+                disabled={submitting || !clientName || !clientPhone}
                 className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 style={{ backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
               >
-                <Check className="w-5 h-5" /> Confirmar Agendamento
+                <Check className="w-5 h-5" /> {submitting ? 'Salvando...' : 'Confirmar Agendamento'}
               </button>
             </div>
           </div>

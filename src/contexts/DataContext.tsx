@@ -1,235 +1,92 @@
-// @ts-nocheck -- imported code, kept as written
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Client, Barber, Service, Appointment, Testimonial, GalleryImage, SiteSettings, ThemeSettings, Holiday } from '../types';
-import { defaultUsers, defaultClients, defaultBarbers, defaultServices, defaultAppointments, defaultTestimonials, defaultGallery, defaultSiteSettings, defaultThemeSettings, defaultHolidays } from '../data/demoData';
+// @ts-nocheck -- compatibility with imported screens
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { useServerFn } from '@tanstack/react-start';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { manageStaff } from '@/lib/staff.functions';
+import { defaultSiteSettings, defaultThemeSettings } from '../data/demoData';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
-interface DataContextType {
-  users: User[];
-  clients: Client[];
-  barbers: Barber[];
-  services: Service[];
-  appointments: Appointment[];
-  testimonials: Testimonial[];
-  gallery: GalleryImage[];
-  siteSettings: SiteSettings;
-  themeSettings: ThemeSettings;
-  holidays: Holiday[];
-  currentUser: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
-  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'totalSpent' | 'totalVisits'>) => void;
-  addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt'>) => void;
-  updateAppointment: (id: string, data: Partial<Appointment>) => void;
-  updateService: (id: string, data: Partial<Service>) => void;
-  addService: (service: Omit<Service, 'id' | 'createdAt'>) => void;
-  deleteService: (id: string) => void;
-  updateBarber: (id: string, data: Partial<Barber>) => void;
-  addBarber: (barber: Omit<Barber, 'id' | 'createdAt'>) => void;
-  deleteBarber: (id: string) => void;
-  updateTestimonial: (id: string, data: Partial<Testimonial>) => void;
-  addTestimonial: (testimonial: Omit<Testimonial, 'id' | 'createdAt'>) => void;
-  deleteTestimonial: (id: string) => void;
-  updateGalleryImage: (id: string, data: Partial<GalleryImage>) => void;
-  addGalleryImage: (image: Omit<GalleryImage, 'id' | 'createdAt'>) => void;
-  deleteGalleryImage: (id: string) => void;
-  updateSiteSettings: (settings: Partial<SiteSettings>) => void;
-  updateThemeSettings: (settings: Partial<ThemeSettings>) => void;
-  updateClient: (id: string, data: Partial<Client>) => void;
-  addHoliday: (holiday: Omit<Holiday, 'id'>) => void;
-  deleteHoliday: (id: string) => void;
-  addUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
-  updateUser: (id: string, data: Partial<User>) => void;
-  deleteUser: (id: string) => void;
-}
-
-const DataContext = createContext<DataContextType | undefined>(undefined);
-
-function loadFromStorage<T>(key: string, defaultValue: T): T {
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error(`Error loading ${key} from storage`, e);
-  }
-  return defaultValue;
-}
-
-function saveToStorage<T>(key: string, value: T) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    console.error(`Error saving ${key} to storage`, e);
-  }
-}
-
+const DataContext = createContext<any>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(() => loadFromStorage('users', defaultUsers));
-  const [clients, setClients] = useState<Client[]>(() => loadFromStorage('clients', defaultClients));
-  const [barbers, setBarbers] = useState<Barber[]>(() => loadFromStorage('barbers', defaultBarbers));
-  const [services, setServices] = useState<Service[]>(() => loadFromStorage('services', defaultServices));
-  const [appointments, setAppointments] = useState<Appointment[]>(() => loadFromStorage('appointments', defaultAppointments));
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => loadFromStorage('testimonials', defaultTestimonials));
-  const [gallery, setGallery] = useState<GalleryImage[]>(() => loadFromStorage('gallery', defaultGallery));
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => loadFromStorage('siteSettings', defaultSiteSettings));
-  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(() => loadFromStorage('themeSettings', defaultThemeSettings));
-  const [holidays, setHolidays] = useState<Holiday[]>(() => loadFromStorage('holidays', defaultHolidays));
-  const [currentUser, setCurrentUser] = useState<User | null>(() => loadFromStorage('currentUser', null));
-
-  useEffect(() => { saveToStorage('users', users); }, [users]);
-  useEffect(() => { saveToStorage('clients', clients); }, [clients]);
-  useEffect(() => { saveToStorage('barbers', barbers); }, [barbers]);
-  useEffect(() => { saveToStorage('services', services); }, [services]);
-  useEffect(() => { saveToStorage('appointments', appointments); }, [appointments]);
-  useEffect(() => { saveToStorage('testimonials', testimonials); }, [testimonials]);
-  useEffect(() => { saveToStorage('gallery', gallery); }, [gallery]);
-  useEffect(() => { saveToStorage('siteSettings', siteSettings); }, [siteSettings]);
-  useEffect(() => { saveToStorage('themeSettings', themeSettings); }, [themeSettings]);
-  useEffect(() => { saveToStorage('holidays', holidays); }, [holidays]);
-  useEffect(() => { saveToStorage('currentUser', currentUser); }, [currentUser]);
-
-  const login = (email: string, password: string): boolean => {
-    const user = users.find(u => u.email === email && u.password === password && u.active);
-    if (user) {
-      setCurrentUser(user);
-      return true;
-    }
-    return false;
+  const queryClient = useQueryClient();
+  const [records, setRecords] = useState([]);
+  const [busy, setBusy] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const staff = useServerFn(manageStaff);
+  const generation = useRef(0);
+  const refresh = useCallback(async () => {
+    const request = ++generation.current;
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      let role = null;
+      if (auth.user) {
+        const { data } = await supabase.from('user_roles').select('role,active').eq('user_id', auth.user.id).maybeSingle();
+        if (data?.active) role = data.role;
+      }
+      let rows = [], offset = 0;
+      for (;;) {
+        const result = await supabase.from('barbershop_records').select('kind,id,data').order('kind').order('id').range(offset,offset+999);
+        if (result.error) throw result.error;
+        rows.push(...result.data);
+        if (result.data.length < 1000) break;
+        offset += 1000;
+      }
+      const slots = await supabase.rpc('busy_slots');
+      if (slots.error) throw slots.error;
+      if (generation.current !== request) return;
+      setRecords(rows); setBusy(slots.data ?? []); setError('');
+      setCurrentUser(role ? { id: auth.user.id, email: auth.user.email, name: auth.user.user_metadata?.name || auth.user.email, role, active: true } : null);
+      if (role === 'admin') setUsers(await staff({ data: { action: 'list' } }));
+      else setUsers([]);
+    } catch { if (generation.current === request) setError('Não foi possível carregar os dados.'); }
+    finally { if (generation.current === request) setLoading(false); }
+  }, [staff]);
+  useEffect(() => { void refresh(); const focus = () => void refresh(); window.addEventListener('focus',focus); return () => window.removeEventListener('focus',focus); }, [refresh]);
+  const list = kind => records.filter(r => r.kind === kind).map(r => r.data);
+  const settings = kind => records.find(r => r.kind === kind)?.data;
+  const mutate = async operation => {
+    try { const result = await operation(); if (result.error) throw result.error; await refresh(); return result.data; }
+    catch (e) { toast.error('Não foi possível salvar a alteração.'); throw e; }
   };
-
-  const logout = () => setCurrentUser(null);
-
-  const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
-
-  const addClient = (client: Omit<Client, 'id' | 'createdAt' | 'totalSpent' | 'totalVisits'>) => {
-    setClients(prev => [...prev, { ...client, id: generateId(), totalSpent: 0, totalVisits: 0, createdAt: new Date().toISOString() }]);
+  const save = (kind,id,data) => mutate(() => supabase.from('barbershop_records').upsert({kind,id,data}, {onConflict:'kind,id'}));
+  const add = (kind,data) => { const value = {...data,id:crypto.randomUUID(),createdAt:new Date().toISOString()}; return save(kind,value.id,value).then(() => value); };
+  const update = (kind,id,data) => { const existing = list(kind).find(r => r.id === id); if (!existing) return Promise.reject(new Error('Registro não encontrado.')); return save(kind,id,{...existing,...data,id}); };
+  const remove = (kind,id) => mutate(() => supabase.from('barbershop_records').delete().eq('kind',kind).eq('id',id));
+  const actions = {};
+  for (const [singular,kind] of Object.entries({Client:'clients',Appointment:'appointments',Service:'services',Barber:'barbers',Testimonial:'testimonials',GalleryImage:'gallery',Holiday:'holidays'})) {
+    actions['add'+singular] = data => add(kind,kind === 'clients' ? {...data,totalSpent:0,totalVisits:0} : data);
+    actions['update'+singular] = (id,data) => update(kind,id,data);
+    actions['delete'+singular] = id => remove(kind,id);
+  }
+  actions.deleteService = id => list('appointments').some(a=>a.serviceId===id) ? update('services',id,{active:false}) : remove('services',id);
+  for(const action of ['create','update','delete']) {
+    actions[action==='create'?'addUser':action==='update'?'updateUser':'deleteUser'] = async (id,user) => {
+      try { await staff({data:{action,...(action==='create'?{user:id}:{id,...(user?{user:{...users.find(u=>u.id===id),...user}}:{})})}}); await refresh(); }
+      catch(e) { toast.error(e.message || 'Não foi possível salvar o usuário.'); throw e; }
+    };
+  }
+  // Existing screens may fire and forget: prevent unhandled rejections; errors remain visible via toast.
+  for(const key of Object.keys(actions)) { const fn=actions[key]; actions[key]=(...args)=>{ const promise=fn(...args); promise.catch(()=>{}); return promise; }; }
+  const login = async (email,password) => {
+    const {data,error} = await supabase.auth.signInWithPassword({email,password});
+    if(error || !data.user) return false;
+    const {data:role} = await supabase.from('user_roles').select('active').eq('user_id',data.user.id).maybeSingle();
+    if(!role?.active) { await supabase.auth.signOut(); return false; }
+    await refresh(); return true;
   };
-
-  const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt'>) => {
-    const newAppt = { ...appointment, id: generateId(), createdAt: new Date().toISOString() };
-    setAppointments(prev => [...prev, newAppt]);
-    // Update client stats
-    if (appointment.status === 'completed') {
-      const service = services.find(s => s.id === appointment.serviceId);
-      setClients(prev => prev.map(c => c.id === appointment.clientId ? {
-        ...c,
-        totalVisits: c.totalVisits + 1,
-        totalSpent: c.totalSpent + (service?.price || 0)
-      } : c));
-    }
-  };
-
-  const updateAppointment = (id: string, data: Partial<Appointment>) => {
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...data } : a));
-  };
-
-  const updateService = (id: string, data: Partial<Service>) => {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
-  };
-
-  const addService = (service: Omit<Service, 'id' | 'createdAt'>) => {
-    setServices(prev => [...prev, { ...service, id: generateId(), createdAt: new Date().toISOString() }]);
-  };
-
-  const deleteService = (id: string) => {
-    const hasAppointments = appointments.some(a => a.serviceId === id);
-    if (hasAppointments) {
-      updateService(id, { active: false });
-    } else {
-      setServices(prev => prev.filter(s => s.id !== id));
-    }
-  };
-
-  const updateBarber = (id: string, data: Partial<Barber>) => {
-    setBarbers(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
-  };
-
-  const addBarber = (barber: Omit<Barber, 'id' | 'createdAt'>) => {
-    setBarbers(prev => [...prev, { ...barber, id: generateId(), createdAt: new Date().toISOString() }]);
-  };
-
-  const deleteBarber = (id: string) => {
-    setBarbers(prev => prev.filter(b => b.id !== id));
-  };
-
-  const updateTestimonial = (id: string, data: Partial<Testimonial>) => {
-    setTestimonials(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
-  };
-
-  const addTestimonial = (testimonial: Omit<Testimonial, 'id' | 'createdAt'>) => {
-    setTestimonials(prev => [...prev, { ...testimonial, id: generateId(), createdAt: new Date().toISOString() }]);
-  };
-
-  const deleteTestimonial = (id: string) => {
-    setTestimonials(prev => prev.filter(t => t.id !== id));
-  };
-
-  const updateGalleryImage = (id: string, data: Partial<GalleryImage>) => {
-    setGallery(prev => prev.map(g => g.id === id ? { ...g, ...data } : g));
-  };
-
-  const addGalleryImage = (image: Omit<GalleryImage, 'id' | 'createdAt'>) => {
-    setGallery(prev => [...prev, { ...image, id: generateId(), createdAt: new Date().toISOString() }]);
-  };
-
-  const deleteGalleryImage = (id: string) => {
-    setGallery(prev => prev.filter(g => g.id !== id));
-  };
-
-  const updateSiteSettings = (settings: Partial<SiteSettings>) => {
-    setSiteSettings(prev => ({ ...prev, ...settings }));
-  };
-
-  const updateThemeSettings = (settings: Partial<ThemeSettings>) => {
-    setThemeSettings(prev => ({ ...prev, ...settings }));
-  };
-
-  const updateClient = (id: string, data: Partial<Client>) => {
-    setClients(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
-  };
-
-  const addHoliday = (holiday: Omit<Holiday, 'id'>) => {
-    setHolidays(prev => [...prev, { ...holiday, id: generateId() }]);
-  };
-
-  const deleteHoliday = (id: string) => {
-    setHolidays(prev => prev.filter(h => h.id !== id));
-  };
-
-  const addUser = (user: Omit<User, 'id' | 'createdAt'>) => {
-    setUsers(prev => [...prev, { ...user, id: generateId(), createdAt: new Date().toISOString() }]);
-  };
-
-  const updateUser = (id: string, data: Partial<User>) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...data } : u));
-  };
-
-  const deleteUser = (id: string) => {
-    setUsers(prev => prev.filter(u => u.id !== id));
-  };
-
-  return (
-    <DataContext.Provider value={{
-      users, clients, barbers, services, appointments, testimonials, gallery,
-      siteSettings, themeSettings, holidays, currentUser,
-      isAuthenticated: !!currentUser,
-      login, logout,
-      addClient, addAppointment, updateAppointment,
-      updateService, addService, deleteService,
-      updateBarber, addBarber, deleteBarber,
-      updateTestimonial, addTestimonial, deleteTestimonial,
-      updateGalleryImage, addGalleryImage, deleteGalleryImage,
-      updateSiteSettings, updateThemeSettings,
-      updateClient, addHoliday, deleteHoliday,
-      addUser, updateUser, deleteUser
-    }}>
-      {children}
-    </DataContext.Provider>
-  );
+  const logout = async () => { await queryClient.cancelQueries(); queryClient.clear(); ++generation.current; setRecords([]); setUsers([]); setCurrentUser(null); await supabase.auth.signOut(); await refresh(); };
+  if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
+  if(error) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-background text-foreground"><p role="alert">{error}</p><Button onClick={()=>void refresh()}>Tentar novamente</Button></div>;
+  return <DataContext.Provider value={{...actions,users,currentUser,isAuthenticated:!!currentUser,login,logout,refresh,
+    clients:list('clients'), appointments:currentUser ? list('appointments'):busy, services:list('services'),barbers:list('barbers'),testimonials:list('testimonials'),gallery:list('gallery'),holidays:list('holidays'),
+    siteSettings:settings('siteSettings') || defaultSiteSettings, themeSettings:settings('themeSettings') || defaultThemeSettings,
+    updateSiteSettings:data=>save('siteSettings','main',{...(settings('siteSettings')||defaultSiteSettings),...data}),
+    updateThemeSettings:data=>save('themeSettings','main',{...(settings('themeSettings')||defaultThemeSettings),...data})
+  }}>{children}</DataContext.Provider>;
 }
-
-export function useData() {
-  const context = useContext(DataContext);
-  if (!context) throw new Error('useData must be used within DataProvider');
-  return context;
-}
+export function useData() { const value=useContext(DataContext); if(!value) throw new Error('useData must be used within DataProvider'); return value; }

@@ -29,10 +29,12 @@ export default function AdminBarbers() {
     setShowModal(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
     if (!form.name) return;
     if (editing) { updateBarber(editing.id, form); } else { addBarber(form); }
     setShowModal(false);
+    } catch {}
   };
 
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];

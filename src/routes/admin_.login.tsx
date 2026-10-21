@@ -4,6 +4,8 @@ import Page from "@/views/admin/AdminLogin";
 export const Route = createFileRoute("/admin_/login")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Login administrativo | BarberShop Pro" },
       { name: "description", content: "BarberShop Pro - Login administrativo" },
       { property: "og:title", content: "Login administrativo | BarberShop Pro" },

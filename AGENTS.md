@@ -9,4 +9,6 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Imported barbershop screens live in src/views and navigate via src/lib/router-compat (TanStack adapter); app data is browser-only, so __root renders DataProvider after hydration.
+- Imported barbershop screens live in src/views and use the TanStack navigation adapter; DataProvider loads Cloud records after hydration and never uses browser storage as the data authority.
+- Preserve imported entity shapes in kind-scoped JSON records with RLS; public booking and receipt access use narrowly scoped transactional RPCs to avoid exposing client records.
+- Cloud Auth owns staff credentials; roles live only in user_roles, and privileged staff management validates the caller before importing the admin client.

@@ -8,10 +8,12 @@ export default function AdminTheme() {
   const [form, setForm] = useState(themeSettings);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    updateThemeSettings(form);
+  const handleSave = async () => {
+    try {
+    await updateThemeSettings(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    } catch {}
   };
 
   const presets = [

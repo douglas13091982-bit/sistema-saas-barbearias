@@ -9,6 +9,8 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Toaster } from "@/components/ui/sonner";
 import { DataProvider } from "../contexts/DataContext";
 
 import appCss from "../styles.css?url";
@@ -121,11 +123,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(event => {
+      if (!["SIGNED_IN","SIGNED_OUT","USER_UPDATED"].includes(event)) return;
+      void router.invalidate();
+      if(event !== "SIGNED_OUT") void queryClient.invalidateQueries();
+      window.dispatchEvent(new Event("focus"));
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <ClientData />
+      <Toaster />
     </QueryClientProvider>
   );
 }
