@@ -4,6 +4,7 @@ import { useData } from '@/contexts/DataContext';
 import { Link } from '@/lib/router-compat';
 import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, UsersRound, ArrowRight, Menu, X, MessageCircle, Youtube } from 'lucide-react';
 import '@/styles/barbershop-home.css';
+import { getServiceImage } from '@/lib/service-images';
 import type { Service, Barber, Testimonial, GalleryImage, SiteSettings, ThemeSettings } from '@/types';
 
 export default function Home() {
@@ -48,14 +49,14 @@ export default function Home() {
     { id: 'contact', anchor: 'contato', label: 'Contato', show: true },
   ].filter(item => enabled(item.id) && item.show);
   const brand = <>{site.logo ? <SiteImage src={site.logo} alt={`Logo ${site.barbershopName}`} className="bb-logo" /> : <Scissors className="bb-brand-icon" aria-hidden="true" />}<span>{site.barbershopName}</span></>;
-  const servicePhoto = (service: { name: string; category: string; image: string }) => service.image || (/barba/i.test(service.name) ? '/images/barba.webp' : /tratamento/i.test(service.category) ? '/images/ambiente.webp' : '/images/corte.webp');
+  const servicePhoto = (service: { name: string; category: string; image: string }) => service.image || getServiceImage(service.name, service.category);
   const sectionHeading = (eyebrow: string, title: string) => <div className="bb-section-heading"><p className="bb-eyebrow">{eyebrow}</p><h2>{title}</h2></div>;
 
   const sections: Record<string, ReactNode> = {
     services: activeServices.length > 0 && <section id="servicos" className="bb-section bb-wrap">
       {sectionHeading('Nossos serviços', 'O cuidado que seu estilo merece.')}
       <div className="bb-service-grid">{activeServices.map(service => <article className="bb-service-card" key={service.id}>
-        <div className="bb-service-photo"><SiteImage src={servicePhoto(service)} fallbackSrc="/images/corte.webp" alt={service.name} loading="lazy" decoding="async" />
+        <div className="bb-service-photo"><SiteImage src={servicePhoto(service)} fallbackSrc={getServiceImage(service.name, service.category)} alt={service.name} loading="lazy" decoding="async" />
           {service.featured && <span className="bb-featured">Destaque</span>}
         </div>
         <div className="bb-service-body"><h3>{service.name}</h3><div className="bb-service-meta"><strong>{site.currency} {Number(service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><span><Clock size={13} aria-hidden="true" />{service.duration} min</span></div>
@@ -118,7 +119,7 @@ export default function Home() {
       {orderedSections.map((id, index) => <div key={id}>
         {enabled(id) && sections[id]}
         {index === 0 && <section id="sobre" className="bb-about">
-          <div className="bb-about-image"><SiteImage src="/images/detalhes.webp" alt="Cuidado profissional e acabamento de um corte de cabelo" loading="lazy" decoding="async" /></div>
+          <div className="bb-about-image"><SiteImage src="/images/sobre-atendimento.webp" alt="Cuidado profissional e acabamento de um corte de cabelo" loading="lazy" decoding="async" /></div>
           <div className="bb-about-copy"><p className="bb-eyebrow">Sobre a barbearia</p><h2>Tradição no cuidado.<br />Precisão em cada detalhe.</h2><p>Um espaço para cuidar de você, valorizar seu estilo e transformar cada visita em um momento especial. Do corte ao acabamento, cada detalhe faz parte da experiência.</p>
             {enabled('barbers') && activeBarbers.length > 0 ? <a href="#barbeiros" className="bb-button bb-button-outline">Conheça nossa equipe <ArrowRight size={16} aria-hidden="true" /></a> : <Link to="/agendar" className="bb-button bb-button-outline">Agendar horário <ArrowRight size={16} aria-hidden="true" /></Link>}
           </div>

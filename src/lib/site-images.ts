@@ -1,8 +1,8 @@
 const bundledImages: Record<string, string> = {
   "photo-1585747860019-024e8567e756": "/images/barbearia-capa.webp",
-  "photo-1596728325488-58c876d1f9ee": "/images/detalhes.webp",
-  "photo-1503951914875-452162b0f3f1": "/images/corte.webp",
-  "photo-1599351431202-1e0f0137899a": "/images/barba.webp",
+  "photo-1596728325488-58c876d1f9ee": "/images/galeria-produtos.webp",
+  "photo-1503951914875-452162b0f3f1": "/images/barba.webp",
+  "photo-1599351431202-1e0f0137899a": "/images/corte.webp",
   "photo-1621605815971-fbc98d665033": "/images/ambiente.webp",
   "photo-1622286342621-4bd786c2447c": "/images/detalhes.webp",
   "photo-1507003211169-0a1dd7228f2d": "/images/barbeiro-1.webp",
@@ -17,6 +17,7 @@ export function resolveSiteImage(src?: string): string {
   try {
     const url = new URL(value);
     if (url.hostname === 'images.unsplash.com') {
+      if (url.pathname === '/photo-1585747860019-024e8567e756' && url.searchParams.get('w') === '600') return '/images/galeria-espaco.webp';
       const replacement = bundledImages[url.pathname.slice(1)];
       if (replacement) return replacement;
     }

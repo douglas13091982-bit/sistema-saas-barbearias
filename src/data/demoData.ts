@@ -93,14 +93,14 @@ export const defaultBarbers: Barber[] = [
 ];
 
 export const defaultServices: Service[] = [
-  { id: '1', name: 'Corte Masculino', description: 'Corte moderno com acabamento perfeito na máquina e tesoura.', price: 55, duration: 40, category: 'Cortes', active: true, featured: true, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '2', name: 'Barba Completa', description: 'Barba com toalha quente, navalha e finalização com balm.', price: 40, duration: 30, category: 'Barba', active: true, featured: true, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '3', name: 'Corte + Barba', description: 'Combo completo com corte e barba. O pacote mais popular.', price: 85, duration: 60, category: 'Combos', active: true, featured: true, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '4', name: 'Degradê Premium', description: 'Degradê perfeito com transição suave e acabamento navalhado.', price: 65, duration: 50, category: 'Cortes', active: true, featured: false, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '5', name: 'Corte Navalhado', description: 'Corte clássico com acabamento na navalha para um visual impecável.', price: 70, duration: 45, category: 'Cortes', active: true, featured: false, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '6', name: 'Hidratação Capilar', description: 'Tratamento profundo para cabelos ressecados com produtos premium.', price: 50, duration: 30, category: 'Tratamentos', active: true, featured: false, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '7', name: 'Limpeza de Pele', description: 'Limpeza facial completa com extração e máscara revitalizante.', price: 60, duration: 40, category: 'Tratamentos', active: true, featured: false, image: '', createdAt: '2024-01-01T00:00:00Z' },
-  { id: '8', name: 'Sobrancelha', description: 'Design de sobrancelha masculina com pinça e navalha.', price: 20, duration: 15, category: 'Acabamento', active: true, featured: false, image: '', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '1', name: 'Corte Masculino', description: 'Corte moderno com acabamento perfeito na máquina e tesoura.', price: 55, duration: 40, category: 'Cortes', active: true, featured: true, image: '/images/servico-corte.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '2', name: 'Barba Completa', description: 'Barba com toalha quente, navalha e finalização com balm.', price: 40, duration: 30, category: 'Barba', active: true, featured: true, image: '/images/servico-barba.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '3', name: 'Corte + Barba', description: 'Combo completo com corte e barba. O pacote mais popular.', price: 85, duration: 60, category: 'Combos', active: true, featured: true, image: '/images/servico-combo.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '4', name: 'Degradê Premium', description: 'Degradê perfeito com transição suave e acabamento navalhado.', price: 65, duration: 50, category: 'Cortes', active: true, featured: false, image: '/images/servico-degrade.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '5', name: 'Corte Navalhado', description: 'Corte clássico com acabamento na navalha para um visual impecável.', price: 70, duration: 45, category: 'Cortes', active: true, featured: false, image: '/images/servico-navalhado.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '6', name: 'Hidratação Capilar', description: 'Tratamento profundo para cabelos ressecados com produtos premium.', price: 50, duration: 30, category: 'Tratamentos', active: true, featured: false, image: '/images/servico-hidratacao.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '7', name: 'Limpeza de Pele', description: 'Limpeza facial completa com extração e máscara revitalizante.', price: 60, duration: 40, category: 'Tratamentos', active: true, featured: false, image: '/images/servico-pele.webp', createdAt: '2024-01-01T00:00:00Z' },
+  { id: '8', name: 'Sobrancelha', description: 'Design de sobrancelha masculina com pinça e navalha.', price: 20, duration: 15, category: 'Acabamento', active: true, featured: false, image: '/images/servico-sobrancelha.webp', createdAt: '2024-01-01T00:00:00Z' },
 ];
 
 export const defaultAppointments: Appointment[] = [
@@ -120,12 +120,12 @@ export const defaultTestimonials: Testimonial[] = [
 ];
 
 export const defaultGallery: GalleryImage[] = [
-  { id: '1', url: '/images/barbearia-capa.webp', caption: 'Nosso espaço', order: 1, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '2', url: '/images/corte.webp', caption: 'Corte degradê', order: 2, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '3', url: '/images/barba.webp', caption: 'Barba perfeita', order: 3, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '4', url: '/images/ambiente.webp', caption: 'Ambiente premium', order: 4, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '1', url: '/images/galeria-espaco.webp', caption: 'Nosso espaço', order: 1, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '2', url: '/images/barba.webp', caption: 'Corte degradê', order: 2, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '3', url: '/images/corte.webp', caption: 'Barba perfeita', order: 3, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '4', url: '/images/ambiente.webp', caption: 'Ferramentas profissionais', order: 4, createdAt: '2024-01-01T00:00:00Z' },
   { id: '5', url: '/images/detalhes.webp', caption: 'Detalhes do corte', order: 5, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '6', url: '/images/detalhes.webp', caption: 'Estilo e acabamento', order: 6, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '6', url: '/images/galeria-produtos.webp', caption: 'Produtos e cuidados', order: 6, createdAt: '2024-01-01T00:00:00Z' },
 ];
 
 export const defaultSiteSettings: SiteSettings = {
