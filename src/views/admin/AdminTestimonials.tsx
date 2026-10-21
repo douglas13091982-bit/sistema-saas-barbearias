@@ -13,10 +13,12 @@ export default function AdminTestimonials() {
   const openNew = () => { setEditing(null); setForm({ clientName: '', text: '', rating: 5, photo: '', active: true }); setShowModal(true); };
   const openEdit = (t: Testimonial) => { setEditing(t); setForm({ clientName: t.clientName, text: t.text, rating: t.rating, photo: t.photo, active: t.active }); setShowModal(true); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
     if (!form.clientName || !form.text) return;
     if (editing) { updateTestimonial(editing.id, form); } else { addTestimonial(form); }
     setShowModal(false);
+    } catch {}
   };
 
   return (

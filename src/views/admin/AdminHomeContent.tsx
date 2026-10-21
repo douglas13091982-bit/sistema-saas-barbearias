@@ -8,10 +8,12 @@ export default function AdminHomeContent() {
   const [form, setForm] = useState(siteSettings);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    updateSiteSettings(form);
+  const handleSave = async () => {
+    try {
+    await updateSiteSettings(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    } catch {}
   };
 
   const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];

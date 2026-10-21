@@ -9,11 +9,13 @@ export default function AdminGallery() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ url: '', caption: '', order: gallery.length + 1 });
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
     if (!form.url) return;
-    addGalleryImage(form);
+    await addGalleryImage(form);
     setForm({ url: '', caption: '', order: gallery.length + 2 });
     setShowModal(false);
+    } catch {}
   };
 
   return (
