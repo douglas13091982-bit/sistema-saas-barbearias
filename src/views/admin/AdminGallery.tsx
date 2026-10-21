@@ -1,5 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState } from 'react';
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { GalleryImage } from '../../types';
@@ -33,7 +34,7 @@ export default function AdminGallery() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {gallery.map(img => (
           <div key={img.id} className="group relative rounded-xl overflow-hidden border border-white/10 bg-[#1f2937]">
-            <img src={img.url} alt={img.caption} className="w-full h-40 object-cover" />
+            <SiteImage src={img.url} alt={img.caption} className="w-full h-40 object-cover" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
               <button onClick={() => { if (confirm('Excluir imagem?')) deleteGalleryImage(img.id); }} className="opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-red-500/80 text-white transition">
                 <Trash2 className="w-5 h-5" />
@@ -72,7 +73,7 @@ export default function AdminGallery() {
               </div>
               {form.url && (
                 <div className="rounded-lg overflow-hidden border border-white/10">
-                  <img src={form.url} alt="Preview" className="w-full h-40 object-cover" />
+                  <SiteImage src={form.url} alt="Preview" className="w-full h-40 object-cover" />
                 </div>
               )}
               <div className="flex gap-3 pt-4">

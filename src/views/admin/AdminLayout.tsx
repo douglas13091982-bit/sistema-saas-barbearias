@@ -1,5 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState } from 'react';
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { Outlet, NavLink, useNavigate, Navigate } from '@/lib/router-compat';
 import { LayoutDashboard, Calendar, CalendarDays, Scissors, Users, UserCircle, Clock, Palette, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
@@ -42,7 +43,7 @@ export default function AdminLayout() {
         <div className="flex flex-col h-full">
           <div className="p-5 border-b border-white/5">
             <div className="flex items-center gap-2">
-              {siteSettings.logo ? <img src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
+              {siteSettings.logo ? <SiteImage src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
               <span className="font-bold text-white" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
             </div>
             <p className="text-xs text-white/40 mt-1">Painel Administrativo</p>

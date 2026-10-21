@@ -1,6 +1,7 @@
 // @ts-nocheck -- imported code, kept as written
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useMemo } from 'react';
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { useNavigate, useSearchParams, Link } from '@/lib/router-compat';
 import { Scissors, Clock, ChevronLeft, ChevronRight, Calendar, User, Check, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -219,7 +220,7 @@ export default function Booking() {
                   style={{ borderColor: selectedBarber === barber.id ? theme.accentColor : undefined, backgroundColor: selectedBarber === barber.id ? `${theme.accentColor}15` : 'rgba(255,255,255,0.03)' }}
                 >
                   <div className="flex items-center gap-4">
-                    <img src={barber.photo} alt={barber.name} className="w-16 h-16 rounded-full object-cover border-2" style={{ borderColor: theme.accentColor }} />
+                    <SiteImage src={barber.photo} alt={barber.name} className="w-16 h-16 rounded-full object-cover border-2" style={{ borderColor: theme.accentColor }} />
                     <div>
                       <h3 className="font-bold text-lg">{barber.name}</h3>
                       <p className="text-sm" style={{ color: theme.accentColor }}>{barber.specialty}</p>

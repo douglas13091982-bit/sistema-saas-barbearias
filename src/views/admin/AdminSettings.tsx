@@ -1,5 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState } from 'react';
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { Save, Plus, Trash2, X, Settings as SettingsIcon } from 'lucide-react';
 import { Holiday } from '../../types';
@@ -81,7 +82,7 @@ export default function AdminSettings() {
           <h3 className="font-semibold text-white">Logo da Barbearia</h3>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="w-32 h-24 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center p-2">
-              {form.logo ? <img src={form.logo} alt="Prévia da logo" className="max-w-full max-h-full object-contain" /> : <span className="text-sm text-white/50">Sem logo</span>}
+              {form.logo ? <SiteImage src={form.logo} alt="Prévia da logo" className="max-w-full max-h-full object-contain" /> : <span className="text-sm text-white/50">Sem logo</span>}
             </div>
             <div className="space-y-2 min-w-0">
               <label htmlFor="barbershop-logo" className="block text-sm text-white/70">Enviar logo</label>

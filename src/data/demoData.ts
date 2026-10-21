@@ -34,7 +34,7 @@ export const defaultBarbers: Barber[] = [
   {
     id: '1',
     name: 'Ricardo Mendes',
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face',
+    photo: '/images/barbeiro-1.jpg',
     specialty: 'Cortes Modernos & Degradê',
     bio: 'Com mais de 10 anos de experiência, Ricardo é especialista em cortes modernos e degradê perfeito.',
     active: true,
@@ -54,7 +54,7 @@ export const defaultBarbers: Barber[] = [
   {
     id: '2',
     name: 'Bruno Alves',
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=face',
+    photo: '/images/barbeiro-2.jpg',
     specialty: 'Barba & Tratamentos',
     bio: 'Bruno é mestre em barbas e tratamentos capilares. Seus acabamentos são impecáveis.',
     active: true,
@@ -74,7 +74,7 @@ export const defaultBarbers: Barber[] = [
   {
     id: '3',
     name: 'Diego Ferreira',
-    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face',
+    photo: '/images/barbeiro-3.jpg',
     specialty: 'Cortes Clássicos & Navalhado',
     bio: 'Diego combina técnicas clássicas com toques modernos. Especialista em corte navalhado.',
     active: true,
@@ -120,12 +120,12 @@ export const defaultTestimonials: Testimonial[] = [
 ];
 
 export const defaultGallery: GalleryImage[] = [
-  { id: '1', url: 'https://images.unsplash.com/photo-1585747860019-024e8567e756?w=600&h=400&fit=crop', caption: 'Nosso espaço', order: 1, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '2', url: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&h=400&fit=crop', caption: 'Corte degradê', order: 2, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '3', url: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=600&h=400&fit=crop', caption: 'Barba perfeita', order: 3, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '4', url: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=600&h=400&fit=crop', caption: 'Ambiente premium', order: 4, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '5', url: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&h=400&fit=crop', caption: 'Detalhes do corte', order: 5, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '6', url: 'https://images.unsplash.com/photo-1596728325488-58c876d1f9ee?w=600&h=400&fit=crop', caption: 'Produtos premium', order: 6, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '1', url: '/images/barbearia-capa.webp', caption: 'Nosso espaço', order: 1, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '2', url: '/images/corte.jpg', caption: 'Corte degradê', order: 2, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '3', url: '/images/barba.jpg', caption: 'Barba perfeita', order: 3, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '4', url: '/images/ambiente.jpg', caption: 'Ambiente premium', order: 4, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '5', url: '/images/detalhes.jpg', caption: 'Detalhes do corte', order: 5, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '6', url: '/images/detalhes.jpg', caption: 'Estilo e acabamento', order: 6, createdAt: '2024-01-01T00:00:00Z' },
 ];
 
 export const defaultSiteSettings: SiteSettings = {
@@ -134,7 +134,7 @@ export const defaultSiteSettings: SiteSettings = {
   heroTitle: 'Seu Estilo, Nossa Arte',
   heroSubtitle: 'Mais de 10 anos transformando visuais com excelência. Agende agora e descubra o melhor da barbearia moderna.',
   heroButtonText: 'Agendar Agora',
-  heroImage: 'https://images.unsplash.com/photo-1585747860019-024e8567e756?w=1920&h=1080&fit=crop',
+  heroImage: '/images/barbearia-capa.webp',
   logo: '',
   favicon: '',
   phone: '(11) 3456-7890',

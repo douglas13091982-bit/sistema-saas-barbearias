@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { Link } from '@/lib/router-compat';
 import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, ChevronRight, Calendar, Users, Award, MessageCircle } from 'lucide-react';
@@ -29,7 +30,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              {siteSettings.logo ? <img src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
+              {siteSettings.logo ? <SiteImage src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
               <span className="text-xl font-bold" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
             </div>
             <div className="hidden md:flex items-center gap-6 text-sm">
@@ -61,12 +62,12 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={siteSettings.heroImage}
+          <SiteImage
+            src={siteSettings.heroImage} fallbackSrc="/images/barbearia-capa.webp" fetchPriority="high"
             alt="Barbearia"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/80" />
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <div className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm">
@@ -168,7 +169,7 @@ export default function Home() {
             {activeBarbers.map(barber => (
               <div key={barber.id} className="group text-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 hover:border-white/20 transition-all">
                 <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-2" style={{ borderColor: theme.accentColor }}>
-                  <img src={barber.photo} alt={barber.name} className="w-full h-full object-cover" />
+                  <SiteImage src={barber.photo} loading="lazy" alt={barber.name} className="w-full h-full object-cover" />
                 </div>
                 <h3 className="text-xl font-bold mb-1">{barber.name}</h3>
                 <p className="text-sm mb-3" style={{ color: theme.accentColor }}>{barber.specialty}</p>
@@ -196,7 +197,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {gallery.map((img, idx) => (
               <div key={img.id} className={`relative rounded-xl overflow-hidden group cursor-pointer ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
-                <img src={img.url} alt={img.caption} className="w-full h-full object-cover min-h-[200px] group-hover:scale-110 transition-transform duration-500" />
+                <SiteImage src={img.url} fallbackSrc="/images/barbearia-capa.webp" loading="lazy" alt={img.caption} className="w-full h-full object-cover min-h-[200px] group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-4">
                   <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity">{img.caption}</span>
                 </div>
@@ -304,7 +305,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                {siteSettings.logo ? <img src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
+                {siteSettings.logo ? <SiteImage src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
                 <span className="text-xl font-bold" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
               </div>
               <p className="text-white/60 text-sm">{siteSettings.tagline}</p>

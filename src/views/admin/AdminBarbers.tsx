@@ -1,5 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState } from 'react';
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { Plus, Edit, Trash2, X, Users } from 'lucide-react';
 import { Barber } from '../../types';
@@ -62,7 +63,7 @@ export default function AdminBarbers() {
         {barbers.map(barber => (
           <div key={barber.id} className={`rounded-xl border p-5 transition ${barber.active ? 'border-white/10 bg-[#1f2937]' : 'border-white/5 bg-[#1f2937]/50 opacity-60'}`}>
             <div className="flex items-center gap-4 mb-4">
-              <img src={barber.photo} alt={barber.name} className="w-14 h-14 rounded-full object-cover border-2" style={{ borderColor: '#c9a96e' }} />
+              <SiteImage src={barber.photo} alt={barber.name} className="w-14 h-14 rounded-full object-cover border-2" style={{ borderColor: '#c9a96e' }} />
               <div>
                 <h3 className="font-semibold text-white">{barber.name}</h3>
                 <p className="text-xs" style={{ color: '#c9a96e' }}>{barber.specialty}</p>
