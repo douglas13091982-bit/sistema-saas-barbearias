@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { SiteImage } from '@/components/SiteImage';
 import { Link } from '@/lib/router-compat';
 import '@/styles/saas.css';
 import '@/styles/saas-landing.css';
 import { Scissors, ArrowUpRight, Check, Globe, CalendarDays, Users } from 'lucide-react';
 
 export default function Landing(){
- const [price,setPrice]=useState<number|null>(null),[name,setName]=useState('BarberShop Pro');
- useEffect(()=>{void supabase.from('saas_settings').select('name,price_per_barber_cents').eq('id',true).single().then(({data})=>{if(data){setPrice(data.price_per_barber_cents);setName(data.name);}});},[]);
+ const [price,setPrice]=useState<number|null>(null),[name,setName]=useState('BarberShop Pro'),[logo,setLogo]=useState('');
+ useEffect(()=>{
+  let active=true;
+  const load=()=>{void supabase.from('saas_settings').select('name,logo,price_per_barber_cents').eq('id',true).single().then(({data})=>{if(active&&data){setPrice(data.price_per_barber_cents);setName(data.name);setLogo(data.logo);}});};
+  load();window.addEventListener('focus',load);
+  return ()=>{active=false;window.removeEventListener('focus',load);};
+ },[]);
  return <main className="saas-page saas-landing">
  <div className="sl-cover" aria-hidden="true"><img src="/images/barbearia-capa.webp" alt="" fetchPriority="high" decoding="async" width="1672" height="941" /></div>
  <div className="sl-content">
- <header className="saas-nav sl-nav"><a href="/" className="sl-brand"><Scissors aria-hidden="true"/><strong>{name}</strong></a><Link className="sl-login" to="/admin/login">Entrar no painel <ArrowUpRight size={16} aria-hidden="true"/></Link></header>
+ <header className="saas-nav sl-nav"><a href="/" className="sl-brand">{logo?<SiteImage src={logo} alt={`Logo ${name}`} className="sl-logo"/>:<Scissors aria-hidden="true"/>}<strong>{name}</strong></a><Link className="sl-login" to="/admin/login">Entrar no painel <ArrowUpRight size={16} aria-hidden="true"/></Link></header>
  <section className="saas-hero sl-hero">
  <p className="saas-kicker"><span/> GESTÃO PARA BARBEARIAS QUE QUEREM CRESCER</p>
  <h1>Seu talento na cadeira.<br/><em>Sua gestão em outro nível.</em></h1>

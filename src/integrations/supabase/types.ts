@@ -16,7 +16,7 @@ export type Database = {
   public: {
     Tables: {
       tenants: SaasTable<{id:string;owner_id:string|null;slug:string;name:string;status:string;trial_ends_at:string;created_at:string}>;
-      saas_settings: SaasTable<{id:boolean;name:string;price_per_barber_cents:number|null;trial_days:number;updated_at:string}>;
+      saas_settings: SaasTable<{id:boolean;name:string;logo:string;price_per_barber_cents:number|null;trial_days:number;updated_at:string}>;
       platform_admins: SaasTable<{user_id:string}>;
       barber_subscriptions: SaasTable<{id:string;tenant_id:string;barber_id:string;amount_cents:number|null;provider_id:string|null;checkout_url:string|null;state:string;paid_until:string|null;archived_at:string|null;created_at:string}>;
       subscription_payments: SaasTable<{provider_payment_id:string;subscription_id:string;approved:boolean;amount_cents:number;period_end:string;updated_at:string}>;
