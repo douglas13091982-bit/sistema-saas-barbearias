@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { PhotoUpload } from '@/components/PhotoUpload';
 import { useData } from '../../contexts/DataContext';
 import { Save } from 'lucide-react';
 import { useState } from 'react';
@@ -7,8 +8,10 @@ export default function AdminHomeContent() {
   const { siteSettings, updateSiteSettings } = useData();
   const [form, setForm] = useState(siteSettings);
   const [saved, setSaved] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
 
   const handleSave = async () => {
+    if (imageBusy) return;
     try {
     await updateSiteSettings(form);
     setSaved(true);
@@ -25,7 +28,7 @@ export default function AdminHomeContent() {
           <h1 className="text-2xl font-bold text-white">Conteúdo da Home</h1>
           <p className="text-white/50 text-sm">Gerencie textos, seções e informações da página inicial</p>
         </div>
-        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
+        <button disabled={imageBusy} onClick={handleSave} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
           <Save className="w-4 h-4" /> {saved ? 'Salvo!' : 'Salvar'}
         </button>
       </div>
@@ -54,10 +57,7 @@ export default function AdminHomeContent() {
             <label className="block text-sm text-white/70 mb-1">Texto do Botão</label>
             <input value={form.heroButtonText} onChange={e => setForm({ ...form, heroButtonText: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
           </div>
-          <div>
-            <label className="block text-sm text-white/70 mb-1">URL do Banner</label>
-            <input value={form.heroImage} onChange={e => setForm({ ...form, heroImage: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
-          </div>
+          <PhotoUpload id="home-banner" label="Imagem de capa" value={form.heroImage} onChange={heroImage => setForm(prev => ({ ...prev, heroImage }))} onBusyChange={setImageBusy} maxEdge={1920} />
         </div>
 
         {/* Contact Info */}

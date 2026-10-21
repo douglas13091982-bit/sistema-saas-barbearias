@@ -9,9 +9,10 @@ type Props = {
   onChange: (value: string) => void;
   onBusyChange: (busy: boolean) => void;
   disabled?: boolean;
+  maxEdge?: number;
 };
 
-export function PhotoUpload({ id, label, value, onChange, onBusyChange, disabled }: Props) {
+export function PhotoUpload({ id, label, value, onChange, onBusyChange, disabled, maxEdge }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const request = useRef(0);
@@ -23,7 +24,7 @@ export function PhotoUpload({ id, label, value, onChange, onBusyChange, disabled
     const current = ++request.current;
     setError(''); setBusy(true); onBusyChange(true);
     try {
-      const photo = await preparePhoto(file);
+      const photo = await preparePhoto(file, { maxEdge });
       if (request.current === current) onChange(photo);
     } catch (cause) {
       if (request.current === current) setError(cause instanceof Error ? cause.message : 'Não foi possível abrir a foto. Escolha outro arquivo.');
@@ -35,7 +36,7 @@ export function PhotoUpload({ id, label, value, onChange, onBusyChange, disabled
     <label htmlFor={id} className="block text-sm text-white/70">{label}</label>
     <input id={id} type="file" accept="image/jpeg,image/png,image/webp" disabled={disabled || busy} onChange={selectPhoto}
       aria-describedby={id + '-help'} className="block w-full min-w-0 text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2.5 file:text-white disabled:opacity-50" />
-    <p id={id + '-help'} className="text-xs text-white/50">{busy ? 'Preparando foto...' : 'JPG, PNG ou WebP, até 5 MB. Escolha a foto e clique em Salvar.'}</p>
+    <p id={id + '-help'} className="text-xs text-white/50">{busy ? 'Preparando foto...' : 'JPG, PNG ou WebP, até 5 MB. Compressão e conversão WebP automáticas. Clique em Salvar.'}</p>
     {value && <div className="space-y-2">
       <SiteImage src={value} alt="Prévia da foto selecionada" className="h-40 w-full rounded-xl border border-white/10 object-contain bg-black/20" />
       <button type="button" disabled={disabled || busy} onClick={() => { onChange(''); setError(''); }} className="text-sm text-red-400 hover:underline disabled:opacity-50">Remover foto</button>

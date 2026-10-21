@@ -34,7 +34,7 @@ export const defaultBarbers: Barber[] = [
   {
     id: '1',
     name: 'Ricardo Mendes',
-    photo: '/images/barbeiro-1.jpg',
+    photo: '/images/barbeiro-1.webp',
     specialty: 'Cortes Modernos & Degradê',
     bio: 'Com mais de 10 anos de experiência, Ricardo é especialista em cortes modernos e degradê perfeito.',
     active: true,
@@ -54,7 +54,7 @@ export const defaultBarbers: Barber[] = [
   {
     id: '2',
     name: 'Bruno Alves',
-    photo: '/images/barbeiro-2.jpg',
+    photo: '/images/barbeiro-2.webp',
     specialty: 'Barba & Tratamentos',
     bio: 'Bruno é mestre em barbas e tratamentos capilares. Seus acabamentos são impecáveis.',
     active: true,
@@ -74,7 +74,7 @@ export const defaultBarbers: Barber[] = [
   {
     id: '3',
     name: 'Diego Ferreira',
-    photo: '/images/barbeiro-3.jpg',
+    photo: '/images/barbeiro-3.webp',
     specialty: 'Cortes Clássicos & Navalhado',
     bio: 'Diego combina técnicas clássicas com toques modernos. Especialista em corte navalhado.',
     active: true,
@@ -121,11 +121,11 @@ export const defaultTestimonials: Testimonial[] = [
 
 export const defaultGallery: GalleryImage[] = [
   { id: '1', url: '/images/barbearia-capa.webp', caption: 'Nosso espaço', order: 1, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '2', url: '/images/corte.jpg', caption: 'Corte degradê', order: 2, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '3', url: '/images/barba.jpg', caption: 'Barba perfeita', order: 3, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '4', url: '/images/ambiente.jpg', caption: 'Ambiente premium', order: 4, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '5', url: '/images/detalhes.jpg', caption: 'Detalhes do corte', order: 5, createdAt: '2024-01-01T00:00:00Z' },
-  { id: '6', url: '/images/detalhes.jpg', caption: 'Estilo e acabamento', order: 6, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '2', url: '/images/corte.webp', caption: 'Corte degradê', order: 2, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '3', url: '/images/barba.webp', caption: 'Barba perfeita', order: 3, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '4', url: '/images/ambiente.webp', caption: 'Ambiente premium', order: 4, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '5', url: '/images/detalhes.webp', caption: 'Detalhes do corte', order: 5, createdAt: '2024-01-01T00:00:00Z' },
+  { id: '6', url: '/images/detalhes.webp', caption: 'Estilo e acabamento', order: 6, createdAt: '2024-01-01T00:00:00Z' },
 ];
 
 export const defaultSiteSettings: SiteSettings = {

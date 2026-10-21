@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { preparePhoto } from '@/lib/prepare-photo';
 import { useState } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
@@ -25,22 +26,11 @@ export default function AdminSettings() {
     }
     setReadingLogo(true);
     try {
-      const logo = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Falha ao ler a imagem.'));
-        reader.onload = () => resolve(String(reader.result));
-        reader.readAsDataURL(file);
-      });
-      await new Promise<void>((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve();
-        image.onerror = () => reject(new Error('Imagem inválida.'));
-        image.src = logo;
-      });
+      const logo = await preparePhoto(file, { maxEdge: 600, maxBytes: 100 * 1024 });
       setForm(prev => ({ ...prev, logo }));
       setSaved(false);
-    } catch {
-      setLogoError('Não foi possível abrir a imagem. Escolha outro arquivo.');
+    } catch (cause) {
+      setLogoError(cause instanceof Error ? cause.message : 'Não foi possível abrir a imagem. Escolha outro arquivo.');
     } finally { setReadingLogo(false); }
   };
   const [showHolidayModal, setShowHolidayModal] = useState(false);
