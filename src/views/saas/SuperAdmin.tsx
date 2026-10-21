@@ -40,7 +40,8 @@ export default function SuperAdmin(){
  const paid=seats.filter(s=>s.paid_until&&new Date(s.paid_until).getTime()>Date.now());
  const active=shops.filter(s=>s.status==='active').length;
  const trials=shops.filter(s=>s.status==='active'&&new Date(s.trial_ends_at).getTime()>Date.now()).length;
- const approved=sales.filter(s=>s.approved),gross=approved.reduce((n,s)=>n+s.amount_cents,0),mrr=paid.reduce((n,s)=>n+(s.amount_cents||0),0);
+ const recurring=paid.filter(s=>s.state==='authorized');
+ const approved=sales.filter(s=>s.approved),gross=approved.reduce((n,s)=>n+s.amount_cents,0),mrr=recurring.reduce((n,s)=>n+(s.amount_cents||0),0);
  const filtered=useMemo(()=>{const cutoff=period==='all'?0:Date.now()-Number(period)*86400000,q=search.trim().toLocaleLowerCase('pt-BR');return sales.filter(s=>new Date(s.payment_at).getTime()>=cutoff&&(!q||s.shop_name.toLocaleLowerCase('pt-BR').includes(q)||s.shop_slug.toLocaleLowerCase('pt-BR').includes(q)||s.barber_name.toLocaleLowerCase('pt-BR').includes(q)));},[sales,period,search]);
  const months=useMemo(()=>Array.from({length:6},(_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-(5-i));const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return{key,label:new Intl.DateTimeFormat('pt-BR',{month:'short'}).format(d).replace('.',''),value:approved.filter(x=>x.payment_at.slice(0,7)===key).reduce((n,x)=>n+x.amount_cents,0)};}),[sales]);
  const max=Math.max(1,...months.map(m=>m.value));
