@@ -14,16 +14,88 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      barbershop_records: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id: string
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          kind?: string
+        }
+        Relationships: []
+      }
+      booking_receipts: {
+        Row: {
+          appointment_id: string
+          client_id: string
+          created_at: string | null
+          token: string
+        }
+        Insert: {
+          appointment_id: string
+          client_id: string
+          created_at?: string | null
+          token?: string
+        }
+        Update: {
+          appointment_id?: string
+          client_id?: string
+          created_at?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          active: boolean
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      book_appointment: { Args: { input: Json }; Returns: Json }
+      booking_receipt: { Args: { receipt_token: string }; Returns: Json }
+      busy_slots: { Args: never; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "attendant" | "barber"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +222,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "attendant", "barber"],
+    },
   },
 } as const
