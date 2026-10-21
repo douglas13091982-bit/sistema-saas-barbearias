@@ -97,6 +97,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      platform_sales_history: {Args:{p_since?:string|null;p_until?:string|null};Returns:{payment_at:string;period_end:string;amount_cents:number;approved:boolean;updated_at:string;shop_name:string;shop_slug:string;barber_name:string;subscription_state:string}[]};
       is_platform_admin: {Args: never;Returns:boolean};
       tenant_admin: {Args:{tid:string};Returns:boolean};
       public_shop: {Args:{shop_slug?:string|null};Returns:Json};
