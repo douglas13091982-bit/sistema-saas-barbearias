@@ -14,7 +14,7 @@ export const manageStaff = createServerFn({ method: 'POST' })
       if (error) throw new Error('Não foi possível carregar os usuários.');
       return Promise.all((roles ?? []).map(async r => {
         const { data: account } = await supabaseAdmin.auth.admin.getUserById(r.user_id);
-        return { id: r.user_id, role: r.role, active: r.active, name: account.user?.user_metadata?.name || account.user?.email, email: account.user?.email, createdAt: account.user?.created_at };
+        return { id: r.user_id, role: r.role, active: r.active, name: account.user?.user_metadata?.['name'] || account.user?.email, email: account.user?.email, createdAt: account.user?.created_at };
       }));
     }
     if (data.id === context.userId) throw new Error('Não é possível alterar seu próprio acesso nesta tela.');

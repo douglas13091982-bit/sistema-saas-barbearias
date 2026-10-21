@@ -7,7 +7,7 @@ import { defaultSiteSettings, defaultThemeSettings } from '../data/demoData';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
-const DataContext = createContext(undefined);
+const DataContext = createContext<any>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState([]);
   const [busy, setBusy] = useState([]);
