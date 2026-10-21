@@ -106,3 +106,12 @@
 @media(max-width:1050px){.sa-sidebar{width:225px;flex-basis:225px}.sa-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.sa-overview-grid{grid-template-columns:1fr}.sa-chart-panel{min-height:295px}}
 @media(max-width:760px){.sa-sidebar{position:fixed;left:0;top:0;bottom:0;width:272px;flex-basis:272px;height:100dvh;transform:translateX(-105%);transition:transform .22s ease;box-shadow:15px 0 35px #0008}.sa-sidebar.sa-sidebar-open{transform:translateX(0)}.sa-overlay{display:block;position:fixed;inset:0;z-index:45;border:0;background:#0009;backdrop-filter:blur(2px)}.sa-menu-toggle{display:grid;place-items:center}.sa-topbar{justify-content:flex-start;min-height:58px;padding:0 12px}.sa-breadcrumb{flex:1}.sa-topbar-actions{gap:8px}.sa-connection{font-size:0}.sa-connection i{width:9px;height:9px}.sa-content{padding:21px 14px 40px}.sa-page-heading{align-items:flex-start}.sa-page-heading>.sa-primary{display:none}.sa-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.sa-metric{min-height:105px;padding:13px}.sa-metric-value{font-size:18px}.sa-panel{padding:14px}.sa-sales-metrics{grid-template-columns:1fr}.sa-filters{align-items:stretch;flex-direction:column}.sa-filters .sa-search{max-width:none}.sa-settings-grid{grid-template-columns:1fr}.sa-chart{gap:8px}.sa-chart-panel{min-height:270px}}
 @media(max-width:400px){.sa-metric-label{font-size:9px}.sa-metric-icon{width:30px;height:30px}.sa-metric-value{font-size:16px}.sa-page-heading h1{font-size:26px}.sa-shop-summary span{font-size:9px}}
+
+.sa-mp-config{margin-top:15px;max-width:none}
+.sa-mp-help{margin:-5px 0 0;color:#aaa79b;font-size:11px;line-height:1.6}
+.sa-mp-config label{display:grid;gap:6px;color:#b3b0a4;font-size:10px}
+.sa-mp-config input{width:100%;min-height:39px;border:1px solid #ffffff1a;border-radius:5px;background:#10110f;color:#eee9dd;padding:8px 11px;font-size:11px}
+.sa-mp-state{color:#75c89a;font-size:10px}
+.sa-mp-webhook{display:grid;gap:6px;padding:12px;border:1px solid #ffffff12;border-radius:5px;background:#10110f}
+.sa-mp-webhook strong{color:#b3b0a4;font-size:10px}
+.sa-mp-webhook code{color:#e4c582;font-size:11px;overflow-wrap:anywhere}

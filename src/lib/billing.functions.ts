@@ -10,12 +10,12 @@ export const billingAction = createServerFn({ method: 'POST' })
   if (!membership?.active || membership.role!=='admin') throw new Error('Acesso restrito ao proprietário da barbearia.');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const db: any = supabaseAdmin;
-  const { mercado, billingReady, mercadoPublicKey, reconcileSubscription, reconcileAuthorizedPayment } = await import('@/lib/mercadopago.server');
-  if (data.action==='status') return { ready: billingReady(), publicKey: mercadoPublicKey() };
+  const { mercado, billingReady, getMercadoConfig, reconcileSubscription, reconcileAuthorizedPayment } = await import('@/lib/mercadopago.server');
+  if (data.action==='status') { const config=await getMercadoConfig();return { ready: await billingReady(), publicKey:config.publicKey }; }
   if (!data.barberId) throw new Error('Selecione o barbeiro.');
   const { data: sub } = await db.from('barber_subscriptions').select('*').eq('tenant_id',membership.tenant_id).eq('barber_id',data.barberId).maybeSingle();
   if (!sub) throw new Error('Barbeiro não encontrado.');
-  if (!billingReady()) throw new Error('A plataforma precisa configurar a integração Mercado Pago antes de receber pagamentos.');
+  if (!await billingReady()) throw new Error('A plataforma precisa configurar a integração Mercado Pago no painel Super Admin antes de receber pagamentos.');
   if (data.action==='cancel') {
     if (sub.provider_id) await mercado(`/preapproval/${encodeURIComponent(sub.provider_id)}`,'PUT',{ status:'cancelled' });
     else if (sub.state==='creating' || sub.state==='review') throw new Error('Esta cobrança precisa ser conciliada antes do cancelamento.');
@@ -54,12 +54,13 @@ export const billingAction = createServerFn({ method: 'POST' })
       if(remote?.status==='authorized') return {authorized:true};
       return {legacyUrl:claim.checkout_url||remote?.init_point||null,legacy:true,state:remote?.status||claim.state};
     }
-    if(!mercadoPublicKey()) throw new Error('A plataforma ainda não configurou a chave pública do Mercado Pago.');
+    const mpConfig=await getMercadoConfig();
+    if(!mpConfig.publicKey) throw new Error('A plataforma ainda não configurou a chave pública do Mercado Pago.');
     const {data:tenant}=await db.from('tenants').select('name,trial_ends_at').eq('id',membership.tenant_id).single();
     const {data:barber}=await db.from('barbershop_records').select('data').eq('tenant_id',membership.tenant_id).eq('kind','barbers').eq('id',data.barberId).single();
     const {data:account}=await context.supabase.auth.getUser();
     if(!account.user?.email) throw new Error('Sua conta precisa ter um e-mail para criar a assinatura.');
-    return {prepared:true,amountCents:claim.amount_cents,barberName:String(barber?.data?.name||'Barbeiro'),payerEmail:account.user.email,trialEndsAt:tenant?.trial_ends_at||null,publicKey:mercadoPublicKey()};
+    return {prepared:true,amountCents:claim.amount_cents,barberName:String(barber?.data?.name||'Barbeiro'),payerEmail:account.user.email,trialEndsAt:tenant?.trial_ends_at||null,publicKey:mpConfig.publicKey};
   }
   if(data.action==='subscribe') {
     if(!data.cardToken) throw new Error('Não foi possível tokenizar o cartão. Revise os dados e tente novamente.');
@@ -75,7 +76,7 @@ export const billingAction = createServerFn({ method: 'POST' })
       const {data:tenant}=await db.from('tenants').select('name,trial_ends_at').eq('id',membership.tenant_id).single();
       const {data:account}=await context.supabase.auth.getUser();
       if(!account.user?.email) throw new Error('Sua conta precisa ter um e-mail para criar a assinatura.');
-      const origin=new URL(process.env['APP_URL']!).origin;
+      const origin=new URL((await getMercadoConfig()).appUrl).origin;
       if(!origin.startsWith('https://')) throw new Error('Configure uma URL HTTPS para a plataforma.');
       const trialEnd=new Date(tenant.trial_ends_at);
       remote=await mercado('/preapproval','POST',{
@@ -108,7 +109,7 @@ export const billingAction = createServerFn({ method: 'POST' })
   } else {
     const {data:tenant}=await db.from('tenants').select('name,trial_ends_at').eq('id',membership.tenant_id).single();
     const {data:account}=await context.supabase.auth.getUser();
-    const origin=new URL(process.env['APP_URL']!).origin;
+      const origin=new URL((await getMercadoConfig()).appUrl).origin;
     if(!origin.startsWith('https://')) throw new Error('Configure uma URL HTTPS para a plataforma.');
     remote=await mercado('/preapproval','POST',{
       reason:`Agenda mensal de barbeiro — ${tenant.name}`.slice(0,120), external_reference:claim.id,payer_email:account.user?.email,
@@ -128,5 +129,16 @@ export const platformBillingStatus = createServerFn({method:'POST'}).middleware(
   const {data:allowed}=await context.supabase.rpc('is_platform_admin');
   if(!allowed) throw new Error('Acesso restrito ao superadministrador.');
   const {billingReady}=await import('@/lib/mercadopago.server');
-  return {ready:billingReady(),webhookPath:'/api/mercadopago/webhook'};
+  const {data:config,error}=await (context.supabase as any).rpc('platform_mercado_pago_config_status');
+  if(error) throw new Error('Não foi possível consultar as configurações seguras do Mercado Pago.');
+  return {ready:await billingReady(),config,webhookPath:'/api/mercadopago/webhook'};
+});
+
+const platformConfigInput=z.object({accessToken:z.string().max(512).optional().default(''),webhookSecret:z.string().max(512).optional().default(''),publicKey:z.string().max(256).optional().default(''),appUrl:z.string().max(255).optional().default('')});
+export const savePlatformMercadoConfig=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(platformConfigInput).handler(async({data,context})=>{
+  const {data:allowed}=await context.supabase.rpc('is_platform_admin');
+  if(!allowed) throw new Error('Acesso restrito ao superadministrador.');
+  const {data:status,error}=await (context.supabase as any).rpc('platform_save_mercado_pago_config',{p_access_token:data.accessToken,p_webhook_secret:data.webhookSecret,p_public_key:data.publicKey,p_app_url:data.appUrl});
+  if(error) throw new Error(error.message||'Não foi possível salvar as credenciais.');
+  return {config:status};
 });

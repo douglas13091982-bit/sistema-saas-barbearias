@@ -8,16 +8,24 @@ export function verifyMercadoSignature(secret: string, signature: string, reques
   return timingSafeEqual(expected, Buffer.from(values.v1, 'hex'));
 }
 
-export function billingReady() {
-  return Boolean(process.env['MERCADO_PAGO_ACCESS_TOKEN'] && process.env['MERCADO_PAGO_WEBHOOK_SECRET'] && process.env['APP_URL'] && process.env['MERCADO_PAGO_PUBLIC_KEY']);
+export type MercadoPagoConfig = { accessToken: string; webhookSecret: string; publicKey: string; appUrl: string };
+export async function getMercadoConfig(): Promise<MercadoPagoConfig> {
+  const env={accessToken:process.env['MERCADO_PAGO_ACCESS_TOKEN']||'',webhookSecret:process.env['MERCADO_PAGO_WEBHOOK_SECRET']||'',publicKey:process.env['MERCADO_PAGO_PUBLIC_KEY']||'',appUrl:process.env['APP_URL']||''};
+  try {
+    const {supabaseAdmin}=await import('@/integrations/supabase/client.server');
+    const {data,error}=await (supabaseAdmin as any).rpc('platform_mercado_pago_config_private');
+    if(!error&&data) return {accessToken:data.accessToken||env.accessToken,webhookSecret:data.webhookSecret||env.webhookSecret,publicKey:data.publicKey||env.publicKey,appUrl:data.appUrl||env.appUrl};
+  } catch { /* Allow server environment credentials as a migration fallback. */ }
+  return env;
 }
 
-export function mercadoPublicKey() {
-  return process.env['MERCADO_PAGO_PUBLIC_KEY'] || '';
+export async function billingReady() {
+  const config=await getMercadoConfig();
+  return Boolean(config.accessToken&&config.webhookSecret&&config.appUrl&&config.publicKey);
 }
 
 export async function mercado(path: string, method = 'GET', body?: unknown, idempotencyKey?: string): Promise<any> {
-  const token = process.env['MERCADO_PAGO_ACCESS_TOKEN'];
+  const {accessToken:token} = await getMercadoConfig();
   if (!token) throw new Error('A integração Mercado Pago ainda não foi configurada pela plataforma.');
   const result = await fetch(`https://api.mercadopago.com${path}`, {
     method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(idempotencyKey ? { 'X-Idempotency-Key': idempotencyKey } : {}) },

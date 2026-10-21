@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { createHmac } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { billingReady, mercadoPublicKey, reconcileSubscription, reconcileAuthorizedPayment, verifyMercadoSignature } from './mercadopago.server';
+import { billingReady, getMercadoConfig, reconcileSubscription, reconcileAuthorizedPayment, verifyMercadoSignature } from './mercadopago.server';
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 describe('Mercado Pago billing protections',()=>{
- it('requires server credentials, webhook secret, URL, and public key before checkout is ready',()=>{
+ it('requires server credentials, webhook secret, URL, and public key before checkout is ready',async()=>{
   vi.stubEnv('MERCADO_PAGO_ACCESS_TOKEN','access');vi.stubEnv('MERCADO_PAGO_WEBHOOK_SECRET','webhook');vi.stubEnv('APP_URL','https://example.test');vi.stubEnv('MERCADO_PAGO_PUBLIC_KEY','public');
-  expect(billingReady()).toBe(true);expect(mercadoPublicKey()).toBe('public');
-  vi.stubEnv('MERCADO_PAGO_PUBLIC_KEY','');expect(billingReady()).toBe(false);expect(mercadoPublicKey()).toBe('');
+  expect(await billingReady()).toBe(true);expect((await getMercadoConfig()).publicKey).toBe('public');
+  vi.stubEnv('MERCADO_PAGO_PUBLIC_KEY','');expect(await billingReady()).toBe(false);expect((await getMercadoConfig()).publicKey).toBe('');
  });
  it('validates the signature against the exact resource and request',()=>{
   const signature='ts=1704908010,v1='+createHmac('sha256','secret').update('id:invoice1;request-id:req1;ts:1704908010;').digest('hex');

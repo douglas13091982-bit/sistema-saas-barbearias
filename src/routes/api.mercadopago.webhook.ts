@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/api/mercadopago/webhook')({
  server:{handlers:{POST:async({request})=>{
-  const {verifyMercadoSignature,reconcileSubscription,reconcileAuthorizedPayment,reconcilePaymentChange}=await import('@/lib/mercadopago.server');
-  const secret=process.env['MERCADO_PAGO_WEBHOOK_SECRET'];
+  const {verifyMercadoSignature,reconcileSubscription,reconcileAuthorizedPayment,reconcilePaymentChange,getMercadoConfig}=await import('@/lib/mercadopago.server');
+  const {webhookSecret:secret}=await getMercadoConfig();
   if(!secret) return new Response('Integração indisponível',{status:503});
   const url=new URL(request.url),id=url.searchParams.get('data.id') || '';
   if(!/^[a-zA-Z0-9-]{1,100}$/.test(id) || !verifyMercadoSignature(secret,request.headers.get('x-signature') || '',request.headers.get('x-request-id') || '',id)) return new Response('Assinatura inválida',{status:401});
