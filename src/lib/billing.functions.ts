@@ -4,14 +4,14 @@ import { z } from 'zod';
 
 export const billingAction = createServerFn({ method: 'POST' })
  .middleware([requireSupabaseAuth])
- .inputValidator(z.object({ action: z.enum(['status','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional() }))
+ .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional() }))
  .handler(async ({ data, context }) => {
   const { data: membership } = await context.supabase.from('user_roles').select('tenant_id,role,active').eq('user_id',context.userId).maybeSingle();
   if (!membership?.active || membership.role!=='admin') throw new Error('Acesso restrito ao proprietário da barbearia.');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const db: any = supabaseAdmin;
-  const { mercado, billingReady, reconcileSubscription, reconcileAuthorizedPayment } = await import('@/lib/mercadopago.server');
-  if (data.action==='status') return { ready: billingReady() };
+  const { mercado, billingReady, mercadoPublicKey, reconcileSubscription, reconcileAuthorizedPayment } = await import('@/lib/mercadopago.server');
+  if (data.action==='status') return { ready: billingReady(), publicKey: mercadoPublicKey() };
   if (!data.barberId) throw new Error('Selecione o barbeiro.');
   const { data: sub } = await db.from('barber_subscriptions').select('*').eq('tenant_id',membership.tenant_id).eq('barber_id',data.barberId).maybeSingle();
   if (!sub) throw new Error('Barbeiro não encontrado.');
@@ -24,7 +24,17 @@ export const billingAction = createServerFn({ method: 'POST' })
     return { cancelled:true };
   }
   if(data.action==='sync') {
-    if(!sub.provider_id) throw new Error('Nenhuma assinatura foi identificada. Use o botão de pagamento para recuperar o checkout.');
+    if(!sub.provider_id) {
+      const found=await mercado(`/preapproval/search?external_reference=${encodeURIComponent(sub.id)}`);
+      const matches=(found.results || []).filter((item:any)=>String(item.external_reference)===sub.id);
+      if(matches.length!==1) throw new Error('Ainda não há confirmação do Mercado Pago. Aguarde alguns instantes e consulte novamente.');
+      const remote=matches[0];
+      if(!remote.id || remote.auto_recurring?.currency_id!=='BRL' || Math.round(Number(remote.auto_recurring?.transaction_amount)*100)!==sub.amount_cents) throw new Error('A assinatura encontrada precisa de análise da plataforma.');
+      const {error}=await db.from('barber_subscriptions').update({provider_id:String(remote.id),checkout_url:null,state:['pending','authorized','paused','cancelled'].includes(remote.status)?remote.status:'review'}).eq('id',sub.id).is('provider_id',null);
+      if(error) throw new Error('Não foi possível conciliar esta assinatura.');
+      await reconcileSubscription(db,{...sub,provider_id:String(remote.id)});
+      return {synced:true};
+    }
     await reconcileSubscription(db,sub);
     let offset=0;
     for(let page=0;page<20;page++) {
@@ -34,6 +44,51 @@ export const billingAction = createServerFn({ method: 'POST' })
       offset+=100;
     }
     return { synced:true };
+  }
+  if(data.action==='prepare') {
+    const {data:claimed,error:claimError}=await context.supabase.rpc('claim_barber_checkout',{bid:data.barberId});
+    if(claimError||!claimed) throw new Error(claimError?.message||'Não foi possível preparar o pagamento.');
+    const claim=claimed as any;
+    if(claim.provider_id) {
+      const remote=await reconcileSubscription(db,claim);
+      if(remote?.status==='authorized') return {authorized:true};
+      return {legacyUrl:claim.checkout_url||remote?.init_point||null,legacy:true,state:remote?.status||claim.state};
+    }
+    if(!mercadoPublicKey()) throw new Error('A plataforma ainda não configurou a chave pública do Mercado Pago.');
+    const {data:tenant}=await db.from('tenants').select('name,trial_ends_at').eq('id',membership.tenant_id).single();
+    const {data:barber}=await db.from('barbershop_records').select('data').eq('tenant_id',membership.tenant_id).eq('kind','barbers').eq('id',data.barberId).single();
+    const {data:account}=await context.supabase.auth.getUser();
+    if(!account.user?.email) throw new Error('Sua conta precisa ter um e-mail para criar a assinatura.');
+    return {prepared:true,amountCents:claim.amount_cents,barberName:String(barber?.data?.name||'Barbeiro'),payerEmail:account.user.email,trialEndsAt:tenant?.trial_ends_at||null,publicKey:mercadoPublicKey()};
+  }
+  if(data.action==='subscribe') {
+    if(!data.cardToken) throw new Error('Não foi possível tokenizar o cartão. Revise os dados e tente novamente.');
+    const {data:claimed,error:claimError}=await context.supabase.rpc('claim_barber_checkout',{bid:data.barberId});
+    if(claimError||!claimed) throw new Error(claimError?.message||'Não foi possível validar a mensalidade.');
+    const claim=claimed as any;
+    if(claim.provider_id) return {legacy:true,legacyUrl:claim.checkout_url||null};
+    const found=await mercado(`/preapproval/search?external_reference=${encodeURIComponent(claim.id)}`);
+    const matches=(found.results||[]).filter((item:any)=>String(item.external_reference)===claim.id);
+    if(matches.length>1) throw new Error('Há mais de uma assinatura pendente para este barbeiro. A plataforma precisa conciliá-las antes de continuar.');
+    let remote=matches[0];
+    if(!remote) {
+      const {data:tenant}=await db.from('tenants').select('name,trial_ends_at').eq('id',membership.tenant_id).single();
+      const {data:account}=await context.supabase.auth.getUser();
+      if(!account.user?.email) throw new Error('Sua conta precisa ter um e-mail para criar a assinatura.');
+      const origin=new URL(process.env['APP_URL']!).origin;
+      if(!origin.startsWith('https://')) throw new Error('Configure uma URL HTTPS para a plataforma.');
+      const trialEnd=new Date(tenant.trial_ends_at);
+      remote=await mercado('/preapproval','POST',{
+        reason:`Agenda mensal de barbeiro — ${tenant.name}`.slice(0,120),external_reference:claim.id,payer_email:account.user.email,card_token_id:data.cardToken,
+        auto_recurring:{frequency:1,frequency_type:'months',transaction_amount:claim.amount_cents/100,currency_id:'BRL',...(trialEnd.getTime()>Date.now()?{start_date:trialEnd.toISOString()}:{})},
+        back_url:`${origin}/admin/mensalidade`,status:'authorized',
+      },claim.id);
+    }
+    if(!remote?.id||String(remote.external_reference)!==claim.id||remote.auto_recurring?.currency_id!=='BRL'||Math.round(Number(remote.auto_recurring?.transaction_amount)*100)!==claim.amount_cents) throw new Error('O Mercado Pago ainda não confirmou esta assinatura. Consulte novamente antes de tentar outra cobrança.');
+    const state=['pending','authorized','paused','cancelled'].includes(remote.status)?remote.status:'review';
+    const {error:saveError}=await db.from('barber_subscriptions').update({provider_id:String(remote.id),checkout_url:null,state}).eq('id',claim.id).is('provider_id',null);
+    if(saveError) throw new Error('Assinatura criada, mas aguardando conciliação. Use Consultar pagamento antes de tentar novamente.');
+    return {authorized:state==='authorized',pending:state==='pending',state};
   }
   const { data: claimed, error: claimError } = await context.supabase.rpc('claim_barber_checkout',{ bid:data.barberId });
   if(claimError || !claimed) throw new Error(claimError?.message || 'Não foi possível preparar o pagamento.');

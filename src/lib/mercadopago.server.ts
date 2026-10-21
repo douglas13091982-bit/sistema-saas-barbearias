@@ -9,7 +9,11 @@ export function verifyMercadoSignature(secret: string, signature: string, reques
 }
 
 export function billingReady() {
-  return Boolean(process.env['MERCADO_PAGO_ACCESS_TOKEN'] && process.env['MERCADO_PAGO_WEBHOOK_SECRET'] && process.env['APP_URL']);
+  return Boolean(process.env['MERCADO_PAGO_ACCESS_TOKEN'] && process.env['MERCADO_PAGO_WEBHOOK_SECRET'] && process.env['APP_URL'] && process.env['MERCADO_PAGO_PUBLIC_KEY']);
+}
+
+export function mercadoPublicKey() {
+  return process.env['MERCADO_PAGO_PUBLIC_KEY'] || '';
 }
 
 export async function mercado(path: string, method = 'GET', body?: unknown, idempotencyKey?: string): Promise<any> {

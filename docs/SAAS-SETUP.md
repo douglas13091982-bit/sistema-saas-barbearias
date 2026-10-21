@@ -16,9 +16,12 @@ Configure apenas no ambiente de servidor do Lovable (nunca no código, navegador
 
 - `MERCADO_PAGO_ACCESS_TOKEN`: credencial da aplicação recebedora.
 - `MERCADO_PAGO_WEBHOOK_SECRET`: assinatura secreta das notificações dessa aplicação.
+- `MERCADO_PAGO_PUBLIC_KEY`: chave pública da mesma aplicação Mercado Pago. Ela é entregue ao navegador somente para inicializar os campos seguros do CardForm; nunca coloque o access token no frontend.
 - `APP_URL`: URL HTTPS publicada da plataforma; neste projeto `https://menubarber.lovable.app`.
 
-Na aplicação Mercado Pago configure a URL HTTPS `${APP_URL}/api/mercadopago/webhook` para os eventos `subscription_preapproval`, `subscription_authorized_payment` e `payment`. Use credenciais e usuários de teste antes da ativação em produção. O checkout hospedado coleta os dados financeiros; a plataforma não armazena dados de cartão.
+Na aplicação Mercado Pago configure a URL HTTPS `${APP_URL}/api/mercadopago/webhook` para os eventos `subscription_preapproval`, `subscription_authorized_payment` e `payment`. A prontidão do checkout exige as quatro variáveis acima. O CardForm oficial do Mercado Pago coleta e tokeniza os dados dentro dos campos seguros; o servidor recebe apenas o token de uso único e não armazena número, validade ou CVV.
+
+Valide primeiro com a chave pública e o access token de teste da mesma aplicação e os cartões/usuários de teste publicados pelo Mercado Pago. Não use dados reais durante o teste. Confirme que a assinatura aparece no Mercado Pago, que a agenda não libera só pela autorização, e que a confirmação do pagamento pelo webhook libera somente o barbeiro correspondente. Depois da validação, substitua as duas credenciais por produção e confirme novamente o webhook.
 
 Teste completo necessário antes de abrir vendas: criar barbearia, configurar preço, cadastrar dois barbeiros, autorizar assinatura de um, aguardar pagamento aprovado, conferir somente sua liberação após o teste; conferir renovação, falha, cancelamento e estorno. Não foram realizados pagamentos reais ou de sandbox neste ambiente: credenciais não disponibilizadas.
 
