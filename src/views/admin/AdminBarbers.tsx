@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { PhotoUpload } from '@/components/PhotoUpload';
 import { useState } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
@@ -8,12 +9,15 @@ import { Barber } from '../../types';
 export default function AdminBarbers() {
   const { barbers, services, addBarber, updateBarber, deleteBarber } = useData();
   const [showModal, setShowModal] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [editing, setEditing] = useState<Barber | null>(null);
   const [form, setForm] = useState({ name: '', photo: '', specialty: '', bio: '', active: true, order: 1, serviceIds: [] as string[], workingHours: [] as any[], daysOff: [] as string[] });
 
   const openNew = () => {
-    setEditing(null);
-    setForm({ name: '', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face', specialty: '', bio: '', active: true, order: barbers.length + 1, serviceIds: [], workingHours: [
+    setEditing(null); setSaveError(''); setPhotoBusy(false);
+    setForm({ name: '', photo: '', specialty: '', bio: '', active: true, order: barbers.length + 1, serviceIds: [], workingHours: [
       { dayOfWeek: 1, start: '09:00', end: '18:00', active: true },
       { dayOfWeek: 2, start: '09:00', end: '18:00', active: true },
       { dayOfWeek: 3, start: '09:00', end: '18:00', active: true },
@@ -25,17 +29,20 @@ export default function AdminBarbers() {
   };
 
   const openEdit = (b: Barber) => {
-    setEditing(b);
+    setEditing(b); setSaveError(''); setPhotoBusy(false);
     setForm({ name: b.name, photo: b.photo, specialty: b.specialty, bio: b.bio, active: b.active, order: b.order, serviceIds: b.serviceIds, workingHours: b.workingHours, daysOff: b.daysOff });
     setShowModal(true);
   };
 
   const handleSave = async () => {
+    if (photoBusy || saving) return;
+    if (!form.name.trim()) { setSaveError('Informe o nome do barbeiro.'); return; }
+    setSaving(true); setSaveError('');
     try {
-    if (!form.name) return;
-    if (editing) { updateBarber(editing.id, form); } else { addBarber(form); }
-    setShowModal(false);
-    } catch {}
+      if (editing) await updateBarber(editing.id, form); else await addBarber(form);
+      setShowModal(false);
+    } catch { setSaveError('Não foi possível salvar o barbeiro. Tente novamente.'); }
+    finally { setSaving(false); }
   };
 
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -96,17 +103,14 @@ export default function AdminBarbers() {
           <div className="bg-[#1f2937] rounded-2xl border border-white/10 p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-white">{editing ? 'Editar Barbeiro' : 'Novo Barbeiro'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/10"><X className="w-5 h-5 text-white/50" /></button>
+              <button disabled={saving || photoBusy} onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/10"><X className="w-5 h-5 text-white/50" /></button>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-white/70 mb-1">Nome *</label>
                 <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
               </div>
-              <div>
-                <label className="block text-sm text-white/70 mb-1">URL da Foto</label>
-                <input value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
-              </div>
+              <PhotoUpload id="barber-photo" label="Foto do barbeiro" value={form.photo} onChange={photo => setForm(prev => ({ ...prev, photo }))} onBusyChange={setPhotoBusy} disabled={saving} />
               <div>
                 <label className="block text-sm text-white/70 mb-1">Especialidade</label>
                 <input value={form.specialty} onChange={e => setForm({ ...form, specialty: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
@@ -145,9 +149,10 @@ export default function AdminBarbers() {
               <label className="flex items-center gap-2 text-sm text-white/70">
                 <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} className="rounded" /> Ativo
               </label>
+              {saveError && <p role="alert" className="text-sm text-red-300">{saveError}</p>}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/70 text-sm hover:bg-white/5 transition">Cancelar</button>
-                <button onClick={handleSave} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>Salvar</button>
+                <button disabled={saving || photoBusy} onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/70 text-sm hover:bg-white/5 transition">Cancelar</button>
+                <button onClick={handleSave} disabled={photoBusy || saving} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>{saving ? 'Salvando...' : 'Salvar'}</button>
               </div>
             </div>
           </div>
