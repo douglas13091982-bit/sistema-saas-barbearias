@@ -14,6 +14,7 @@ export default function Landing(){
   load();window.addEventListener('focus',load);
   return ()=>{active=false;window.removeEventListener('focus',load);};
  },[]);
+ const formattedPrice=price===null?null:(price/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  return <main className="saas-page saas-landing">
  <div className="sl-cover" aria-hidden="true"><img src="/images/barbearia-capa.webp" alt="" fetchPriority="high" decoding="async" width="1672" height="941" /></div>
  <div className="sl-content">
@@ -29,7 +30,7 @@ export default function Landing(){
  <div className="sl-section-heading"><p className="saas-kicker">MENOS COMPLICAÇÃO. MAIS CONTROLE.</p><h2>Uma experiência completa,<br/>do primeiro clique ao próximo corte.</h2></div>
  <div className="saas-grid">
  <article className="saas-card"><Globe className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">01</span><h3>Sua marca, seu espaço</h3><p>Um endereço exclusivo com logo, cores, fotos e serviços da sua barbearia. Seus dados ficam separados das outras lojas.</p></article>
- <article className="saas-card"><Users className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">02</span><h3>Cresça no seu ritmo</h3><p>{price===null?'Mensalidade por barbeiro cadastrado, com valor definido pela plataforma.':(price/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' por barbeiro cadastrado por mês.'}</p><p>Após o teste, cada agenda é liberada com pagamento confirmado.</p></article>
+ <article className="saas-card"><Users className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">02</span><h3>Cresça no seu ritmo</h3>{formattedPrice?<div className="sl-price"><strong>{formattedPrice}</strong><span>por barbeiro cadastrado<br/>por mês</span></div>:<p>Mensalidade por barbeiro cadastrado, com valor definido pela plataforma.</p>}<p>Após o teste, cada agenda é liberada com pagamento confirmado.</p></article>
  <article className="saas-card"><CalendarDays className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">03</span><h3>Seu negócio nas mãos</h3><p>Agenda, clientes, equipe, serviços e relatórios em um único painel. Mensalidades pelo Mercado Pago.</p></article>
  </div></section>
  <footer className="sl-footer"><span>{name}</span><p>Mais tempo para fazer o que você faz de melhor.</p><Link to="/cadastro">Criar minha barbearia <ArrowUpRight size={15} aria-hidden="true"/></Link></footer>
