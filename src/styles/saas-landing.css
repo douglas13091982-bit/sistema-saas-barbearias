@@ -30,6 +30,9 @@
 .sl-number{position:absolute;right:27px;top:30px;color:#bda16e66;font:18px Georgia,serif}
 .sl-benefits h3{font:23px 'Playfair Display',Georgia,serif;margin:0 0 16px;color:#f0e7d6}
 .sl-benefits .saas-card p{font-size:12px;line-height:1.9;margin:0 0 8px;color:#aaa69b}
+.sl-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin:0 0 14px;padding:12px 14px;border:1px solid #c9a96e45;border-radius:6px;background:linear-gradient(110deg,#c9a96e18,#c9a96e08)}
+.sl-price strong{color:#e1c486;font:600 27px/1.1 Inter,sans-serif;letter-spacing:-.035em;text-shadow:0 0 22px #c9a96e22}
+.sl-price span{color:#d1c4a6;font-size:11px;line-height:1.55}
 .sl-footer{border-top:1px solid #ffffff12;padding:29px 0 35px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .sl-footer>span{font:20px Georgia,serif}.sl-footer p{font-size:11px;margin:0}.sl-footer a{display:flex;align-items:center;gap:8px;font-size:12px;min-height:44px}
 @media(min-width:1500px){.sl-cover{height:940px}.sl-hero{padding-top:125px;padding-bottom:140px}}
