@@ -13,13 +13,11 @@ export default function AdminHomeContent() {
   const handleSave = async () => {
     if (imageBusy) return;
     try {
-    await updateSiteSettings(form);
+    await updateSiteSettings({ ...form, businessHours: siteSettings.businessHours });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     } catch {}
   };
-
-  const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   return (
     <div className="space-y-6">
@@ -105,29 +103,6 @@ export default function AdminHomeContent() {
           <div>
             <label className="block text-sm text-white/70 mb-1">TikTok</label>
             <input value={form.socialMedia.tiktok} onChange={e => setForm({ ...form, socialMedia: { ...form.socialMedia, tiktok: e.target.value } })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
-          </div>
-        </div>
-
-        {/* Business Hours */}
-        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4">
-          <h3 className="font-semibold text-white">Horário de Funcionamento</h3>
-          <div className="space-y-2">
-            {form.businessHours.map((bh, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-sm">
-                <span className="w-20 text-white/70">{dayNames[bh.dayOfWeek]}</span>
-                <label className="flex items-center gap-1 text-xs text-white/50">
-                  <input type="checkbox" checked={bh.active} onChange={e => { const bhs = [...form.businessHours]; bhs[idx] = { ...bhs[idx], active: e.target.checked }; setForm({ ...form, businessHours: bhs }); }} />
-                  Aberto
-                </label>
-                {bh.active && (
-                  <>
-                    <input type="time" value={bh.start} onChange={e => { const bhs = [...form.businessHours]; bhs[idx] = { ...bhs[idx], start: e.target.value }; setForm({ ...form, businessHours: bhs }); }} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-xs" />
-                    <span className="text-white/30">-</span>
-                    <input type="time" value={bh.end} onChange={e => { const bhs = [...form.businessHours]; bhs[idx] = { ...bhs[idx], end: e.target.value }; setForm({ ...form, businessHours: bhs }); }} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-xs" />
-                  </>
-                )}
-              </div>
-            ))}
           </div>
         </div>
 
