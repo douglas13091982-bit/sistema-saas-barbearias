@@ -17,7 +17,7 @@
 .sl-actions{margin-top:33px;gap:26px}
 .sl-actions .saas-button{gap:20px;min-height:53px;font-weight:600;border-radius:5px;background:#d0b17a;padding:15px 24px;box-shadow:0 6px 24px #0004}
 .sl-actions .saas-button:hover{background:#e3c794}
-.saas-landing .sl-model{display:flex;align-items:center;gap:14px;color:#f2e7d5;font-size:13px;padding:12px 0;min-height:44px}
+.saas-landing .sl-model{display:inline-flex;align-items:center;justify-content:center;gap:14px;color:#f2e7d5;font-size:13px;padding:12px 18px;min-height:53px;border:1px solid #d0b17a99;border-radius:5px;background:#17130dcc;transition:background .2s,border-color .2s,transform .2s}.saas-landing .sl-model:hover{background:#d0b17a1f;border-color:#d0b17a;transform:translateY(-1px)}
 .sl-assurances{display:flex;flex-wrap:wrap;gap:12px 24px;margin-top:24px;color:#bdb7a9;font-size:11px}
 .sl-assurances span{display:flex;align-items:center;gap:7px}.sl-assurances svg{color:#d0b17a}
 .sl-benefits{padding:30px 0 65px}
