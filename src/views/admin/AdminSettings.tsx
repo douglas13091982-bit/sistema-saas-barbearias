@@ -6,10 +6,23 @@ import { useData } from '../../contexts/DataContext';
 import { Save, Plus, Trash2, X, Settings as SettingsIcon } from 'lucide-react';
 import { Holiday } from '../../types';
 
+const defaultBusinessHours = Array.from({ length: 7 }, (_, dayOfWeek) => ({
+  dayOfWeek,
+  start: dayOfWeek === 6 ? '08:00' : '09:00',
+  end: dayOfWeek === 5 ? '21:00' : dayOfWeek === 6 ? '18:00' : '20:00',
+  active: dayOfWeek !== 0,
+}));
+
+const normalizeBusinessHours = (hours = []) => defaultBusinessHours.map(defaultDay => ({
+  ...defaultDay,
+  ...(hours.find(day => day.dayOfWeek === defaultDay.dayOfWeek) || {}),
+}));
+
 export default function AdminSettings() {
   const { siteSettings, updateSiteSettings, holidays, addHoliday, deleteHoliday } = useData();
-  const [form, setForm] = useState(siteSettings);
+  const [form, setForm] = useState(() => ({ ...siteSettings, businessHours: normalizeBusinessHours(siteSettings.businessHours) }));
   const [saved, setSaved] = useState(false);
+  const [formError, setFormError] = useState('');
   const [logoError, setLogoError] = useState('');
   const [readingLogo, setReadingLogo] = useState(false);
 
@@ -37,6 +50,12 @@ export default function AdminSettings() {
   const [holidayForm, setHolidayForm] = useState({ name: '', date: '', active: true });
 
   const handleSave = async () => {
+    if (form.businessHours.some(day => day.active && (!day.start || !day.end || day.start >= day.end))) {
+      setFormError('Confira os horários: a abertura precisa ser anterior ao fechamento em todos os dias abertos.');
+      setSaved(false);
+      return;
+    }
+    setFormError('');
     try {
       await updateSiteSettings(form);
       setLogoError('');
@@ -66,8 +85,32 @@ export default function AdminSettings() {
           <Save className="w-4 h-4" /> {saved ? 'Salvo!' : 'Salvar'}
         </button>
       </div>
+      {formError && <p role="alert" className="text-sm text-red-300">{formError}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
+          <div>
+            <h3 className="font-semibold text-white">Horário de funcionamento da barbearia</h3>
+            <p className="text-xs text-white/50 mt-1">Defina quando a barbearia está aberta. A agenda pública respeitará estes horários e a disponibilidade de cada barbeiro.</p>
+          </div>
+          <div className="space-y-2">
+            {form.businessHours.map((day, idx) => (
+              <div key={day.dayOfWeek} className="grid grid-cols-[minmax(80px,1fr)_auto] items-center gap-3 rounded-lg bg-white/[0.03] px-3 py-2 text-sm sm:grid-cols-[minmax(130px,1fr)_auto_minmax(96px,120px)_auto_minmax(96px,120px)]">
+                <span className="text-white/80">{['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][day.dayOfWeek]}</span>
+                <label className="flex items-center gap-2 text-xs text-white/60">
+                  <input type="checkbox" checked={day.active} onChange={e => { const businessHours = [...form.businessHours]; businessHours[idx] = { ...day, active: e.target.checked }; setForm({ ...form, businessHours }); setSaved(false); setFormError(''); }} />
+                  Aberta
+                </label>
+                {day.active ? <div className="col-span-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:contents">
+                  <input aria-label={`Abertura ${['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][day.dayOfWeek]}`} type="time" value={day.start} onChange={e => { const businessHours = [...form.businessHours]; businessHours[idx] = { ...day, start: e.target.value }; setForm({ ...form, businessHours }); setSaved(false); setFormError(''); }} className="w-full px-2 py-2 rounded bg-white/5 border border-white/10 text-white text-xs" />
+                  <span className="text-center text-white/30">até</span>
+                  <input aria-label={`Fechamento ${['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][day.dayOfWeek]}`} type="time" value={day.end} onChange={e => { const businessHours = [...form.businessHours]; businessHours[idx] = { ...day, end: e.target.value }; setForm({ ...form, businessHours }); setSaved(false); setFormError(''); }} className="w-full px-2 py-2 rounded bg-white/5 border border-white/10 text-white text-xs" />
+                </div> : <span className="col-span-2 text-xs text-white/35 sm:col-span-3">Fechada</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
           <h3 className="font-semibold text-white">Logo da Barbearia</h3>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
