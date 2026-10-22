@@ -74,6 +74,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     finally { if (generation.current === request) setLoading(false); }
   }, [staff,slug,isPanel]);
   useEffect(() => { void refresh(); const focus = () => void refresh(); window.addEventListener('focus',focus); return () => window.removeEventListener('focus',focus); }, [refresh]);
+  useEffect(() => {
+    if (!isPanel || !tenant?.id || !currentUser) return;
+    const channel = supabase.channel(`barbershop-appointments-${tenant.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'barbershop_records',
+        filter: `tenant_id=eq.${tenant.id}`,
+      }, payload => {
+        if (payload.new?.kind === 'appointments') void refresh();
+      })
+      .subscribe();
+    const fallbackPoll = window.setInterval(() => void refresh(), 30_000);
+    return () => {
+      window.clearInterval(fallbackPoll);
+      void supabase.removeChannel(channel);
+    };
+  }, [isPanel, tenant?.id, currentUser?.id, refresh]);
   const list = kind => records.filter(r => r.kind === kind).map(r => r.data);
   const settings = kind => records.find(r => r.kind === kind)?.data;
   const mutate = async operation => {
