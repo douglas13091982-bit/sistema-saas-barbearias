@@ -40,6 +40,9 @@ export default function Booking() {
     const date = new Date(selectedDate + 'T12:00:00');
     const dayOfWeek = date.getDay();
 
+    const shopHours = siteSettings.businessHours?.find(day => day.dayOfWeek === dayOfWeek);
+    if (Array.isArray(siteSettings.businessHours) && !shopHours?.active) return [];
+
     // Check holiday
     const isHoliday = holidays.some(h => h.active && h.date === selectedDate);
     if (isHoliday) return [];
@@ -54,12 +57,16 @@ export default function Booking() {
     const service = services.find(s => s.id === selectedService);
     if (!service) return [];
 
-    const startMinutes = parseInt(wh.start.split(':')[0]) * 60 + parseInt(wh.start.split(':')[1]);
-    const endMinutes = parseInt(wh.end.split(':')[0]) * 60 + parseInt(wh.end.split(':')[1]);
-    const interval = siteSettings.intervalMinutes;
+    const barberStartMinutes = parseInt(wh.start.split(':')[0]) * 60 + parseInt(wh.start.split(':')[1]);
+    const barberEndMinutes = parseInt(wh.end.split(':')[0]) * 60 + parseInt(wh.end.split(':')[1]);
+    const shopStartMinutes = shopHours?.active ? parseInt(shopHours.start.split(':')[0]) * 60 + parseInt(shopHours.start.split(':')[1]) : barberStartMinutes;
+    const shopEndMinutes = shopHours?.active ? parseInt(shopHours.end.split(':')[0]) * 60 + parseInt(shopHours.end.split(':')[1]) : barberEndMinutes;
+    const startMinutes = Math.max(barberStartMinutes, shopStartMinutes);
+    const interval = Math.max(Number(siteSettings.intervalMinutes) || 15, 1);
 
     const times: string[] = [];
-    for (let m = startMinutes; m + service.duration <= endMinutes; m += interval) {
+    for (let m = barberStartMinutes; m + service.duration <= Math.min(barberEndMinutes, shopEndMinutes); m += interval) {
+      if (m < startMinutes) continue;
       const hours = Math.floor(m / 60).toString().padStart(2, '0');
       const mins = (m % 60).toString().padStart(2, '0');
       const timeStr = `${hours}:${mins}`;
@@ -103,12 +110,14 @@ export default function Booking() {
       d.setDate(d.getDate() + i);
       const dateStr = d.toISOString().split('T')[0];
       const isHoliday = holidays.some(h => h.active && h.date === dateStr);
-      if (!isHoliday) {
+      const shopHours = siteSettings.businessHours?.find(day => day.dayOfWeek === d.getDay());
+      const shopIsOpen = !Array.isArray(siteSettings.businessHours) || !!shopHours?.active;
+      if (!isHoliday && shopIsOpen) {
         dates.push(dateStr);
       }
     }
     return dates;
-  }, [holidays]);
+  }, [holidays, siteSettings.businessHours]);
 
   const handleSubmit = async () => {
     if(submitting) return;
