@@ -17,26 +17,23 @@ export default function AdminBarbers() {
 
   const openNew = () => {
     setEditing(null); setSaveError(''); setPhotoBusy(false);
-    setForm({ name: '', photo: '', specialty: '', bio: '', active: true, order: barbers.length + 1, serviceIds: [], workingHours: [
-      { dayOfWeek: 1, start: '09:00', end: '18:00', active: true },
-      { dayOfWeek: 2, start: '09:00', end: '18:00', active: true },
-      { dayOfWeek: 3, start: '09:00', end: '18:00', active: true },
-      { dayOfWeek: 4, start: '09:00', end: '18:00', active: true },
-      { dayOfWeek: 5, start: '09:00', end: '18:00', active: true },
-      { dayOfWeek: 6, start: '09:00', end: '15:00', active: true },
-    ], daysOff: [] });
+    setForm({ name: '', photo: '', specialty: '', bio: '', active: true, order: barbers.length + 1, serviceIds: [], workingHours: Array.from({ length: 7 }, (_, dayOfWeek) => ({
+      dayOfWeek, start: '09:00', end: dayOfWeek === 6 ? '15:00' : '18:00', active: dayOfWeek !== 0,
+    })), daysOff: [] });
     setShowModal(true);
   };
 
   const openEdit = (b: Barber) => {
     setEditing(b); setSaveError(''); setPhotoBusy(false);
-    setForm({ name: b.name, photo: b.photo, specialty: b.specialty, bio: b.bio, active: b.active, order: b.order, serviceIds: b.serviceIds, workingHours: b.workingHours, daysOff: b.daysOff });
+    const workingHours = Array.from({ length: 7 }, (_, dayOfWeek) => b.workingHours?.find(wh => wh.dayOfWeek === dayOfWeek) || { dayOfWeek, start: '09:00', end: dayOfWeek === 6 ? '15:00' : '18:00', active: false });
+    setForm({ name: b.name, photo: b.photo, specialty: b.specialty, bio: b.bio, active: b.active, order: b.order, serviceIds: b.serviceIds, workingHours, daysOff: b.daysOff || [] });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (photoBusy || saving) return;
     if (!form.name.trim()) { setSaveError('Informe o nome do barbeiro.'); return; }
+    if (form.workingHours.some(wh => wh.active && (!wh.start || !wh.end || wh.start >= wh.end))) { setSaveError('Confira os horários: a abertura precisa ser anterior ao fechamento em cada dia de atendimento.'); return; }
     setSaving(true); setSaveError('');
     try {
       if (editing) await updateBarber(editing.id, form); else await addBarber(form);
@@ -130,17 +127,17 @@ export default function AdminBarbers() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-white/70 mb-2">Horário de Trabalho</label>
+                <label className="block text-sm text-white/70 mb-2">Dias e horários de atendimento</label>
                 <div className="space-y-2">
                   {form.workingHours.map((wh, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm">
+                    <div key={wh.dayOfWeek} className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="w-8 text-white/50">{dayNames[wh.dayOfWeek]}</span>
-                      <input type="time" value={wh.start} onChange={e => { const whs = [...form.workingHours]; whs[idx] = { ...whs[idx], start: e.target.value }; setForm({ ...form, workingHours: whs }); }} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-xs" />
+                      <input aria-label={`Abertura ${dayNames[wh.dayOfWeek]}`} disabled={!wh.active} type="time" value={wh.start} onChange={e => { const whs = [...form.workingHours]; whs[idx] = { ...whs[idx], start: e.target.value }; setForm({ ...form, workingHours: whs }); }} className="min-w-0 flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-xs disabled:opacity-40" />
                       <span className="text-white/30">-</span>
-                      <input type="time" value={wh.end} onChange={e => { const whs = [...form.workingHours]; whs[idx] = { ...whs[idx], end: e.target.value }; setForm({ ...form, workingHours: whs }); }} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-xs" />
-                      <label className="flex items-center gap-1 text-xs text-white/50">
+                      <input aria-label={`Fechamento ${dayNames[wh.dayOfWeek]}`} disabled={!wh.active} type="time" value={wh.end} onChange={e => { const whs = [...form.workingHours]; whs[idx] = { ...whs[idx], end: e.target.value }; setForm({ ...form, workingHours: whs }); }} className="min-w-0 flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-white text-xs disabled:opacity-40" />
+                      <label className="flex items-center gap-1 text-xs text-white/50 whitespace-nowrap">
                         <input type="checkbox" checked={wh.active} onChange={e => { const whs = [...form.workingHours]; whs[idx] = { ...whs[idx], active: e.target.checked }; setForm({ ...form, workingHours: whs }); }} />
-                        Ativo
+                        Atende
                       </label>
                     </div>
                   ))}
