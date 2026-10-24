@@ -13,20 +13,20 @@ export default function AdminBarbers() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [editing, setEditing] = useState<Barber | null>(null);
-  const [form, setForm] = useState({ name: '', photo: '', specialty: '', bio: '', active: true, order: 1, serviceIds: [] as string[], workingHours: [] as any[], daysOff: [] as string[] });
+  const [form, setForm] = useState({ name: '', photo: '', specialty: '', bio: '', active: true, order: 1, serviceIds: [] as string[], workingHours: [] as any[], daysOff: [] as string[], commissionType: 'percentage', commissionValue: '' as number | string });
 
   const openNew = () => {
     setEditing(null); setSaveError(''); setPhotoBusy(false);
     setForm({ name: '', photo: '', specialty: '', bio: '', active: true, order: barbers.length + 1, serviceIds: [], workingHours: Array.from({ length: 7 }, (_, dayOfWeek) => ({
       dayOfWeek, start: '09:00', end: dayOfWeek === 6 ? '15:00' : '18:00', active: dayOfWeek !== 0,
-    })), daysOff: [] });
+    })), daysOff: [], commissionType: 'percentage', commissionValue: '' });
     setShowModal(true);
   };
 
   const openEdit = (b: Barber) => {
     setEditing(b); setSaveError(''); setPhotoBusy(false);
     const workingHours = Array.from({ length: 7 }, (_, dayOfWeek) => b.workingHours?.find(wh => wh.dayOfWeek === dayOfWeek) || { dayOfWeek, start: '09:00', end: dayOfWeek === 6 ? '15:00' : '18:00', active: false });
-    setForm({ name: b.name, photo: b.photo, specialty: b.specialty, bio: b.bio, active: b.active, order: b.order, serviceIds: b.serviceIds, workingHours, daysOff: b.daysOff || [] });
+    setForm({ name: b.name, photo: b.photo, specialty: b.specialty, bio: b.bio, active: b.active, order: b.order, serviceIds: b.serviceIds, workingHours, daysOff: b.daysOff || [], commissionType: b.commissionType || 'percentage', commissionValue: b.commissionValue ?? '' });
     setShowModal(true);
   };
 
@@ -34,9 +34,15 @@ export default function AdminBarbers() {
     if (photoBusy || saving) return;
     if (!form.name.trim()) { setSaveError('Informe o nome do barbeiro.'); return; }
     if (form.workingHours.some(wh => wh.active && (!wh.start || !wh.end || wh.start >= wh.end))) { setSaveError('Confira os horários: a abertura precisa ser anterior ao fechamento em cada dia de atendimento.'); return; }
+    const commissionValue = form.commissionValue === '' || form.commissionValue === null ? null : Number(form.commissionValue);
+    if (commissionValue !== null && (!Number.isFinite(commissionValue) || commissionValue < 0 || (form.commissionType === 'percentage' && commissionValue > 100))) {
+      setSaveError(form.commissionType === 'percentage' ? 'Informe um percentual entre 0 e 100.' : 'Informe um valor fixo válido por corte.');
+      return;
+    }
+    const payload = { ...form, commissionValue };
     setSaving(true); setSaveError('');
     try {
-      if (editing) await updateBarber(editing.id, form); else await addBarber(form);
+      if (editing) await updateBarber(editing.id, payload); else await addBarber(payload);
       setShowModal(false);
     } catch { setSaveError('Não foi possível salvar o barbeiro. Tente novamente.'); }
     finally { setSaving(false); }
@@ -74,6 +80,9 @@ export default function AdminBarbers() {
               </div>
             </div>
             <p className="text-white/50 text-sm mb-3 line-clamp-2">{barber.bio}</p>
+            <p className="text-xs text-white/50 mb-3">
+              Repasse: {barber.commissionValue === null || barber.commissionValue === undefined || barber.commissionValue === '' ? 'não configurado' : barber.commissionType === 'fixed' ? `R$ ${Number(barber.commissionValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} por corte` : `${Number(barber.commissionValue)}% do corte`}
+            </p>
             <div className="flex items-center justify-between">
               <span className={`text-xs px-2 py-1 rounded-full ${barber.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                 {barber.active ? 'Ativo' : 'Inativo'} · {bookingAccess[barber.id] ? 'Agenda liberada' : 'Pagamento pendente'}
@@ -124,6 +133,25 @@ export default function AdminBarbers() {
                       {s.name}
                     </button>
                   ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/10 p-4 space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Repasse por corte concluído</h3>
+                  <p className="text-xs text-white/50 mt-1">Defina quanto o barbeiro recebe por corte. O cálculo do relatório usa apenas atendimentos concluídos.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Forma de repasse</label>
+                    <select value={form.commissionType} onChange={e => setForm({ ...form, commissionType: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-[#111827] border border-white/10 text-white text-sm outline-none focus:border-white/30">
+                      <option value="fixed">Valor fixo por corte</option>
+                      <option value="percentage">Porcentagem do valor do corte</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">{form.commissionType === 'fixed' ? 'Valor recebido por corte (R$)' : 'Percentual recebido por corte (%)'}</label>
+                    <input type="number" min="0" max={form.commissionType === 'percentage' ? '100' : undefined} step={form.commissionType === 'fixed' ? '0.01' : '1'} value={form.commissionValue} onChange={e => setForm({ ...form, commissionValue: e.target.value })} placeholder={form.commissionType === 'fixed' ? 'Ex.: 15,00' : 'Ex.: 50'} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
+                  </div>
                 </div>
               </div>
               <div>
