@@ -4,7 +4,46 @@ import { SiteImage } from '@/components/SiteImage';
 import { Link } from '@/lib/router-compat';
 import '@/styles/saas.css';
 import '@/styles/saas-landing.css';
-import { Scissors, ArrowUpRight, Check, Globe, CalendarDays, Users } from 'lucide-react';
+import { Scissors, ArrowUpRight, Check, Globe, CalendarDays, Users, BarChart3, Percent, CircleDollarSign } from 'lucide-react';
+
+const features = [
+  {
+    icon: CalendarDays,
+    number: '01',
+    title: 'Agendamento online',
+    description: 'Seus clientes escolhem o serviço, o barbeiro e o horário disponível pelo site da barbearia.',
+  },
+  {
+    icon: Globe,
+    number: '02',
+    title: 'Site com a sua identidade',
+    description: 'Apresente serviços, equipe, fotos e informações da barbearia em uma página exclusiva.',
+  },
+  {
+    icon: Users,
+    number: '03',
+    title: 'Equipe e clientes organizados',
+    description: 'Gerencie barbeiros, horários, serviços e o cadastro de clientes em um só lugar.',
+  },
+  {
+    icon: BarChart3,
+    number: '04',
+    title: 'Faturamento por barbeiro',
+    description: 'Veja quantos cortes e atendimentos cada profissional concluiu e o faturamento que gerou.',
+  },
+  {
+    icon: Percent,
+    number: '05',
+    title: 'Repasse definido por você',
+    description: 'Configure um valor fixo por corte ou uma porcentagem para cada barbeiro e acompanhe o repasse do período.',
+  },
+  {
+    icon: CircleDollarSign,
+    number: '06',
+    title: 'Visão do faturamento da barbearia',
+    description: 'Acompanhe o faturamento dos serviços concluídos e veja a parte da barbearia após o repasse dos cortes.',
+  },
+];
 
 export default function Landing(){
  const [price,setPrice]=useState<number|null>(null),[name,setName]=useState('BarberShop Pro'),[logo,setLogo]=useState('');
@@ -20,19 +59,44 @@ export default function Landing(){
  <div className="sl-content">
  <header className="saas-nav sl-nav"><a href="/" className="sl-brand">{logo?<SiteImage src={logo} alt={`Logo ${name}`} className="sl-logo"/>:<Scissors aria-hidden="true"/>}<strong>{name}</strong></a><Link className="sl-login" to="/admin/login">Entrar no painel <ArrowUpRight size={16} aria-hidden="true"/></Link></header>
  <section className="saas-hero sl-hero">
- <p className="saas-kicker"><span/> GESTÃO PARA BARBEARIAS QUE QUEREM CRESCER</p>
- <h1>Seu talento na cadeira.<br/><em>Sua gestão em outro nível.</em></h1>
- <p className="sl-intro">Transforme sua barbearia com um site exclusivo, agendamento online e tudo o que você precisa para cuidar do seu negócio.</p>
+ <p className="saas-kicker"><span/> GESTÃO COMPLETA PARA BARBEARIAS</p>
+ <h1>Mais que agendamento.<br/><em>Gestão para crescer.</em></h1>
+ <p className="sl-intro">Organize a agenda e a equipe, acompanhe o faturamento de cada barbeiro e saiba quanto repassar por corte. Seu site e a gestão da barbearia em um só sistema.</p>
  <div className="saas-actions sl-actions"><Link className="saas-button" to="/cadastro">Começar meus 7 dias grátis <ArrowUpRight size={18} aria-hidden="true"/></Link><Link className="sl-model" to="/barbershop-pro">Conhecer o modelo <span aria-hidden="true">→</span></Link></div>
- <div className="sl-assurances"><span><Check size={15} aria-hidden="true"/> 7 dias para experimentar</span><span><Check size={15} aria-hidden="true"/> Seu site com sua identidade</span></div>
+ <div className="sl-assurances"><span><Check size={15} aria-hidden="true"/> 7 dias para experimentar</span><span><Check size={15} aria-hidden="true"/> Seu site com sua identidade</span><span><Check size={15} aria-hidden="true"/> Gestão e relatórios em um só painel</span></div>
  </section>
+
  <section className="sl-benefits" aria-label="Recursos da plataforma">
- <div className="sl-section-heading"><p className="saas-kicker">MENOS COMPLICAÇÃO. MAIS CONTROLE.</p><h2>Uma experiência completa,<br/>do primeiro clique ao próximo corte.</h2></div>
- <div className="saas-grid">
- <article className="saas-card"><Globe className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">01</span><h3>Sua marca, seu espaço</h3><p>Um endereço exclusivo com logo, cores, fotos e serviços da sua barbearia. Seus dados ficam separados das outras lojas.</p></article>
- <article className="saas-card"><Users className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">02</span><h3>Cresça no seu ritmo</h3>{formattedPrice?<div className="sl-price"><strong>{formattedPrice}</strong><span>por barbeiro cadastrado<br/>por mês</span></div>:<p>Mensalidade por barbeiro cadastrado, com valor definido pela plataforma.</p>}<p>Após o teste, cada agenda é liberada com pagamento confirmado.</p></article>
- <article className="saas-card"><CalendarDays className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">03</span><h3>Seu negócio nas mãos</h3><p>Agenda, clientes, equipe, serviços e relatórios em um único painel. Mensalidades pelo Mercado Pago.</p></article>
- </div></section>
+ <div className="sl-section-heading"><p className="saas-kicker">DA AGENDA AO FATURAMENTO</p><div><h2>O que a sua barbearia precisa,<br/>em um só lugar.</h2><p className="sl-section-intro">Tenha mais clareza sobre a rotina, a equipe e os resultados do negócio.</p></div></div>
+ <div className="saas-grid sl-feature-grid">
+ {features.map(({icon:Icon,number,title,description})=><article className="saas-card sl-feature-card" key={number}><Icon className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}
+ </div>
+ </section>
+
+ <section className="sl-showcase" aria-label="Barbearia e gestão do negócio">
+ <div className="sl-showcase-copy">
+  <p className="saas-kicker">RESULTADOS VISÍVEIS PARA A EQUIPE</p>
+  <h2>Saiba o que cada cadeira está rendendo.</h2>
+  <p>O painel mostra a produção por profissional: cortes concluídos, faturamento e o repasse calculado de acordo com a regra que você definiu para cada barbeiro.</p>
+  <ul>
+   <li><Check size={17} aria-hidden="true"/> Valor fixo por corte ou comissão percentual</li>
+   <li><Check size={17} aria-hidden="true"/> Relatório por profissional e por período</li>
+   <li><Check size={17} aria-hidden="true"/> Faturamento bruto e parte da barbearia</li>
+  </ul>
+  <Link className="sl-inline-link" to="/cadastro">Quero organizar minha barbearia <ArrowUpRight size={16} aria-hidden="true"/></Link>
+ </div>
+ <div className="sl-photo-composition">
+  <figure className="sl-photo-main"><img src="/images/corte.webp" alt="Detalhe de um corte de cabelo feito na barbearia" loading="lazy" decoding="async"/><figcaption>Atendimento de qualidade, rotina organizada.</figcaption></figure>
+  <figure className="sl-photo-secondary"><img src="/images/ambiente.webp" alt="Ambiente de uma barbearia" loading="lazy" decoding="async"/></figure>
+  <div className="sl-photo-badge"><BarChart3 size={20} aria-hidden="true"/><span>Equipe, cortes<br/>e faturamento</span></div>
+ </div>
+ </section>
+
+ <section className="sl-plan-callout">
+  <div><p className="saas-kicker">COMECE COM 7 DIAS GRÁTIS</p><h2>Conheça o sistema completo<br/>antes de contratar.</h2><p>Cadastre sua barbearia, personalize o site e explore o painel. O plano é calculado por barbeiro cadastrado.</p></div>
+  <div className="sl-plan-action">{formattedPrice?<div className="sl-price"><strong>{formattedPrice}</strong><span>por barbeiro<br/>por mês</span></div>:<p className="sl-plan-price-note">Mensalidade por barbeiro cadastrado.</p>}<Link className="saas-button" to="/cadastro">Criar minha barbearia <ArrowUpRight size={18} aria-hidden="true"/></Link></div>
+ </section>
+
  <footer className="sl-footer"><span>{name}</span><p>Mais tempo para fazer o que você faz de melhor.</p><Link to="/cadastro">Criar minha barbearia <ArrowUpRight size={15} aria-hidden="true"/></Link></footer>
  </div></main>;
 }
