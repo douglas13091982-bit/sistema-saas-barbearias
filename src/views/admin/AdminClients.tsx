@@ -1,12 +1,18 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
-import { Search, UserCircle, Ban, CheckCircle } from 'lucide-react';
+import { Search, UserCircle, Ban, CheckCircle, Gift } from 'lucide-react';
+import { countCompletedHaircuts } from '@/lib/loyalty';
 
 export default function AdminClients() {
-  const { clients, appointments, services, updateClient, siteSettings } = useData();
+  const { clients, appointments, services, updateClient, siteSettings, currentUser } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [loyaltyError, setLoyaltyError] = useState('');
+  const loyaltyProgram = siteSettings.loyaltyProgram || { enabled: false, cutsRequired: 5, rewardServiceId: '', rewardName: '' };
+  const loyaltyRewardName = loyaltyProgram.rewardName || services.find(service => service.id === loyaltyProgram.rewardServiceId)?.name || '';
+  const loyaltyEnabled = Boolean(loyaltyProgram.enabled && Number(loyaltyProgram.cutsRequired) > 0 && loyaltyRewardName);
 
   const filtered = clients.filter(c => {
     if (!searchTerm) return true;
@@ -16,6 +22,33 @@ export default function AdminClients() {
 
   const selected = clients.find(c => c.id === selectedClient);
   const clientAppointments = selected ? appointments.filter(a => a.clientId === selected.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+  const loyaltyCuts = selected && loyaltyEnabled ? countCompletedHaircuts(selected.id, appointments, services) : 0;
+  const rewardsEarned = loyaltyEnabled ? Math.floor(loyaltyCuts / Number(loyaltyProgram.cutsRequired)) : 0;
+  const rewardsRedeemed = Number(selected?.loyaltyRewardsRedeemed || 0);
+  const rewardsAvailable = Math.max(0, rewardsEarned - rewardsRedeemed);
+  const loyaltyProgress = loyaltyEnabled ? (rewardsAvailable > 0 ? 100 : ((loyaltyCuts % Number(loyaltyProgram.cutsRequired)) / Number(loyaltyProgram.cutsRequired)) * 100) : 0;
+  const registerRewardRedemption = async () => {
+    if (!selected || !loyaltyEnabled || rewardsAvailable <= 0 || redeeming) return;
+    setRedeeming(true);
+    setLoyaltyError('');
+    const record = {
+      id: crypto.randomUUID(),
+      rewardServiceId: loyaltyProgram.rewardServiceId,
+      rewardName: loyaltyRewardName,
+      redeemedAt: new Date().toISOString(),
+      redeemedBy: currentUser?.name || currentUser?.email || '',
+    };
+    try {
+      await updateClient(selected.id, {
+        loyaltyRewardsRedeemed: rewardsRedeemed + 1,
+        loyaltyRedemptions: [...(Array.isArray(selected.loyaltyRedemptions) ? selected.loyaltyRedemptions : []), record],
+      });
+    } catch {
+      setLoyaltyError('Não foi possível registrar o resgate. Tente novamente.');
+    } finally {
+      setRedeeming(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -39,6 +72,7 @@ export default function AdminClients() {
                   <th className="text-left py-3 px-4 text-white/50 font-medium">Nome</th>
                   <th className="text-left py-3 px-4 text-white/50 font-medium">Telefone</th>
                   <th className="text-left py-3 px-4 text-white/50 font-medium">Visitas</th>
+                  {loyaltyEnabled && <th className="text-left py-3 px-4 text-white/50 font-medium">Fidelidade</th>}
                   <th className="text-left py-3 px-4 text-white/50 font-medium">Total Gasto</th>
                   <th className="text-left py-3 px-4 text-white/50 font-medium">Status</th>
                 </tr>
@@ -49,6 +83,7 @@ export default function AdminClients() {
                     <td className="py-3 px-4 text-white font-medium">{client.name}</td>
                     <td className="py-3 px-4 text-white/70">{client.phone}</td>
                     <td className="py-3 px-4 text-white/70">{client.totalVisits}</td>
+                    {loyaltyEnabled && <td className="py-3 px-4 text-white/70">{countCompletedHaircuts(client.id, appointments, services)} / {loyaltyProgram.cutsRequired}</td>}
                     <td className="py-3 px-4 font-medium" style={{ color: '#c9a96e' }}>{siteSettings.currency} {client.totalSpent.toFixed(2)}</td>
                     <td className="py-3 px-4">
                       <span className={`text-xs px-2 py-1 rounded-full ${client.blocked ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
@@ -91,11 +126,38 @@ export default function AdminClients() {
                   <p className="text-lg font-bold" style={{ color: '#c9a96e' }}>R$ {selected.totalSpent}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => updateClient(selected.id, { blocked: !selected.blocked })} className={`flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 ${selected.blocked ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                  {selected.blocked ? <><CheckCircle className="w-3 h-3" /> Desbloquear</> : <><Ban className="w-3 h-3" /> Bloquear</>}
-                </button>
-              </div>
+              {loyaltyEnabled && (
+                <div className="rounded-xl border border-[#c9a96e]/20 bg-[#c9a96e]/[0.06] p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-[#e3c98f]">
+                    <Gift className="w-4 h-4" />
+                    <h4 className="text-sm font-semibold">Programa de fidelidade</h4>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="text-white/65">{loyaltyCuts} de {loyaltyProgram.cutsRequired} cortes concluídos</span>
+                    <span className="text-white font-semibold">{rewardsAvailable} recompensa{rewardsAvailable === 1 ? '' : 's'} disponível{rewardsAvailable === 1 ? '' : 'is'}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-[#c9a96e] transition-all" style={{ width: `${loyaltyProgress}%` }} />
+                  </div>
+                  <p className="text-xs text-white/55">
+                    {rewardsAvailable > 0
+                      ? `Recompensa: ${loyaltyRewardName} gratuito. Registre o resgate quando o benefício for entregue.`
+                      : `Faltam ${Number(loyaltyProgram.cutsRequired) - (loyaltyCuts % Number(loyaltyProgram.cutsRequired))} corte(s) para liberar ${loyaltyRewardName}.`}
+                  </p>
+                  {rewardsAvailable > 0 && <button type="button" disabled={redeeming} onClick={registerRewardRedemption} className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50" style={{ backgroundColor: '#c9a96e', color: '#111' }}>
+                    <Gift className="w-3.5 h-3.5" /> {redeeming ? 'Registrando...' : 'Registrar entrega da recompensa'}
+                  </button>}
+                  {loyaltyError && <p role="alert" className="text-xs text-red-300">{loyaltyError}</p>}
+                  {Array.isArray(selected.loyaltyRedemptions) && selected.loyaltyRedemptions.length > 0 && (
+                    <div className="border-t border-white/10 pt-2">
+                      <p className="mb-1 text-[11px] text-white/45">Último resgate</p>
+                      <p className="text-xs text-white/65">
+                        {selected.loyaltyRedemptions[selected.loyaltyRedemptions.length - 1].rewardName} · {new Date(selected.loyaltyRedemptions[selected.loyaltyRedemptions.length - 1].redeemedAt).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <h4 className="text-sm font-medium text-white/70 mb-2">Histórico</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
