@@ -1,4 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
+import { PhotoUpload } from '@/components/PhotoUpload';
+import { SiteImage } from '@/components/SiteImage';
 import { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { Plus, Edit, Trash2, X, Star, MessageSquare } from 'lucide-react';
@@ -8,17 +10,23 @@ export default function AdminTestimonials() {
   const { testimonials, addTestimonial, updateTestimonial, deleteTestimonial } = useData();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Testimonial | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [form, setForm] = useState({ clientName: '', text: '', rating: 5, photo: '', active: true });
 
-  const openNew = () => { setEditing(null); setForm({ clientName: '', text: '', rating: 5, photo: '', active: true }); setShowModal(true); };
-  const openEdit = (t: Testimonial) => { setEditing(t); setForm({ clientName: t.clientName, text: t.text, rating: t.rating, photo: t.photo, active: t.active }); setShowModal(true); };
+  const openNew = () => { setEditing(null); setSaveError(''); setPhotoBusy(false); setForm({ clientName: '', text: '', rating: 5, photo: '', active: true }); setShowModal(true); };
+  const openEdit = (t: Testimonial) => { setEditing(t); setSaveError(''); setPhotoBusy(false); setForm({ clientName: t.clientName, text: t.text, rating: t.rating, photo: t.photo || '', active: t.active }); setShowModal(true); };
 
   const handleSave = async () => {
+    if (photoBusy || saving) return;
+    if (!form.clientName.trim() || !form.text.trim()) { setSaveError('Preencha o nome do cliente e o depoimento.'); return; }
+    setSaving(true); setSaveError('');
     try {
-    if (!form.clientName || !form.text) return;
-    if (editing) { updateTestimonial(editing.id, form); } else { addTestimonial(form); }
-    setShowModal(false);
-    } catch {}
+      if (editing) await updateTestimonial(editing.id, form); else await addTestimonial(form);
+      setShowModal(false);
+    } catch { setSaveError('Não foi possível salvar o depoimento. Tente novamente.'); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -47,7 +55,7 @@ export default function AdminTestimonials() {
             </div>
             <p className="text-white/70 text-sm mb-3 italic">"{t.text}"</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-white">{t.clientName}</span>
+              <div className="flex items-center gap-3">{t.photo && <SiteImage src={t.photo} alt={`Foto de ${t.clientName}`} className="w-10 h-10 rounded-full object-cover border border-white/10" />}<span className="text-sm font-medium text-white">{t.clientName}</span></div>
               <span className={`text-xs px-2 py-1 rounded-full ${t.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                 {t.active ? 'Ativo' : 'Inativo'}
               </span>
@@ -80,6 +88,7 @@ export default function AdminTestimonials() {
                 <label className="block text-sm text-white/70 mb-1">Depoimento *</label>
                 <textarea value={form.text} onChange={e => setForm({ ...form, text: e.target.value })} rows={3} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30 resize-none" />
               </div>
+              <PhotoUpload id="testimonial-photo" label="Foto do cliente (opcional)" value={form.photo} onChange={photo => setForm(prev => ({ ...prev, photo }))} onBusyChange={setPhotoBusy} disabled={saving} />
               <div>
                 <label className="block text-sm text-white/70 mb-1">Avaliação</label>
                 <div className="flex items-center gap-1">
@@ -93,9 +102,10 @@ export default function AdminTestimonials() {
               <label className="flex items-center gap-2 text-sm text-white/70">
                 <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} className="rounded" /> Ativo
               </label>
+              {saveError && <p role="alert" className="text-sm text-red-300">{saveError}</p>}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/70 text-sm hover:bg-white/5 transition">Cancelar</button>
-                <button onClick={handleSave} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>Salvar</button>
+                <button disabled={saving || photoBusy} onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/70 text-sm hover:bg-white/5 transition">Cancelar</button>
+                <button onClick={handleSave} disabled={saving || photoBusy} className="flex-1 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50" style={{ backgroundColor: '#c9a96e', color: '#000' }}>{saving ? 'Salvando...' : 'Salvar'}</button>
               </div>
             </div>
           </div>
