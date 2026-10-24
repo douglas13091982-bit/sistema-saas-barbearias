@@ -4,7 +4,7 @@ import { SiteImage } from '@/components/SiteImage';
 import { Link } from '@/lib/router-compat';
 import '@/styles/saas.css';
 import '@/styles/saas-landing.css';
-import { Scissors, ArrowUpRight, Check, Globe, CalendarDays, Users, BarChart3, Percent, CircleDollarSign } from 'lucide-react';
+import { Scissors, ArrowUpRight, Check, Globe, CalendarDays, Users, BarChart3, Percent, CircleDollarSign, Gift } from 'lucide-react';
 
 const features = [
   {
@@ -16,26 +16,26 @@ const features = [
   {
     icon: Globe,
     number: '02',
-    title: 'Site com a sua identidade',
-    description: 'Apresente serviços, equipe, fotos e informações da barbearia em uma página exclusiva.',
-  },
-  {
-    icon: Users,
-    number: '03',
-    title: 'Equipe e clientes organizados',
-    description: 'Gerencie barbeiros, horários, serviços e o cadastro de clientes em um só lugar.',
+    title: 'Site, equipe e clientes em um só lugar',
+    description: 'Apresente a barbearia e organize serviços, horários, barbeiros e clientes no mesmo sistema.',
   },
   {
     icon: BarChart3,
-    number: '04',
+    number: '03',
     title: 'Faturamento por barbeiro',
     description: 'Veja quantos cortes e atendimentos cada profissional concluiu e o faturamento que gerou.',
   },
   {
     icon: Percent,
-    number: '05',
+    number: '04',
     title: 'Repasse definido por você',
     description: 'Configure um valor fixo por corte ou uma porcentagem para cada barbeiro e acompanhe o repasse do período.',
+  },
+  {
+    icon: Gift,
+    number: '05',
+    title: 'Programa de fidelidade',
+    description: 'Crie recompensas, divulgue a campanha no site da barbearia e acompanhe o progresso e os resgates dos clientes.',
   },
   {
     icon: CircleDollarSign,
