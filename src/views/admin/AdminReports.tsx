@@ -45,22 +45,36 @@ export default function AdminReports() {
     count: filteredAppointments.filter(a => a.serviceId === s.id).length,
   })).filter(s => s.count > 0).sort((a, b) => b.revenue - a.revenue);
 
-  // Desempenho por barbeiro: o faturamento considera somente serviços concluídos.
+  // Calcula o repasse sobre os cortes concluídos, de acordo com a regra definida para cada barbeiro.
   const appointmentsByBarber = barbers.map(b => {
     const barberAppointments = filteredAppointments.filter(a => a.barberId === b.id);
     const completed = barberAppointments.filter(a => a.status === 'completed');
-    const haircuts = completed.filter(a => {
+    const haircutAppointments = completed.map(a => {
       const service = services.find(s => s.id === a.serviceId);
       const label = `${service?.name || ''} ${service?.category || ''}`
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
-      return label.includes('cort');
-    }).length;
+      return { appointment: a, service, isHaircut: label.includes('cort') };
+    }).filter(item => item.isHaircut);
+    const haircuts = haircutAppointments.length;
+    const haircutRevenue = haircutAppointments.reduce((sum, item) => sum + (Number(item.service?.price) || 0), 0);
     const revenue = completed.reduce((sum, a) => {
       const service = services.find(s => s.id === a.serviceId);
       return sum + (Number(service?.price) || 0);
     }, 0);
+    const commissionValue = b.commissionValue === null || b.commissionValue === undefined || b.commissionValue === ''
+      ? null
+      : Number(b.commissionValue);
+    const commissionConfigured = commissionValue !== null
+      && Number.isFinite(commissionValue)
+      && commissionValue >= 0
+      && (b.commissionType === 'fixed' || (b.commissionType === 'percentage' && commissionValue <= 100));
+    const barberPayout = commissionConfigured
+      ? b.commissionType === 'fixed'
+        ? haircuts * commissionValue
+        : haircutRevenue * commissionValue / 100
+      : null;
     return {
       id: b.id,
       name: b.name,
@@ -68,6 +82,12 @@ export default function AdminReports() {
       completed: completed.length,
       haircuts,
       revenue,
+      haircutRevenue,
+      commissionType: b.commissionType,
+      commissionValue,
+      commissionConfigured,
+      barberPayout,
+      shopCutRevenue: commissionConfigured ? haircutRevenue - barberPayout : null,
     };
   }).sort((a, b) => b.revenue - a.revenue || b.haircuts - a.haircuts || a.name.localeCompare(b.name));
 
@@ -152,40 +172,55 @@ export default function AdminReports() {
           <p className="mt-1 text-sm text-white/50">Cortes de cabelo concluídos e faturamento bruto dos serviços no período selecionado.</p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
+          <table className="w-full min-w-[1120px] text-sm">
             <thead>
               <tr className="border-b border-white/5">
                 <th className="text-left py-3 px-3 text-white/50 font-medium">Barbeiro</th>
-                <th className="text-right py-3 px-3 text-white/50 font-medium">Agendamentos</th>
                 <th className="text-right py-3 px-3 text-white/50 font-medium">Cortes concluídos</th>
-                <th className="text-right py-3 px-3 text-white/50 font-medium">Atendimentos concluídos</th>
-                <th className="text-right py-3 px-3 text-white/50 font-medium">Taxa de conclusão</th>
-                <th className="text-right py-3 px-3 text-white/50 font-medium">Faturamento gerado</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Serviços concluídos</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Faturamento total</th>
+                <th className="text-left py-3 px-3 text-white/50 font-medium">Regra de repasse</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Repasse ao barbeiro</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Parte da barbearia (cortes)</th>
               </tr>
             </thead>
             <tbody>
               {appointmentsByBarber.map(b => (
                 <tr key={b.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
                   <td className="py-3 px-3 font-medium text-white">{b.name}</td>
-                  <td className="py-3 px-3 text-right text-white/70">{b.total}</td>
                   <td className="py-3 px-3 text-right font-semibold text-white">{b.haircuts}</td>
                   <td className="py-3 px-3 text-right text-white/70">{b.completed}</td>
-                  <td className="py-3 px-3 text-right text-white/70">
-                    {b.total > 0 ? ((b.completed / b.total) * 100).toFixed(0) : 0}%
+                  <td className="py-3 px-3 text-right text-white/70 whitespace-nowrap">
+                    {siteSettings.currency} {b.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td className="py-3 px-3 text-white/70 whitespace-nowrap">
+                    {b.commissionConfigured
+                      ? b.commissionType === 'fixed'
+                        ? `${siteSettings.currency} ${b.commissionValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} por corte`
+                        : `${b.commissionValue}% do valor do corte`
+                      : <a href="/admin/barbeiros" className="text-amber-300 underline underline-offset-2">Configurar em Barbeiros</a>}
                   </td>
                   <td className="py-3 px-3 text-right font-semibold whitespace-nowrap" style={{ color: '#c9a96e' }}>
-                    {siteSettings.currency} {b.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {b.barberPayout === null
+                      ? '—'
+                      : `${siteSettings.currency} ${b.barberPayout.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  </td>
+                  <td className={`py-3 px-3 text-right font-semibold whitespace-nowrap ${b.shopCutRevenue !== null && b.shopCutRevenue < 0 ? 'text-red-400' : 'text-white/80'}`}>
+                    {b.shopCutRevenue === null
+                      ? '—'
+                      : `${siteSettings.currency} ${b.shopCutRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </td>
                 </tr>
               ))}
               {appointmentsByBarber.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-white/40">Nenhum barbeiro cadastrado.</td>
+                  <td colSpan={7} className="py-8 text-center text-white/40">Nenhum barbeiro cadastrado.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+        <p className="mt-3 text-xs text-white/45">O repasse é calculado apenas para serviços cujo nome ou categoria indica corte e com status Concluído. O faturamento total inclui todos os serviços concluídos. Configure a regra de cada profissional em Barbeiros.</p>
       </div>
 
       {/* Charts */}
