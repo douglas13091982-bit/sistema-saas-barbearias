@@ -110,8 +110,8 @@ export default function AdminReports() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Relatórios</h1>
-          <p className="text-white/50 text-sm">Análise de desempenho do negócio</p>
+          <h1 className="text-2xl font-bold text-white">Produção por barbeiro</h1>
+          <p className="text-white/50 text-sm">Confira os cortes concluídos e o faturamento gerado por cada profissional.</p>
         </div>
         <div className="flex items-center gap-2">
           <select value={period} onChange={e => setPeriod(e.target.value as any)} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none">
@@ -142,39 +142,6 @@ export default function AdminReports() {
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-4">
           <p className="text-xs text-white/50 mb-1">Cancelados</p>
           <p className="text-xl font-bold text-red-400">{cancelledAppointments}</p>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
-          <h3 className="text-lg font-semibold text-white mb-4">Agendamentos por Dia</h3>
-          {dailyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                <Line type="monotone" dataKey="count" stroke="#c9a96e" strokeWidth={2} dot={false} name="Agendamentos" />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : <p className="text-white/40 text-center py-10">Sem dados</p>}
-        </div>
-
-        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
-          <h3 className="text-lg font-semibold text-white mb-4">Faturamento por Serviço</h3>
-          {revenueByService.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={revenueByService}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                <Bar dataKey="revenue" fill="#c9a96e" radius={[4, 4, 0, 0]} name="Faturamento (R$)" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : <p className="text-white/40 text-center py-10">Sem dados</p>}
         </div>
       </div>
 
@@ -220,6 +187,41 @@ export default function AdminReports() {
           </table>
         </div>
       </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Agendamentos por Dia</h3>
+          {dailyData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Line type="monotone" dataKey="count" stroke="#c9a96e" strokeWidth={2} dot={false} name="Agendamentos" />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : <p className="text-white/40 text-center py-10">Sem dados</p>}
+        </div>
+
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Faturamento por Serviço</h3>
+          {revenueByService.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={revenueByService}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Bar dataKey="revenue" fill="#c9a96e" radius={[4, 4, 0, 0]} name="Faturamento (R$)" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : <p className="text-white/40 text-center py-10">Sem dados</p>}
+        </div>
+      </div>
+
+
     </div>
   );
 }
