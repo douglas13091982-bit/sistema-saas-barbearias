@@ -10,18 +10,20 @@ export default function AdminReports() {
 
   const filteredAppointments = useMemo(() => {
     const now = new Date();
+    const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const today = dateKey(now);
     return appointments.filter(a => {
       if (period === 'all') return true;
-      const d = new Date(a.date);
+      const appointmentDate = String(a.date || '').slice(0, 10);
       if (period === 'week') {
         const weekAgo = new Date(now);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return d >= weekAgo;
+        weekAgo.setDate(weekAgo.getDate() - 6);
+        return appointmentDate >= dateKey(weekAgo) && appointmentDate <= today;
       }
       if (period === 'month') {
         const monthAgo = new Date(now);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
-        return d >= monthAgo;
+        return appointmentDate >= dateKey(monthAgo) && appointmentDate <= today;
       }
       return true;
     });
@@ -51,7 +53,7 @@ export default function AdminReports() {
       const service = services.find(s => s.id === a.serviceId);
       const label = `${service?.name || ''} ${service?.category || ''}`
         .normalize('NFD')
-        .replace(/[\\u0300-\\u036f]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
       return label.includes('cort');
     }).length;
