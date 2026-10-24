@@ -34,9 +34,14 @@ async function mercadoRequest(token:string,path:string,method='GET',body?:unknow
   });
   if (!result.ok) {
     const details:any=await result.json().catch(()=>({}));
+    const providerCode=details.error||details.cause?.[0]?.code||details.errors?.[0]?.code||null;
+    const requestId=result.headers.get('x-request-id');
     // Keep provider diagnostics on the server; never return raw API details or credentials to the browser.
-    console.error('[mercadopago] request failed', {path,method,status:result.status,code:details.error||details.cause?.[0]?.code,message:details.message,requestId:result.headers.get('x-request-id')});
-    throw new Error('O Mercado Pago recusou a operação. Confira o meio de pagamento e tente novamente; se persistir, consulte o suporte com o horário da tentativa.');
+    console.error('[mercadopago] request failed', {path,method,status:result.status,code:providerCode,message:details.message,requestId});
+    const diagnostic=[`HTTP ${result.status}.`,providerCode?`Código: ${providerCode}.`:null,requestId?`Protocolo: ${requestId}.`:null].filter(Boolean).join(' ');
+    const error=new Error(`O Mercado Pago recusou a operação. Confira o meio de pagamento e tente novamente.${diagnostic?` ${diagnostic}`:''}`);
+    Object.assign(error,{providerStatus:result.status,providerCode,requestId});
+    throw error;
   }
   return result.json();
 }

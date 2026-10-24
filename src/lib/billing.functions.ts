@@ -139,7 +139,22 @@ export const billingAction = createServerFn({ method: 'POST' })
         transactions:{payments:[{amount:money,payment_method:paymentMethod,...(data.paymentMethod==='pix'?{expiration_time:'PT24H'}:{expiration_time:'P3D'})}]},
       };
       if(address) body.config={location:{state_id:`BR-${address.state}`}};
-      remote=await mercadoOrders('/v1/orders','POST',body,String(claim.id));
+      try {
+        remote=await mercadoOrders('/v1/orders','POST',body,String(claim.id));
+      } catch (error) {
+        const diagnostic=error as Error&{providerStatus?:number;providerCode?:string|null;requestId?:string|null};
+        // A definitive HTTP rejection must not leave this attempt in `creating`;
+        // otherwise claim_subscription_payment_order would reuse its idempotency key forever.
+        // Keep transport/timeout failures untouched because Mercado Pago may have received them.
+        if (diagnostic.providerStatus) {
+          await db.from('subscription_payment_orders').update({
+            state:'rejected',
+            payment_data:{error:{httpStatus:diagnostic.providerStatus,code:diagnostic.providerCode||null,requestId:diagnostic.requestId||null}},
+            updated_at:new Date().toISOString(),
+          }).eq('id',claim.id).is('provider_order_id',null);
+        }
+        throw error;
+      }
     }
     if(!remote?.id||String(remote.external_reference)!==String(claim.id)||Math.round(Number(remote.total_amount)*100)!==claim.amount_cents) throw new Error('O Mercado Pago não confirmou a cobrança. Consulte o pagamento antes de tentar novamente.');
     const payment=remote.transactions?.payments?.[0]||{};
