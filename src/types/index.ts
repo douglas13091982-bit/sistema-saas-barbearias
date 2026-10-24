@@ -126,6 +126,12 @@ export interface SiteSettings {
   toleranceMinutes: number;
   cancelPolicy: string;
   currency: string;
+  loyaltyProgram?: {
+    enabled: boolean;
+    cutsRequired: number;
+    rewardServiceId: string;
+    rewardName: string;
+  };
   sections: {
     id: string;
     name: string;
