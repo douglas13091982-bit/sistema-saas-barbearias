@@ -10,12 +10,22 @@ export const billingAction = createServerFn({ method: 'POST' })
   if (!membership?.active || membership.role!=='admin') throw new Error('Acesso restrito ao proprietário da barbearia.');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const db: any = supabaseAdmin;
-  const { mercado, mercadoOrders, billingReady, getMercadoConfig, reconcileSubscription, reconcileAuthorizedPayment, reconcileTransparentOrder } = await import('@/lib/mercadopago.server');
-  if (data.action==='status') { const config=await getMercadoConfig();return { ready: await billingReady(), publicKey:config.publicKey }; }
+  const { mercado, mercadoOrders, getMercadoConfig, reconcileSubscription, reconcileAuthorizedPayment, reconcileTransparentOrder } = await import('@/lib/mercadopago.server');
+  if (data.action==='status') {
+    const config=await getMercadoConfig();
+    const cardReady=Boolean(config.accessToken&&config.webhookSecret&&config.publicKey&&config.appUrl);
+    const transparentReady=Boolean(config.ordersAccessToken&&config.ordersWebhookSecret);
+    return {ready:cardReady&&transparentReady,cardReady,transparentReady,publicKey:config.publicKey};
+  }
   if (!data.barberId) throw new Error('Selecione o barbeiro.');
   const { data: sub } = await db.from('barber_subscriptions').select('*').eq('tenant_id',membership.tenant_id).eq('barber_id',data.barberId).maybeSingle();
   if (!sub) throw new Error('Barbeiro não encontrado.');
-  if (!await billingReady()) throw new Error('A plataforma precisa configurar a integração Mercado Pago no painel Super Admin antes de receber pagamentos.');
+  const mpConfig=await getMercadoConfig();
+  const cardReady=Boolean(mpConfig.accessToken&&mpConfig.webhookSecret&&mpConfig.publicKey&&mpConfig.appUrl);
+  const transparentReady=Boolean(mpConfig.ordersAccessToken&&mpConfig.ordersWebhookSecret);
+  if ((data.action==='prepare'||data.action==='subscribe')&&!cardReady) throw new Error('O pagamento com cartão ainda não está configurado pela plataforma.');
+  if (data.action==='checkout'&&!transparentReady) throw new Error('Pix e boleto ainda não estão configurados pela plataforma.');
+  if ((data.action==='sync'||data.action==='cancel')&&sub.provider_id&&!mpConfig.accessToken) throw new Error('A aplicação de Assinaturas do Mercado Pago ainda não está configurada.');
   if (data.action==='cancel') {
     if (sub.provider_id) await mercado(`/preapproval/${encodeURIComponent(sub.provider_id)}`,'PUT',{ status:'cancelled' });
     else if (sub.state==='creating' || sub.state==='review') throw new Error('Esta cobrança precisa ser conciliada antes do cancelamento.');
@@ -25,6 +35,7 @@ export const billingAction = createServerFn({ method: 'POST' })
   }
   if(data.action==='sync') {
     if(!sub.provider_id) {
+      if(!mpConfig.ordersAccessToken) throw new Error('A aplicação de Checkout Transparente ainda não está configurada.');
       const {data:attempt}=await db.from('subscription_payment_orders').select('provider_order_id').eq('subscription_id',sub.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
       if(attempt?.provider_order_id) await reconcileTransparentOrder(db,attempt.provider_order_id);
       return {synced:true};
