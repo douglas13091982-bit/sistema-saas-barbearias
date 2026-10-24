@@ -86,7 +86,7 @@ export default function Home() {
       <div className="bb-wrap">{sectionHeading('Depoimentos', 'Quem vem, recomenda.')}
         <div className="bb-review-grid">{activeTestimonials.map(review => <figure key={review.id} className="bb-review">
           <div className="bb-stars" aria-label={`${review.rating} de 5 estrelas`}>{Array.from({ length: 5 }, (_, index) => <Star key={index} size={15} fill={index < review.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}</div>
-          <blockquote>“{review.text}”</blockquote><figcaption>{review.clientName}</figcaption>
+          <blockquote>“{review.text}”</blockquote><figcaption className="bb-review-author">{review.photo && <SiteImage src={review.photo} alt={`Foto de ${review.clientName}`} className="bb-review-photo" />}<span>{review.clientName}</span></figcaption>
         </figure>)}</div>
       </div>
     </section>,
