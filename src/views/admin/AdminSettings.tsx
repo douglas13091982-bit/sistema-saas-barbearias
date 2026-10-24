@@ -68,7 +68,6 @@ export default function AdminSettings() {
     const loyaltyProgram = {
       ...form.loyaltyProgram,
       cutsRequired: Number(form.loyaltyProgram.cutsRequired),
-      startedAt: form.loyaltyProgram.startedAt || new Date().toISOString(),
     };
     if (loyaltyProgram.enabled && (!Number.isInteger(loyaltyProgram.cutsRequired) || loyaltyProgram.cutsRequired < 1 || loyaltyProgram.cutsRequired > 100)) {
       setFormError('Defina uma quantidade de cortes entre 1 e 100.');
