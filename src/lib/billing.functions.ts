@@ -171,11 +171,11 @@ export const validatePlatformMercadoConfig = createServerFn({method:'POST'}).mid
   return validateMercadoPagoMethods();
 });
 
-const platformConfigInput=z.object({accessToken:z.string().max(512).optional().default(''),webhookSecret:z.string().max(512).optional().default(''),publicKey:z.string().max(256).optional().default(''),appUrl:z.string().max(255).optional().default(''),ordersAccessToken:z.string().max(512).optional().default(''),ordersWebhookSecret:z.string().max(512).optional().default('')});
+const platformConfigInput=z.object({accessToken:z.string().max(512).optional().default(''),webhookSecret:z.string().max(512).optional().default(''),publicKey:z.string().max(256).optional().default(''),appUrl:z.string().max(255).optional().default('')});
 export const savePlatformMercadoConfig=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(platformConfigInput).handler(async({data,context})=>{
   const {data:allowed}=await context.supabase.rpc('is_platform_admin');
   if(!allowed) throw new Error('Acesso restrito ao superadministrador.');
-  const {data:status,error}=await (context.supabase as any).rpc('platform_save_mercado_pago_config',{p_access_token:data.accessToken,p_webhook_secret:data.webhookSecret,p_public_key:data.publicKey,p_app_url:data.appUrl,p_orders_access_token:data.ordersAccessToken,p_orders_webhook_secret:data.ordersWebhookSecret});
+  const {data:status,error}=await (context.supabase as any).rpc('platform_save_mercado_pago_config',{p_access_token:data.accessToken,p_webhook_secret:data.webhookSecret,p_public_key:data.publicKey,p_app_url:data.appUrl});
   if(error) throw new Error(error.message||'Não foi possível salvar as credenciais.');
   return {config:status};
 });

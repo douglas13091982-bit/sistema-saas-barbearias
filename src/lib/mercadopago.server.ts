@@ -16,14 +16,14 @@ export async function getMercadoConfig(): Promise<MercadoPagoConfig> {
   try {
     const {supabaseAdmin}=await import('@/integrations/supabase/client.server');
     const {data,error}=await (supabaseAdmin as any).rpc('platform_mercado_pago_config_private');
-    if(!error&&data) return {accessToken:data.accessToken||env.accessToken,webhookSecret:data.webhookSecret||env.webhookSecret,publicKey:data.publicKey||env.publicKey,appUrl:data.appUrl||env.appUrl,ordersAccessToken:data.ordersAccessToken||env.ordersAccessToken,ordersWebhookSecret:data.ordersWebhookSecret||env.ordersWebhookSecret};
+    if(!error&&data) return {accessToken:data.accessToken||env.accessToken,webhookSecret:data.webhookSecret||env.webhookSecret,publicKey:data.publicKey||env.publicKey,appUrl:data.appUrl||env.appUrl,ordersAccessToken:data.accessToken||data.ordersAccessToken||env.accessToken||env.ordersAccessToken,ordersWebhookSecret:data.webhookSecret||data.ordersWebhookSecret||env.webhookSecret||env.ordersWebhookSecret};
   } catch { /* Allow server environment credentials as a migration fallback. */ }
   return env;
 }
 
 export async function billingReady() {
   const config=await getMercadoConfig();
-  return Boolean(config.accessToken&&config.webhookSecret&&config.publicKey&&config.appUrl&&config.ordersAccessToken&&config.ordersWebhookSecret);
+  return Boolean(config.accessToken&&config.webhookSecret&&config.publicKey&&config.appUrl);
 }
 
 async function mercadoRequest(token:string,path:string,method='GET',body?:unknown,idempotencyKey?:string):Promise<any>{
