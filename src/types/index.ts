@@ -19,6 +19,8 @@ export interface Client {
   blocked: boolean;
   totalSpent: number;
   totalVisits: number;
+  loyaltyRewardsRedeemed?: number;
+  loyaltyRedemptions?: Array<{ id: string; rewardServiceId?: string; rewardName: string; redeemedAt: string; redeemedBy?: string }>;
   createdAt: string;
 }
 
