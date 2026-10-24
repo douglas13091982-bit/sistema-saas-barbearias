@@ -1,6 +1,7 @@
 // @ts-nocheck -- imported code, kept as written
 import { useMemo, useState } from 'react';
 import { useData } from '../../contexts/DataContext';
+import { isHaircutService } from '@/lib/loyalty';
 import { Download, BarChart3, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
