@@ -85,3 +85,7 @@
 @media(max-width:980px){.sl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-showcase{gap:38px}.sl-photo-composition{min-height:340px}.sl-plan-callout{padding:30px}}
 @media(max-width:700px){.sl-benefits{padding:25px 0 55px}.sl-section-heading{align-items:flex-start}.sl-feature-grid{grid-template-columns:1fr}.sl-benefits .sl-feature-card{min-height:0}.sl-showcase{grid-template-columns:1fr;gap:30px;padding:8px 0 65px}.sl-photo-composition{min-height:330px;margin:0 4px}.sl-plan-callout{align-items:flex-start;flex-direction:column;padding:25px 22px;gap:22px}.sl-plan-action{min-width:0;width:100%}.sl-plan-action .saas-button{width:100%}}
 @media(max-width:380px){.sl-photo-composition{min-height:280px}.sl-photo-main{right:10%}.sl-photo-secondary{width:44%;height:45%}.sl-plan-callout{padding:22px 18px}}
+
+.saas-landing .sl-feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:980px){.saas-landing .sl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.saas-landing .sl-feature-grid{grid-template-columns:1fr}}
