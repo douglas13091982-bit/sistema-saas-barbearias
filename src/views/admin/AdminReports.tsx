@@ -43,12 +43,31 @@ export default function AdminReports() {
     count: filteredAppointments.filter(a => a.serviceId === s.id).length,
   })).filter(s => s.count > 0).sort((a, b) => b.revenue - a.revenue);
 
-  // Appointments by barber
-  const appointmentsByBarber = barbers.map(b => ({
-    name: b.name.split(' ')[0],
-    total: filteredAppointments.filter(a => a.barberId === b.id).length,
-    completed: filteredAppointments.filter(a => a.barberId === b.id && a.status === 'completed').length,
-  })).filter(b => b.total > 0);
+  // Desempenho por barbeiro: o faturamento considera somente serviços concluídos.
+  const appointmentsByBarber = barbers.map(b => {
+    const barberAppointments = filteredAppointments.filter(a => a.barberId === b.id);
+    const completed = barberAppointments.filter(a => a.status === 'completed');
+    const haircuts = completed.filter(a => {
+      const service = services.find(s => s.id === a.serviceId);
+      const label = `${service?.name || ''} ${service?.category || ''}`
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .toLowerCase();
+      return label.includes('cort');
+    }).length;
+    const revenue = completed.reduce((sum, a) => {
+      const service = services.find(s => s.id === a.serviceId);
+      return sum + (Number(service?.price) || 0);
+    }, 0);
+    return {
+      id: b.id,
+      name: b.name,
+      total: barberAppointments.length,
+      completed: completed.length,
+      haircuts,
+      revenue,
+    };
+  }).sort((a, b) => b.revenue - a.revenue || b.haircuts - a.haircuts || a.name.localeCompare(b.name));
 
   // Daily appointments chart
   const dailyData = useMemo(() => {
@@ -159,33 +178,42 @@ export default function AdminReports() {
 
       {/* Barber Performance */}
       <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">Desempenho dos Barbeiros</h3>
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-white">Produção e faturamento por barbeiro</h3>
+          <p className="mt-1 text-sm text-white/50">Cortes de cabelo concluídos e faturamento bruto dos serviços no período selecionado.</p>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="text-left py-2 px-3 text-white/50 font-medium">Barbeiro</th>
-                <th className="text-left py-2 px-3 text-white/50 font-medium">Total</th>
-                <th className="text-left py-2 px-3 text-white/50 font-medium">Concluídos</th>
-                <th className="text-left py-2 px-3 text-white/50 font-medium">Taxa Conclusão</th>
+                <th className="text-left py-3 px-3 text-white/50 font-medium">Barbeiro</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Agendamentos</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Cortes concluídos</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Atendimentos concluídos</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Taxa de conclusão</th>
+                <th className="text-right py-3 px-3 text-white/50 font-medium">Faturamento gerado</th>
               </tr>
             </thead>
             <tbody>
               {appointmentsByBarber.map(b => (
-                <tr key={b.name} className="border-b border-white/5">
-                  <td className="py-2 px-3 text-white">{b.name}</td>
-                  <td className="py-2 px-3 text-white/70">{b.total}</td>
-                  <td className="py-2 px-3 text-white/70">{b.completed}</td>
-                  <td className="py-2 px-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 rounded-full bg-white/10 max-w-[100px]">
-                        <div className="h-full rounded-full" style={{ width: `${b.total > 0 ? (b.completed / b.total) * 100 : 0}%`, backgroundColor: '#c9a96e' }} />
-                      </div>
-                      <span className="text-xs text-white/50">{b.total > 0 ? ((b.completed / b.total) * 100).toFixed(0) : 0}%</span>
-                    </div>
+                <tr key={b.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
+                  <td className="py-3 px-3 font-medium text-white">{b.name}</td>
+                  <td className="py-3 px-3 text-right text-white/70">{b.total}</td>
+                  <td className="py-3 px-3 text-right font-semibold text-white">{b.haircuts}</td>
+                  <td className="py-3 px-3 text-right text-white/70">{b.completed}</td>
+                  <td className="py-3 px-3 text-right text-white/70">
+                    {b.total > 0 ? ((b.completed / b.total) * 100).toFixed(0) : 0}%
+                  </td>
+                  <td className="py-3 px-3 text-right font-semibold whitespace-nowrap" style={{ color: '#c9a96e' }}>
+                    {siteSettings.currency} {b.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
               ))}
+              {appointmentsByBarber.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-white/40">Nenhum barbeiro cadastrado.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
