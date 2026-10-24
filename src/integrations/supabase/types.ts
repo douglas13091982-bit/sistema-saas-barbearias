@@ -6,7 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-type SaasTable<T> = { Row: T; Insert: Partial<T>; Update: Partial<T>; Relationships: [] };
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -15,99 +14,281 @@ export type Database = {
   }
   public: {
     Tables: {
-      tenants: SaasTable<{id:string;owner_id:string|null;slug:string;name:string;status:string;trial_ends_at:string;created_at:string}>;
-      saas_settings: SaasTable<{id:boolean;name:string;logo:string;price_per_barber_cents:number|null;trial_days:number;updated_at:string}>;
-      platform_admins: SaasTable<{user_id:string}>;
-      barber_subscriptions: SaasTable<{id:string;tenant_id:string;barber_id:string;amount_cents:number|null;provider_id:string|null;checkout_url:string|null;state:string;paid_until:string|null;archived_at:string|null;created_at:string}>;
-      subscription_payments: SaasTable<{provider_payment_id:string;subscription_id:string;approved:boolean;amount_cents:number;period_end:string;updated_at:string}>;
+      barber_subscriptions: {
+        Row: {
+          amount_cents: number | null
+          archived_at: string | null
+          barber_id: string
+          checkout_url: string | null
+          created_at: string
+          id: string
+          paid_until: string | null
+          provider_id: string | null
+          state: string
+          tenant_id: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          archived_at?: string | null
+          barber_id: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          paid_until?: string | null
+          provider_id?: string | null
+          state?: string
+          tenant_id: string
+        }
+        Update: {
+          amount_cents?: number | null
+          archived_at?: string | null
+          barber_id?: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          paid_until?: string | null
+          provider_id?: string | null
+          state?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barber_subscriptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       barbershop_records: {
         Row: {
-          tenant_id: string
           created_at: string
           data: Json
           id: string
           kind: string
+          tenant_id: string
         }
         Insert: {
-          tenant_id?: string
           created_at?: string
           data: Json
           id: string
           kind: string
+          tenant_id?: string
         }
         Update: {
-          tenant_id?: string
           created_at?: string
           data?: Json
           id?: string
           kind?: string
+          tenant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "barbershop_records_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       booking_receipts: {
         Row: {
-          tenant_id: string
           appointment_id: string
           client_id: string
           created_at: string | null
+          tenant_id: string
           token: string
         }
         Insert: {
-          tenant_id?: string
           appointment_id: string
           client_id: string
           created_at?: string | null
+          tenant_id?: string
           token?: string
         }
         Update: {
-          tenant_id?: string
           appointment_id?: string
           client_id?: string
           created_at?: string | null
+          tenant_id?: string
           token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_receipts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_admins: {
+        Row: {
+          user_id: string
+        }
+        Insert: {
+          user_id: string
+        }
+        Update: {
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saas_settings: {
+        Row: {
+          id: boolean
+          logo: string
+          name: string
+          price_per_barber_cents: number | null
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          logo?: string
+          name?: string
+          price_per_barber_cents?: number | null
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          logo?: string
+          name?: string
+          price_per_barber_cents?: number | null
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_payments: {
+        Row: {
+          amount_cents: number
+          approved: boolean
+          paid_at: string | null
+          period_end: string
+          provider_payment_id: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          approved: boolean
+          paid_at?: string | null
+          period_end: string
+          provider_payment_id: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          approved?: boolean
+          paid_at?: string | null
+          period_end?: string
+          provider_payment_id?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "barber_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string | null
+          slug: string
+          status: string
+          trial_ends_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id?: string | null
+          slug: string
+          status?: string
+          trial_ends_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string | null
+          slug?: string
+          status?: string
+          trial_ends_at?: string
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          tenant_id: string
           active: boolean
           id: string
           role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
           user_id: string
         }
         Insert: {
-          tenant_id?: string
           active?: boolean
           id?: string
           role: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string
           user_id: string
         }
         Update: {
-          tenant_id?: string
           active?: boolean
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      platform_sales_history: {Args:{p_since?:string|null;p_until?:string|null};Returns:{payment_at:string;period_end:string;amount_cents:number;approved:boolean;updated_at:string;shop_name:string;shop_slug:string;barber_name:string;subscription_state:string}[]};
-      is_platform_admin: {Args: never;Returns:boolean};
-      tenant_admin: {Args:{tid:string};Returns:boolean};
-      public_shop: {Args:{shop_slug?:string|null};Returns:Json};
-      create_shop: {Args:{shop_name:string;shop_slug:string};Returns:string};
-      shop_booking_access: {Args:{tid:string};Returns:Json};
-      busy_slots_for_shop: {Args:{tid:string};Returns:Json};
-      claim_barber_checkout: {Args:{bid:string};Returns:Json};
+      apply_subscription_payment: {
+        Args: {
+          approved_at: string
+          cents: number
+          is_approved: boolean
+          pid: string
+          sid: string
+        }
+        Returns: undefined
+      }
+      barber_can_book: { Args: { bid: string; tid: string }; Returns: boolean }
       book_appointment: { Args: { input: Json }; Returns: Json }
       booking_receipt: { Args: { receipt_token: string }; Returns: Json }
       busy_slots: { Args: never; Returns: Json }
+      busy_slots_for_shop: { Args: { tid: string }; Returns: Json }
+      claim_barber_checkout: { Args: { bid: string }; Returns: Json }
+      create_shop: {
+        Args: { shop_name: string; shop_slug: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -115,7 +296,38 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_admin: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      platform_mercado_pago_config_private: { Args: never; Returns: Json }
+      platform_mercado_pago_config_status: { Args: never; Returns: Json }
+      platform_sales_history: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: {
+          amount_cents: number
+          approved: boolean
+          barber_name: string
+          payment_at: string
+          period_end: string
+          shop_name: string
+          shop_slug: string
+          subscription_state: string
+          updated_at: string
+        }[]
+      }
+      platform_save_mercado_pago_config: {
+        Args: {
+          p_access_token?: string
+          p_app_url?: string
+          p_public_key?: string
+          p_webhook_secret?: string
+        }
+        Returns: Json
+      }
+      public_shop: { Args: { shop_slug?: string }; Returns: Json }
+      shop_booking_access: { Args: { tid: string }; Returns: Json }
+      tenant_admin: { Args: { tid: string }; Returns: boolean }
+      tenant_is_public: { Args: { tid: string }; Returns: boolean }
+      tenant_staff: { Args: { tid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "attendant" | "barber"
