@@ -67,7 +67,7 @@ export default function Landing(){
  </section>
 
  <section className="sl-benefits" aria-label="Recursos da plataforma">
- <div className="sl-section-heading"><p className="saas-kicker">DA AGENDA AO FATURAMENTO</p><div><h2>O que a sua barbearia precisa,<br/>em um só lugar.</h2><p className="sl-section-intro">Tenha mais clareza sobre a rotina, a equipe e os resultados do negócio.</p></div></div>
+ <div className="sl-section-heading"><p className="saas-kicker">DA AGENDA AO FATURAMENTO</p><div><h2>O que a sua barbearia precisa, em um só lugar.</h2><p className="sl-section-intro">Tenha mais clareza sobre a rotina, a equipe e os resultados do negócio.</p></div></div>
  <div className="saas-grid sl-feature-grid">
  {features.map(({icon:Icon,number,title,description})=><article className="saas-card sl-feature-card" key={number}><Icon className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}
  </div>
