@@ -30,7 +30,7 @@ export default function SuperAdmin(){
     supabase.from('tenants').select('id,name,slug,status,created_at,trial_ends_at,owner_id').order('created_at',{ascending:false}),
     supabase.from('barber_subscriptions').select('id,tenant_id,barber_id,amount_cents,state,paid_until,archived_at').is('archived_at',null),
     supabase.from('saas_settings').select('name,logo,price_per_barber_cents').eq('id',true).single(),
-    check(),supabase.rpc('platform_sales_history',{p_since:null,p_until:null}),
+    check(),supabase.rpc('platform_sales_history',{}),
    ]);
    if(a.error||b.error||c.error||e.error)throw new Error('Não foi possível carregar todos os dados. Tente atualizar a página.');
    setShops(a.data||[]);setSeats(b.data||[]);setName(c.data.name||'');setLogo(c.data.logo||'');
