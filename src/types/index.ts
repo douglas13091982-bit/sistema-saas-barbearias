@@ -33,6 +33,8 @@ export interface Barber {
   serviceIds: string[];
   workingHours: WorkingHours[];
   daysOff: string[];
+  commissionType?: 'fixed' | 'percentage';
+  commissionValue?: number | null;
   createdAt: string;
 }
 
