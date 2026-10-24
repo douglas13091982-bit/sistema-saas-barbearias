@@ -164,6 +164,59 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_payment_orders: {
+        Row: {
+          amount_cents: number
+          approved_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          payment_data: Json | null
+          payment_method: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          state: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          approved_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_data?: Json | null
+          payment_method: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          state?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          approved_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_data?: Json | null
+          payment_method?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          state?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payment_orders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "barber_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_payments: {
         Row: {
           amount_cents: number
@@ -285,6 +338,10 @@ export type Database = {
       busy_slots: { Args: never; Returns: Json }
       busy_slots_for_shop: { Args: { tid: string }; Returns: Json }
       claim_barber_checkout: { Args: { bid: string }; Returns: Json }
+      claim_subscription_payment_order: {
+        Args: { method: string; sid: string }
+        Returns: Json
+      }
       create_shop: {
         Args: { shop_name: string; shop_slug: string }
         Returns: string
