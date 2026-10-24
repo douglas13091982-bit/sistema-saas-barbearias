@@ -19,8 +19,12 @@ const normalizeBusinessHours = (hours = []) => defaultBusinessHours.map(defaultD
 }));
 
 export default function AdminSettings() {
-  const { siteSettings, updateSiteSettings, holidays, addHoliday, deleteHoliday } = useData();
-  const [form, setForm] = useState(() => ({ ...siteSettings, businessHours: normalizeBusinessHours(siteSettings.businessHours) }));
+  const { siteSettings, updateSiteSettings, holidays, addHoliday, deleteHoliday, services } = useData();
+  const [form, setForm] = useState(() => ({
+    ...siteSettings,
+    businessHours: normalizeBusinessHours(siteSettings.businessHours),
+    loyaltyProgram: { enabled: false, cutsRequired: 5, rewardServiceId: '', rewardName: '', ...(siteSettings.loyaltyProgram || {}) },
+  }));
   const [saved, setSaved] = useState(false);
   const [formError, setFormError] = useState('');
   const [logoError, setLogoError] = useState('');
@@ -49,15 +53,36 @@ export default function AdminSettings() {
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [holidayForm, setHolidayForm] = useState({ name: '', date: '', active: true });
 
+  const updateLoyaltyProgram = (updates: Record<string, unknown>) => {
+    setForm(prev => ({ ...prev, loyaltyProgram: { ...prev.loyaltyProgram, ...updates } }));
+    setSaved(false);
+    setFormError('');
+  };
+
   const handleSave = async () => {
     if (form.businessHours.some(day => day.active && (!day.start || !day.end || day.start >= day.end))) {
       setFormError('Confira os horários: a abertura precisa ser anterior ao fechamento em todos os dias abertos.');
       setSaved(false);
       return;
     }
+    const loyaltyProgram = {
+      ...form.loyaltyProgram,
+      cutsRequired: Number(form.loyaltyProgram.cutsRequired),
+      startedAt: form.loyaltyProgram.startedAt || new Date().toISOString(),
+    };
+    if (loyaltyProgram.enabled && (!Number.isInteger(loyaltyProgram.cutsRequired) || loyaltyProgram.cutsRequired < 1 || loyaltyProgram.cutsRequired > 100)) {
+      setFormError('Defina uma quantidade de cortes entre 1 e 100.');
+      setSaved(false);
+      return;
+    }
+    if (loyaltyProgram.enabled && !services.some(service => service.active && service.id === loyaltyProgram.rewardServiceId)) {
+      setFormError('Escolha um serviço ativo como recompensa antes de ativar o programa.');
+      setSaved(false);
+      return;
+    }
     setFormError('');
     try {
-      await updateSiteSettings(form);
+      await updateSiteSettings({ ...form, loyaltyProgram });
       setLogoError('');
     } catch {
       setLogoError('Não foi possível salvar. Verifique sua conexão e tente novamente.');
@@ -168,6 +193,37 @@ export default function AdminSettings() {
             <label className="block text-sm text-white/70 mb-1">Política de Cancelamento</label>
             <textarea value={form.cancelPolicy} onChange={e => setForm({ ...form, cancelPolicy: e.target.value })} rows={3} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30 resize-none" />
           </div>
+        </div>
+
+        {/* Loyalty Program */}
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-white">Programa de fidelidade</h3>
+              <p className="text-xs text-white/50 mt-1">Conte os cortes concluídos dos clientes e ofereça um serviço gratuito ao atingir a meta.</p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-white/70 whitespace-nowrap">
+              <input type="checkbox" checked={Boolean(form.loyaltyProgram.enabled)} onChange={e => updateLoyaltyProgram({ enabled: e.target.checked })} />
+              Ativar programa
+            </label>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/70 mb-1">Cortes concluídos para liberar a recompensa</label>
+              <input type="number" min="1" max="100" step="1" disabled={!form.loyaltyProgram.enabled} value={form.loyaltyProgram.cutsRequired} onChange={e => updateLoyaltyProgram({ cutsRequired: e.target.value === '' ? '' : Number(e.target.value) })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30 disabled:opacity-50" />
+            </div>
+            <div>
+              <label className="block text-sm text-white/70 mb-1">Serviço gratuito da recompensa</label>
+              <select disabled={!form.loyaltyProgram.enabled} value={form.loyaltyProgram.rewardServiceId || ''} onChange={e => {
+                const reward = services.find(service => service.id === e.target.value);
+                updateLoyaltyProgram({ rewardServiceId: e.target.value, rewardName: reward?.name || '' });
+              }} className="w-full px-3 py-2.5 rounded-lg bg-[#111827] border border-white/10 text-white text-sm outline-none disabled:opacity-50">
+                <option value="">Selecione um serviço</option>
+                {services.filter(service => service.active).map(service => <option key={service.id} value={service.id}>{service.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-white/45">Somente serviços de corte marcados como Concluído entram na contagem. O progresso e os resgates ficam registrados no cadastro do cliente. A recompensa é entregue e registrada pela equipe no painel.</p>
         </div>
 
         {/* Holidays */}
