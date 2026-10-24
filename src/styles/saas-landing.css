@@ -40,3 +40,48 @@
 @media(max-width:380px){.sl-content{padding:0 18px}.sl-brand{gap:7px}.sl-brand strong{font-size:17px}.sl-login svg{display:none}.saas-landing .sl-hero h1{font-size:37px}}
 
 .sl-brand{min-width:0}.sl-brand strong{overflow-wrap:anywhere}.sl-brand .sl-logo{width:64px;height:56px;object-fit:contain;flex-shrink:0}.sl-nav .sl-login{flex-shrink:0}@media(max-width:600px){.sl-brand .sl-logo{width:42px;height:42px}.sl-brand strong{font-size:17px}.sl-nav{flex-wrap:wrap;padding:15px 0}}
+
+/* Feature presentation for the SaaS home */
+.sl-benefits{padding:42px 0 76px}
+.sl-section-heading{align-items:flex-end}
+.sl-section-heading>div{flex:1}
+.saas-landing .sl-section-heading h2{font-size:clamp(28px,3.3vw,42px);line-height:1.2;letter-spacing:-.025em}
+.sl-section-intro{margin:12px 0 0;font-size:13px;line-height:1.8;color:#aaa69b}
+.sl-feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.sl-benefits .sl-feature-card{min-height:230px;padding:27px 27px 25px;transition:transform .2s,border-color .2s,background .2s}
+.sl-benefits .sl-feature-card:hover{transform:translateY(-3px);border-color:#d0b17a55;background:linear-gradient(135deg,#26241f,#151614)}
+.sl-feature-card .sl-feature-icon{margin-bottom:22px}
+.sl-feature-card h3{font-size:21px;line-height:1.25;margin-bottom:11px}
+.sl-feature-card p{font-size:12px;line-height:1.8}
+.sl-showcase{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);align-items:center;gap:64px;padding:20px 0 98px}
+.sl-showcase-copy h2,.sl-plan-callout h2{font-size:clamp(29px,3.5vw,45px);line-height:1.16;letter-spacing:-.025em;margin:0 0 19px;color:#f1e8d8;font-family:'Playfair Display',Georgia,serif;font-weight:500}
+.sl-showcase-copy .saas-kicker{margin:0 0 18px}
+.sl-showcase-copy>p:not(.saas-kicker){font-size:13px;line-height:1.9;color:#b7b1a6;margin:0}
+.sl-showcase-copy ul{list-style:none;margin:22px 0 25px;padding:0;display:grid;gap:12px}
+.sl-showcase-copy li{display:flex;align-items:flex-start;gap:10px;color:#d8d0c2;font-size:12px;line-height:1.6}
+.sl-showcase-copy li svg{flex:none;color:#d0b17a;margin-top:1px}
+.saas-landing .sl-inline-link{display:inline-flex;align-items:center;gap:8px;color:#e0c58f;text-decoration:none;font-size:12px;border-bottom:1px solid #c9a96e77;padding-bottom:5px}
+.saas-landing .sl-inline-link:hover{color:#fff}
+.sl-photo-composition{position:relative;min-height:390px;padding:0 0 0 12%}
+.sl-photo-composition figure{position:absolute;overflow:hidden;margin:0;border:1px solid #ffffff20;background:#191918;box-shadow:0 24px 60px #0008}
+.sl-photo-composition img{width:100%;height:100%;object-fit:cover;display:block}
+.sl-photo-main{inset:0 15% 32px 0;border-radius:8px}
+.sl-photo-main img{object-position:center}
+.sl-photo-main figcaption{position:absolute;left:0;right:0;bottom:0;padding:26px 17px 15px;color:#f5ede0;font-size:11px;background:linear-gradient(0deg,#0c0d0df2,#0c0d0d00)}
+.sl-photo-secondary{right:0;bottom:0;width:42%;height:47%;border-radius:7px}
+.sl-photo-secondary img{object-position:center}
+.sl-photo-badge{position:absolute;left:0;top:24px;display:flex;align-items:center;gap:11px;padding:13px 16px;border:1px solid #d0b17a55;border-radius:6px;background:#141513ed;box-shadow:0 12px 32px #0007;color:#e8d6ad;font-size:11px;line-height:1.45}
+.sl-photo-badge svg{color:#d0b17a}
+.sl-plan-callout{display:flex;align-items:center;justify-content:space-between;gap:35px;padding:34px 38px;margin:0 0 44px;border:1px solid #c9a96e45;border-radius:9px;background:linear-gradient(110deg,#c9a96e15,#171815 70%)}
+.sl-plan-callout>div:first-child{max-width:620px}
+.sl-plan-callout .saas-kicker{margin:0 0 12px}
+.sl-plan-callout h2{font-size:clamp(26px,3vw,37px);margin:0 0 12px}
+.sl-plan-callout>div:first-child>p:last-child{font-size:12px;line-height:1.8;margin:0;color:#b7b1a6}
+.sl-plan-action{display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:220px}
+.sl-plan-action .sl-price{margin:0;padding:8px 13px}
+.sl-plan-action .sl-price strong{font-size:24px}
+.sl-plan-action .saas-button{white-space:nowrap;gap:12px}
+.sl-plan-price-note{margin:0;color:#d1c4a6;font-size:12px}
+@media(max-width:980px){.sl-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-showcase{gap:38px}.sl-photo-composition{min-height:340px}.sl-plan-callout{padding:30px}}
+@media(max-width:700px){.sl-benefits{padding:25px 0 55px}.sl-section-heading{align-items:flex-start}.sl-feature-grid{grid-template-columns:1fr}.sl-benefits .sl-feature-card{min-height:0}.sl-showcase{grid-template-columns:1fr;gap:30px;padding:8px 0 65px}.sl-photo-composition{min-height:330px;margin:0 4px}.sl-plan-callout{align-items:flex-start;flex-direction:column;padding:25px 22px;gap:22px}.sl-plan-action{min-width:0;width:100%}.sl-plan-action .saas-button{width:100%}}
+@media(max-width:380px){.sl-photo-composition{min-height:280px}.sl-photo-main{right:10%}.sl-photo-secondary{width:44%;height:45%}.sl-plan-callout{padding:22px 18px}}
