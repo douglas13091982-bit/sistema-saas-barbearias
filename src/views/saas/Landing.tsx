@@ -94,7 +94,7 @@ export default function Landing(){
 
  <section className="sl-plan-callout">
   <div><p className="saas-kicker">COMECE COM 7 DIAS GRÁTIS</p><h2>Conheça o sistema completo<br/>antes de contratar.</h2><p>Cadastre sua barbearia, personalize o site e explore o painel. O plano é calculado por barbeiro cadastrado.</p></div>
-  <div className="sl-plan-action">{formattedPrice?<div className="sl-price"><strong>{formattedPrice}</strong><span>por barbeiro por mês</span></div>:<p className="sl-plan-price-note">Mensalidade por barbeiro cadastrado.</p>}<Link className="saas-button" to="/cadastro">Criar minha barbearia <ArrowUpRight size={18} aria-hidden="true"/></Link></div>
+  <div className="sl-plan-action">{formattedPrice?<div className="sl-price"><strong>{formattedPrice}</strong></div>:<p className="sl-plan-price-note">Mensalidade por barbeiro cadastrado.</p>}<Link className="saas-button" to="/cadastro">Criar minha barbearia <ArrowUpRight size={18} aria-hidden="true"/></Link></div>
  </section>
 
  <footer className="sl-footer"><span>{name}</span><p>Mais tempo para fazer o que você faz de melhor.</p><Link to="/cadastro">Criar minha barbearia <ArrowUpRight size={15} aria-hidden="true"/></Link></footer>
