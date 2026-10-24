@@ -27,6 +27,9 @@ export default function AdminClients() {
   const rewardsRedeemed = Number(selected?.loyaltyRewardsRedeemed || 0);
   const rewardsAvailable = Math.max(0, rewardsEarned - rewardsRedeemed);
   const loyaltyProgress = loyaltyEnabled ? (rewardsAvailable > 0 ? 100 : ((loyaltyCuts % Number(loyaltyProgram.cutsRequired)) / Number(loyaltyProgram.cutsRequired)) * 100) : 0;
+  const loyaltyProgressLabel = rewardsAvailable > 0
+    ? `${loyaltyCuts} cortes registrados · ${rewardsAvailable} recompensa${rewardsAvailable === 1 ? '' : 's'} liberada${rewardsAvailable === 1 ? '' : 's'}`
+    : `${loyaltyCuts % Number(loyaltyProgram.cutsRequired)} de ${loyaltyProgram.cutsRequired} cortes para a próxima recompensa`;
   const registerRewardRedemption = async () => {
     if (!selected || !loyaltyEnabled || rewardsAvailable <= 0 || redeeming) return;
     setRedeeming(true);
@@ -83,7 +86,11 @@ export default function AdminClients() {
                     <td className="py-3 px-4 text-white font-medium">{client.name}</td>
                     <td className="py-3 px-4 text-white/70">{client.phone}</td>
                     <td className="py-3 px-4 text-white/70">{client.totalVisits}</td>
-                    {loyaltyEnabled && <td className="py-3 px-4 text-white/70">{countCompletedHaircuts(client.id, appointments, services)} / {loyaltyProgram.cutsRequired}</td>}
+                    {loyaltyEnabled && <td className="py-3 px-4 text-white/70">{(() => {
+                      const cuts = countCompletedHaircuts(client.id, appointments, services);
+                      const available = Math.max(0, Math.floor(cuts / Number(loyaltyProgram.cutsRequired)) - Number(client.loyaltyRewardsRedeemed || 0));
+                      return available > 0 ? `${available} recompensa${available === 1 ? '' : 's'}` : `${cuts % Number(loyaltyProgram.cutsRequired)} / ${loyaltyProgram.cutsRequired}`;
+                    })()}</td>}
                     <td className="py-3 px-4 font-medium" style={{ color: '#c9a96e' }}>{siteSettings.currency} {client.totalSpent.toFixed(2)}</td>
                     <td className="py-3 px-4">
                       <span className={`text-xs px-2 py-1 rounded-full ${client.blocked ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
@@ -133,7 +140,7 @@ export default function AdminClients() {
                     <h4 className="text-sm font-semibold">Programa de fidelidade</h4>
                   </div>
                   <div className="flex items-center justify-between gap-3 text-xs">
-                    <span className="text-white/65">{loyaltyCuts} de {loyaltyProgram.cutsRequired} cortes concluídos</span>
+                    <span className="text-white/65">{loyaltyProgressLabel}</span>
                     <span className="text-white font-semibold">{rewardsAvailable} recompensa{rewardsAvailable === 1 ? '' : 's'} disponível{rewardsAvailable === 1 ? '' : 'is'}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/10">
