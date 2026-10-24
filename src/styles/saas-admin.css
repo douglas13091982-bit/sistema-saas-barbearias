@@ -115,3 +115,5 @@
 .sa-mp-webhook{display:grid;gap:6px;padding:12px;border:1px solid #ffffff12;border-radius:5px;background:#10110f}
 .sa-mp-webhook strong{color:#b3b0a4;font-size:10px}
 .sa-mp-webhook code{color:#e4c582;font-size:11px;overflow-wrap:anywhere}
+.sa-mp-validation{display:grid;gap:5px;padding:12px;border:1px solid #75c89a55;border-radius:5px;background:#75c89a0c;color:#b3b0a4;font-size:11px}.sa-mp-validation strong{color:#75c89a}
+.sa-mp-app-divider{display:grid;gap:5px;margin-top:12px;padding:12px;border:1px solid #c9a96e33;border-radius:5px;background:#c9a96e0c}.sa-mp-app-divider strong{color:#e4c582;font-size:12px}.sa-mp-app-divider span{color:#aaa79b;font-size:10px;line-height:1.5}

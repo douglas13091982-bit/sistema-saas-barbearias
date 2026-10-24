@@ -4,13 +4,13 @@ import { z } from 'zod';
 
 export const billingAction = createServerFn({ method: 'POST' })
  .middleware([requireSupabaseAuth])
- .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional() }))
+ .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(), paymentMethod:z.enum(['pix','boleto']).optional(), payer:z.object({firstName:z.string().trim().min(1).max(80),lastName:z.string().trim().min(1).max(80),cpf:z.string().regex(/^\d{11}$/),zipCode:z.string().regex(/^\d{8}$/).optional(),street:z.string().trim().min(2).max(120).optional(),number:z.string().trim().min(1).max(20).optional(),neighborhood:z.string().trim().min(2).max(80).optional(),city:z.string().trim().min(2).max(80).optional(),state:z.string().regex(/^[A-Z]{2}$/).optional()}).optional() }))
  .handler(async ({ data, context }) => {
   const { data: membership } = await context.supabase.from('user_roles').select('tenant_id,role,active').eq('user_id',context.userId).maybeSingle();
   if (!membership?.active || membership.role!=='admin') throw new Error('Acesso restrito ao proprietário da barbearia.');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const db: any = supabaseAdmin;
-  const { mercado, billingReady, getMercadoConfig, reconcileSubscription, reconcileAuthorizedPayment } = await import('@/lib/mercadopago.server');
+  const { mercado, mercadoOrders, billingReady, getMercadoConfig, reconcileSubscription, reconcileAuthorizedPayment, reconcileTransparentOrder } = await import('@/lib/mercadopago.server');
   if (data.action==='status') { const config=await getMercadoConfig();return { ready: await billingReady(), publicKey:config.publicKey }; }
   if (!data.barberId) throw new Error('Selecione o barbeiro.');
   const { data: sub } = await db.from('barber_subscriptions').select('*').eq('tenant_id',membership.tenant_id).eq('barber_id',data.barberId).maybeSingle();
@@ -24,6 +24,11 @@ export const billingAction = createServerFn({ method: 'POST' })
     return { cancelled:true };
   }
   if(data.action==='sync') {
+    if(!sub.provider_id) {
+      const {data:attempt}=await db.from('subscription_payment_orders').select('provider_order_id').eq('subscription_id',sub.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+      if(attempt?.provider_order_id) await reconcileTransparentOrder(db,attempt.provider_order_id);
+      return {synced:true};
+    }
     if(!sub.provider_id) {
       const found=await mercado(`/preapproval/search?external_reference=${encodeURIComponent(sub.id)}`);
       const matches=(found.results || []).filter((item:any)=>String(item.external_reference)===sub.id);
@@ -91,38 +96,52 @@ export const billingAction = createServerFn({ method: 'POST' })
     if(saveError) throw new Error('Assinatura criada, mas aguardando conciliação. Use Consultar pagamento antes de tentar novamente.');
     return {authorized:state==='authorized',pending:state==='pending',state};
   }
-  const { data: claimed, error: claimError } = await context.supabase.rpc('claim_barber_checkout',{ bid:data.barberId });
-  if(claimError || !claimed) throw new Error(claimError?.message || 'Não foi possível preparar o pagamento.');
-  const claim=claimed as any;
-  if(claim.provider_id) {
-    const remote=await reconcileSubscription(db,claim);
-    if(remote?.status==='authorized') return { authorized:true };
-    if(remote?.status==='cancelled' || remote?.status==='paused') throw new Error('Assinatura sem cobrança ativa. Consulte a plataforma antes de reativar.');
-    return { url:claim.checkout_url };
+  if(data.action==='checkout') {
+    if(!data.paymentMethod) throw new Error('Escolha Pix ou boleto.');
+    if(sub.provider_id) {
+      const remote=await reconcileSubscription(db,sub);
+      if(remote?.status==='authorized') return {authorized:true};
+      if(remote?.init_point) return {legacyUrl:remote.init_point,legacy:true};
+      throw new Error('Esta assinatura precisa ser conciliada pela plataforma antes de criar outra cobrança.');
+    }
+    const {data:claimed,error:claimError}=await context.supabase.rpc('claim_barber_checkout',{bid:data.barberId});
+    if(claimError||!claimed) throw new Error(claimError?.message||'Não foi possível preparar o pagamento.');
+    const {data:attempt,error:attemptError}=await context.supabase.rpc('claim_subscription_payment_order',{sid:sub.id,method:data.paymentMethod});
+    if(attemptError||!attempt) throw new Error(attemptError?.message||'Não foi possível preparar a cobrança.');
+    const claim=attempt as any;
+    let remote=claim.provider_order_id?await mercadoOrders(`/v1/orders/${encodeURIComponent(claim.provider_order_id)}`):null;
+    if(!remote) {
+      const {data:tenant}=await db.from('tenants').select('name').eq('id',membership.tenant_id).single();
+      const {data:account}=await context.supabase.auth.getUser();
+      if(!account.user?.email) throw new Error('Sua conta precisa ter um e-mail confirmado para gerar a cobrança.');
+      const {data:barber}=await db.from('barbershop_records').select('data').eq('tenant_id',membership.tenant_id).eq('kind','barbers').eq('id',data.barberId).single();
+      const payer=data.payer;
+      if(!payer) throw new Error('Preencha seus dados para gerar a cobrança.');
+      const address=data.paymentMethod==='boleto'?payer:null;
+      if(data.paymentMethod==='boleto'&&(!address?.zipCode||!address.street||!address.number||!address.neighborhood||!address.city||!address.state)) throw new Error('Preencha o endereço completo para emitir o boleto.');
+      const money=(claim.amount_cents/100).toFixed(2);
+      const paymentMethod=data.paymentMethod==='pix'?{id:'pix',type:'bank_transfer'}:{id:'boleto',type:'ticket'};
+      const body:any={
+        type:'online',external_reference:String(claim.id),processing_mode:'automatic',capture_mode:'automatic',
+        total_amount:money,description:`Mensalidade MenuBarber — ${tenant?.name||'Barbearia'} — ${String(barber?.data?.name||'Barbeiro')}`.slice(0,120),
+        payer:{email:account.user.email,first_name:payer.firstName,last_name:payer.lastName,identification:{type:'CPF',number:payer.cpf},...(address?{address:{zip_code:address.zipCode,street_name:address.street,street_number:address.number,neighborhood:address.neighborhood,city:address.city,state:address.state}}:{})},
+        transactions:{payments:[{amount:money,payment_method:paymentMethod,...(data.paymentMethod==='pix'?{expiration_time:'PT24H'}:{expiration_time:'P3D'})}]},
+      };
+      if(address) body.config={location:{state_id:`BR-${address.state}`}};
+      remote=await mercadoOrders('/v1/orders','POST',body,String(claim.id));
+    }
+    if(!remote?.id||String(remote.external_reference)!==String(claim.id)||Math.round(Number(remote.total_amount)*100)!==claim.amount_cents) throw new Error('O Mercado Pago não confirmou a cobrança. Consulte o pagamento antes de tentar novamente.');
+    const payment=remote.transactions?.payments?.[0]||{};
+    const details=payment.payment_method||{};
+    // Keep boleto attempts locked beyond weekends, since Mercado Pago adjusts their
+    // effective due date to the next business day.
+    const expiry=data.paymentMethod==='pix'?new Date(Date.now()+24*60*60*1000).toISOString():new Date(Date.now()+5*24*60*60*1000).toISOString();
+    const {error:saveError}=await db.from('subscription_payment_orders').update({provider_order_id:String(remote.id),provider_payment_id:payment.id?String(payment.id):null,state:remote.status==='action_required'?'pending':remote.status==='processed'?'approved':'review',payment_data:{id:payment.id?String(payment.id):null,status:payment.status||null,statusDetail:payment.status_detail||null,methodId:details.id||null,ticketUrl:details.ticket_url||null,qrCode:details.qr_code||null,qrCodeBase64:details.qr_code_base64||null,barcodeContent:details.barcode_content||null,digitableLine:details.digitable_line||null},expires_at:expiry,updated_at:new Date().toISOString()}).eq('id',claim.id);
+    if(saveError) throw new Error('Cobrança criada, mas ainda precisa ser conciliada. Use “Consultar pagamento” antes de gerar outra.');
+    await db.from('barber_subscriptions').update({state:'pending'}).eq('id',sub.id).is('provider_id',null);
+    return {transparent:true,orderId:String(remote.id),method:data.paymentMethod,amountCents:claim.amount_cents,payment:{id:payment.id?String(payment.id):null,status:payment.status||null,ticketUrl:details.ticket_url||null,qrCode:details.qr_code||null,qrCodeBase64:details.qr_code_base64||null,barcodeContent:details.barcode_content||null,digitableLine:details.digitable_line||null},expiresAt:expiry};
   }
-  let remote;
-  if(!claim.can_create) {
-    const found=await mercado(`/preapproval/search?external_reference=${encodeURIComponent(claim.id)}`);
-    const matches=(found.results || []).filter((item:any)=>String(item.external_reference)===claim.id);
-    if(matches.length!==1) throw new Error('O checkout está em conciliação. Aguarde e consulte novamente; uma segunda cobrança não será criada.');
-    remote=matches[0];
-  } else {
-    const {data:tenant}=await db.from('tenants').select('name,trial_ends_at').eq('id',membership.tenant_id).single();
-    const {data:account}=await context.supabase.auth.getUser();
-      const origin=new URL((await getMercadoConfig()).appUrl).origin;
-    if(!origin.startsWith('https://')) throw new Error('Configure uma URL HTTPS para a plataforma.');
-    remote=await mercado('/preapproval','POST',{
-      reason:`Agenda mensal de barbeiro — ${tenant.name}`.slice(0,120), external_reference:claim.id,payer_email:account.user?.email,
-      auto_recurring:{frequency:1,frequency_type:'months',transaction_amount:claim.amount_cents/100,currency_id:'BRL',...(new Date(tenant.trial_ends_at).getTime()>Date.now()?{start_date:new Date(tenant.trial_ends_at).toISOString()}:{})},
-      back_url:`${origin}/admin/mensalidade`,status:'pending',
-    },claim.id);
-  }
-  if(!remote?.id || String(remote.external_reference)!==claim.id || !remote.init_point || remote.auto_recurring?.currency_id!=='BRL' || Math.round(Number(remote.auto_recurring?.transaction_amount)*100)!==claim.amount_cents) throw new Error('Não foi possível confirmar o checkout. Consulte novamente para conciliar.');
-  const checkout=new URL(remote.init_point);
-  if(checkout.protocol!=='https:' || !/(^|\.)mercadopago\.com(\.br)?$/.test(checkout.hostname)) throw new Error('Endereço de pagamento inválido.');
-  const {error:saveError}=await db.from('barber_subscriptions').update({provider_id:remote.id,checkout_url:checkout.href,state:remote.status==='authorized'?'authorized':'pending'}).eq('id',claim.id).is('provider_id',null);
-  if(saveError) throw new Error('Checkout criado, mas aguardando conciliação. Consulte novamente antes de pagar.');
-  return {url:checkout.href};
+  throw new Error('Ação de cobrança inválida.');
  });
 
 export const platformBillingStatus = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
@@ -134,11 +153,18 @@ export const platformBillingStatus = createServerFn({method:'POST'}).middleware(
   return {ready:await billingReady(),config,webhookPath:'/api/mercadopago/webhook'};
 });
 
-const platformConfigInput=z.object({accessToken:z.string().max(512).optional().default(''),webhookSecret:z.string().max(512).optional().default(''),publicKey:z.string().max(256).optional().default(''),appUrl:z.string().max(255).optional().default('')});
+export const validatePlatformMercadoConfig = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
+  const {data:allowed}=await context.supabase.rpc('is_platform_admin');
+  if(!allowed) throw new Error('Acesso restrito ao superadministrador.');
+  const {validateMercadoPagoMethods}=await import('@/lib/mercadopago.server');
+  return validateMercadoPagoMethods();
+});
+
+const platformConfigInput=z.object({accessToken:z.string().max(512).optional().default(''),webhookSecret:z.string().max(512).optional().default(''),publicKey:z.string().max(256).optional().default(''),appUrl:z.string().max(255).optional().default(''),ordersAccessToken:z.string().max(512).optional().default(''),ordersWebhookSecret:z.string().max(512).optional().default('')});
 export const savePlatformMercadoConfig=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(platformConfigInput).handler(async({data,context})=>{
   const {data:allowed}=await context.supabase.rpc('is_platform_admin');
   if(!allowed) throw new Error('Acesso restrito ao superadministrador.');
-  const {data:status,error}=await (context.supabase as any).rpc('platform_save_mercado_pago_config',{p_access_token:data.accessToken,p_webhook_secret:data.webhookSecret,p_public_key:data.publicKey,p_app_url:data.appUrl});
+  const {data:status,error}=await (context.supabase as any).rpc('platform_save_mercado_pago_config',{p_access_token:data.accessToken,p_webhook_secret:data.webhookSecret,p_public_key:data.publicKey,p_app_url:data.appUrl,p_orders_access_token:data.ordersAccessToken,p_orders_webhook_secret:data.ordersWebhookSecret});
   if(error) throw new Error(error.message||'Não foi possível salvar as credenciais.');
   return {config:status};
 });
