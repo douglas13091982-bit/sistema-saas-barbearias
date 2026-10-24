@@ -61,9 +61,9 @@ export default function Landing(){
  <section className="saas-hero sl-hero">
  <p className="saas-kicker"><span/> GESTÃO COMPLETA PARA BARBEARIAS</p>
  <h1>Mais que agendamento.<br/><em>Gestão para crescer.</em></h1>
- <p className="sl-intro">Organize a agenda e a equipe, acompanhe o faturamento de cada barbeiro e saiba quanto repassar por corte. Seu site e a gestão da barbearia em um só sistema.</p>
+ <p className="sl-intro">Organize a agenda e a equipe, acompanhe o faturamento por barbeiro e crie um programa de fidelidade para trazer seus clientes de volta. Seu site e a gestão da barbearia em um só sistema.</p>
  <div className="saas-actions sl-actions"><Link className="saas-button" to="/cadastro">Começar meus 7 dias grátis <ArrowUpRight size={18} aria-hidden="true"/></Link><Link className="sl-model" to="/barbershop-pro">Conhecer o modelo <span aria-hidden="true">→</span></Link></div>
- <div className="sl-assurances"><span><Check size={15} aria-hidden="true"/> 7 dias para experimentar</span><span><Check size={15} aria-hidden="true"/> Seu site com sua identidade</span><span><Check size={15} aria-hidden="true"/> Gestão e relatórios em um só painel</span></div>
+ <div className="sl-assurances"><span><Check size={15} aria-hidden="true"/> 7 dias para experimentar</span><span><Check size={15} aria-hidden="true"/> Seu site com sua identidade</span><span><Check size={15} aria-hidden="true"/> Gestão e relatórios em um só painel</span><span><Check size={15} aria-hidden="true"/> Fidelidade com recompensas configuráveis</span></div>
  </section>
 
  <section className="sl-benefits" aria-label="Recursos da plataforma">
