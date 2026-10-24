@@ -54,10 +54,10 @@ export async function mercadoOrders(path: string, method = 'GET', body?: unknown
 export async function validateMercadoPagoMethods() {
   const methods=await mercadoOrders('/v1/payment_methods');
   if(!Array.isArray(methods)) throw new Error('O Mercado Pago retornou uma lista de meios de pagamento inválida.');
-  // Search only for an intentionally nonexistent marker to confirm that the
-  // separate Subscriptions application can reach the API without creating a charge.
-  const subscriptions=await mercado('/preapproval/search?external_reference=menubarber-connection-check&limit=1');
-  if(!subscriptions||!Array.isArray(subscriptions.results)) throw new Error('A aplicação de Assinaturas não retornou uma resposta válida.');
+  // Confirm the same app token can reach the recurring endpoint without creating a charge.
+  // A Checkout Transparente app may not have Subscriptions enabled, so report this separately.
+  let subscriptionsApi=false;
+  try { const subscriptions=await mercado('/preapproval/search?external_reference=menubarber-connection-check&limit=1');subscriptionsApi=!!subscriptions&&Array.isArray(subscriptions.results); } catch { subscriptionsApi=false; }
   const types=new Set(methods.map((item:any)=>`${item.id||''}:${item.payment_type_id||''}`));
   return {
     authenticated:true,
