@@ -37,7 +37,7 @@ export default function AdminLayout() {
     { to: '/admin/conteudo', icon: Home, label: 'Conteúdo' },
     { to: '/admin/tema', icon: Palette, label: 'Personalização' },
     { to: '/admin/usuarios', icon: Shield, label: 'Usuários' },
-    { to: '/admin/relatorios', icon: BarChart3, label: 'Relatórios' },
+    { to: '/admin/relatorios', icon: BarChart3, label: 'Produção por barbeiro' },
     { to: '/admin/mensalidade', icon: Calendar, label: 'Mensalidade' },
     ...(isPlatformAdmin ? [{ to: '/super-admin', icon: Shield, label: 'Superadministrador' }] : []),
     { to: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
