@@ -52,11 +52,7 @@ export default function AdminReports() {
     const completed = barberAppointments.filter(a => a.status === 'completed');
     const haircutAppointments = completed.map(a => {
       const service = services.find(s => s.id === a.serviceId);
-      const label = `${service?.name || ''} ${service?.category || ''}`
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-      return { appointment: a, service, isHaircut: label.includes('cort') };
+      return { appointment: a, service, isHaircut: isHaircutService(service) };
     }).filter(item => item.isHaircut);
     const haircuts = haircutAppointments.length;
     const haircutRevenue = haircutAppointments.reduce((sum, item) => sum + (Number(item.service?.price) || 0), 0);
