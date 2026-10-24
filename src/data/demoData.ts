@@ -164,7 +164,38 @@ export const defaultSiteSettings: SiteSettings = {
   intervalMinutes: 15,
   toleranceMinutes: 10,
   cancelPolicy: 'Cancelamentos devem ser feitos com pelo menos 2 horas de antecedência. Cancelamentos tardios podem estar sujeitos a taxa.',
-  currency: 'R$',
+  currency: 'R [
+    { id: 'services', name: 'Serviços', active: true, order: 1 },
+    { id: 'barbers', name: 'Barbeiros', active: true, order: 2 },
+    { id: 'gallery', name: 'Galeria', active: true, order: 3 },
+    { id: 'testimonials', name: 'Depoimentos', active: true, order: 4 },
+    { id: 'contact', name: 'Contato', active: true, order: 5 },
+  ]
+};
+
+export const defaultThemeSettings: ThemeSettings = {
+  primaryColor: '#1a1a2e',
+  secondaryColor: '#16213e',
+  accentColor: '#c9a96e',
+  backgroundColor: '#0f0f0f',
+  buttonColor: '#c9a96e',
+  textColor: '#ffffff',
+  fontFamily: 'Inter',
+  darkMode: true,
+  buttonStyle: 'rounded'
+};
+
+export const defaultHolidays: Holiday[] = [
+  { id: '1', name: 'Ano Novo', date: '2025-01-01', active: true },
+  { id: '2', name: 'Carnaval', date: '2025-03-03', active: true },
+  { id: '3', name: 'Carnaval', date: '2025-03-04', active: true },
+  { id: '4', name: 'Tiradentes', date: '2025-04-21', active: true },
+  { id: '5', name: 'Dia do Trabalho', date: '2025-05-01', active: true },
+  { id: '6', name: 'Independência', date: '2025-09-07', active: true },
+  { id: '7', name: 'Natal', date: '2025-12-25', active: true },
+];
+,
+  loyaltyProgram: { enabled: false, cutsRequired: 5, rewardServiceId: '', rewardName: '' },
   sections: [
     { id: 'services', name: 'Serviços', active: true, order: 1 },
     { id: 'barbers', name: 'Barbeiros', active: true, order: 2 },
