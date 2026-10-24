@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '@/contexts/DataContext';
 import { Link } from '@/lib/router-compat';
-import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, UsersRound, ArrowRight, Menu, X, MessageCircle, Youtube } from 'lucide-react';
+import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, UsersRound, ArrowRight, Menu, X, MessageCircle, Youtube, Gift } from 'lucide-react';
 import '@/styles/barbershop-home.css';
 import { getServiceImage } from '@/lib/service-images';
 import type { Service, Barber, Testimonial, GalleryImage, SiteSettings, ThemeSettings } from '@/types';
@@ -14,6 +14,9 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [allPhotos, setAllPhotos] = useState(false);
   const activeServices = services.filter(s => s.active);
+  const loyaltyProgram = site.loyaltyProgram || { enabled: false, cutsRequired: 5, rewardServiceId: '', rewardName: '' };
+  const loyaltyRewardName = loyaltyProgram.rewardName || activeServices.find(service => service.id === loyaltyProgram.rewardServiceId)?.name || '';
+  const showLoyaltyProgram = Boolean(loyaltyProgram.enabled && Number(loyaltyProgram.cutsRequired) > 0 && loyaltyRewardName);
   const activeBarbers = barbers.filter(b => b.active && bookingAccess[b.id]).sort((a, b) => a.order - b.order);
   const activeTestimonials = testimonials.filter(t => t.active);
   const photos = [...gallery].sort((a, b) => a.order - b.order);
@@ -43,6 +46,7 @@ export default function Home() {
   } as CSSProperties;
   const links = [
     { id: 'services', anchor: 'servicos', label: 'Serviços', show: activeServices.length > 0 },
+    { id: 'loyalty', anchor: 'fidelidade', label: 'Fidelidade', show: showLoyaltyProgram },
     { id: 'barbers', anchor: 'barbeiros', label: 'Nossa equipe', show: activeBarbers.length > 0 },
     { id: 'gallery', anchor: 'galeria', label: 'Galeria', show: photos.length > 0 },
     { id: 'testimonials', anchor: 'depoimentos', label: 'Depoimentos', show: activeTestimonials.length > 0 },
@@ -115,6 +119,15 @@ export default function Home() {
         </div>
       </section>
       <div className="bb-benefits"><div className="bb-wrap">{[{ icon: CalendarDays, title: 'Agendamento online', copy: 'Seu horário, em poucos passos.' }, { icon: UsersRound, title: 'Cuidado em cada serviço', copy: 'Atenção a todos os detalhes.' }, { icon: Star, title: 'Atendimento personalizado', copy: 'Seu estilo, do seu jeito.' }].map(item => <div key={item.title}><item.icon aria-hidden="true" /><div><h2>{item.title}</h2><p>{item.copy}</p></div></div>)}</div></div>
+      {showLoyaltyProgram && <section id="fidelidade" className="bb-loyalty bb-wrap" aria-label="Programa de fidelidade">
+        <div className="bb-loyalty-copy">
+          <p className="bb-eyebrow">Programa de fidelidade</p>
+          <h2>A cada {loyaltyProgram.cutsRequired} cortes concluídos, ganhe {loyaltyRewardName} gratuito.</h2>
+          <p>Continue escolhendo seus serviços e acumulando cortes. Quando atingir a meta, nossa equipe registra a entrega da sua recompensa.</p>
+          <Link to="/agendar" className="bb-button">Começar a acumular cortes <ArrowRight size={16} aria-hidden="true" /></Link>
+        </div>
+        <div className="bb-loyalty-mark" aria-hidden="true"><Gift /><strong>{loyaltyProgram.cutsRequired}<span> + 1</span></strong><small>seu próximo serviço por nossa conta</small></div>
+      </section>}
       {orderedSections.map((id, index) => <div key={id}>
         {enabled(id) && sections[id]}
         {index === 0 && <section id="sobre" className="bb-about">
