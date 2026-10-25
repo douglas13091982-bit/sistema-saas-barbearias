@@ -1,11 +1,11 @@
 // @ts-nocheck -- imported code, kept as written
 import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
-import { Calendar, DollarSign, Users, Scissors, TrendingUp, Clock, UserCheck, AlertTriangle } from 'lucide-react';
+import { Calendar, DollarSign, Users, Scissors, TrendingUp, Clock, UserCheck, AlertTriangle, LayoutDashboard, CalendarDays, MessageSquare, Image, Home, Palette, Shield, BarChart3, Settings } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Dashboard() {
-  const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
+  const { appointments, services, barbers, clients, siteSettings, themeSettings, isPlatformAdmin } = useData();
   const today = new Date().toISOString().split('T')[0];
 
   const todayAppointments = appointments.filter(a => a.date === today && a.status !== 'cancelled');
@@ -60,12 +60,46 @@ export default function Dashboard() {
     { label: 'Taxa Cancelamento', value: `${cancelRate}%`, icon: AlertTriangle, color: '#ef4444' },
   ];
 
+  const modules = [
+    { label: 'Dashboard', icon: LayoutDashboard, route: '/admin/dashboard' },
+    { label: 'Agenda', icon: CalendarDays, route: '/admin/agenda' },
+    { label: 'Agendamentos', icon: Calendar, route: '/admin/agendamentos', badge: appointments.filter(a => a.status === 'pending').length },
+    { label: 'Serviços', icon: Scissors, route: '/admin/servicos' },
+    { label: 'Barbeiros', icon: Users, route: '/admin/barbeiros' },
+    { label: 'Clientes', icon: UserCheck, route: '/admin/clientes' },
+    { label: 'Depoimentos', icon: MessageSquare, route: '/admin/depoimentos' },
+    { label: 'Galeria', icon: Image, route: '/admin/galeria' },
+    { label: 'Conteúdo', icon: Home, route: '/admin/conteudo' },
+    { label: 'Personalização', icon: Palette, route: '/admin/tema' },
+    { label: 'Usuários', icon: Shield, route: '/admin/usuarios' },
+    { label: 'Produção', icon: BarChart3, route: '/admin/relatorios' },
+    { label: 'Mensalidade', icon: CalendarDays, route: '/admin/mensalidade' },
+    ...(isPlatformAdmin ? [{ label: 'Super admin', icon: Shield, route: '/super-admin' }] : []),
+    { label: 'Configurações', icon: Settings, route: '/admin/configuracoes' },
+  ];
+
   return (
     <div className="ba-dashboard space-y-6">
       <div className="ba-welcome">
         <div><p className="ba-eyebrow">VISÃO GERAL</p><h1 className="text-2xl font-bold text-white">Seu negócio, em boas mãos.</h1><p className="text-white/50 text-sm">Acompanhe os atendimentos e cuide de cada detalhe da sua barbearia.</p></div>
         <div className="ba-quick-actions"><Link to="/admin/agenda">Ver agenda</Link><Link to="/admin/agendamentos">Gerenciar agendamentos</Link></div>
       </div>
+
+      <section className="ba-mobile-module-hub" aria-label="Acessos rápidos do painel">
+        <div className="ba-mobile-module-heading">
+          <p className="ba-eyebrow">ACESSO RÁPIDO</p>
+          <h2>Seus módulos</h2>
+        </div>
+        <nav className="ba-mobile-module-grid">
+          {modules.map(module => (
+            <Link key={module.route} to={module.route} className="ba-mobile-module-card">
+              <module.icon aria-hidden="true" />
+              <span>{module.label}</span>
+              {module.badge > 0 && <small aria-label={`${module.badge} agendamentos pendentes`}>{module.badge > 99 ? '99+' : module.badge}</small>}
+            </Link>
+          ))}
+        </nav>
+      </section>
 
       {/* Stats Grid */}
       <div className="grid ba-stats grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
