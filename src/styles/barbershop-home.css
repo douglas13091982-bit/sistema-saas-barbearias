@@ -28,5 +28,4 @@
 
 /* Botão "Assinar plano" nos cards de serviço */
 .bb-service-actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:auto}
-.bb-service-actions .bb-text-link{margin-top:0}
-.bb-service-actions .bb-service-subscribe{width:100%;gap:10px;min-height:46px}
+.bb-service-actions .bb-service-cta{width:100%;gap:10px;min-height:46px}

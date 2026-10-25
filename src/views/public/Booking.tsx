@@ -1,5 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { supabase } from '@/integrations/supabase/client';
+import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import { useState, useMemo } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
@@ -24,7 +25,8 @@ export default function Booking() {
   const [clientEmail, setClientEmail] = useState('');
   const [clientNotes, setClientNotes] = useState('');
 
-  const activeServices = services.filter(s => s.active);
+  // Serviços com link de assinatura são planos: o cliente assina pelo site, não escolhe um horário para eles.
+  const activeServices = services.filter(s => s.active && !safeSubscriptionUrl(s.subscriptionUrl));
   const activeBarbers = barbers.filter(b => b.active && bookingAccess[b.id]).sort((a, b) => a.order - b.order);
 
   const filteredBarbers = useMemo(() => {
