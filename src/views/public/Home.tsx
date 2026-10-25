@@ -66,8 +66,9 @@ export default function Home() {
         <div className="bb-service-body"><h3>{service.name}</h3><div className="bb-service-meta"><strong>{site.currency} {Number(service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><span><Clock size={13} aria-hidden="true" />{service.duration} min</span></div>
           <p>{service.description}</p>
           <div className="bb-service-actions">
-            {safeSubscriptionUrl(service.subscriptionUrl) && <a href={safeSubscriptionUrl(service.subscriptionUrl) as string} target="_blank" rel="noopener noreferrer" className="bb-button bb-service-subscribe" aria-label={`Assinar plano ${service.name} (abre em nova aba)`}><CreditCard size={16} aria-hidden="true" />Assinar plano</a>}
-            <Link to={`/agendar?service=${encodeURIComponent(service.id)}`} className="bb-text-link" aria-label={`Agendar ${service.name}`}>Agendar serviço <ArrowRight size={16} aria-hidden="true" /></Link>
+            {safeSubscriptionUrl(service.subscriptionUrl)
+              ? <a href={safeSubscriptionUrl(service.subscriptionUrl) as string} target="_blank" rel="noopener noreferrer" className="bb-button bb-service-cta bb-service-subscribe" aria-label={`Assinar plano ${service.name} (abre em nova aba)`}><CreditCard size={16} aria-hidden="true" />Assinar plano</a>
+              : <Link to={`/agendar?service=${encodeURIComponent(service.id)}`} className="bb-button bb-service-cta" aria-label={`Agendar ${service.name}`}><CalendarDays size={16} aria-hidden="true" />Agendar serviço</Link>}
           </div>
         </div>
       </article>)}</div>
