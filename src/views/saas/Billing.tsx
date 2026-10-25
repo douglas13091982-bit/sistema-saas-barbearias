@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowLeft, Check, Clock, Copy, CreditCard, FileText, Loader2, Lock, QrCode, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { SiteImage } from '@/components/SiteImage';
 import { useData } from '@/contexts/DataContext';
 import { billingAction } from '@/lib/billing.functions';
 import { formatCep, formatCpf, isValidCpf, onlyDigits } from '@/lib/cpf';
@@ -28,7 +29,7 @@ function loadMercadoPago() {
 
 type Method = 'card' | 'pix' | 'boleto';
 type Step = 'method' | 'details' | 'card' | 'order' | 'done';
-type Target = { barberId: string; barberName: string; amountCents: number };
+type Target = { barberId: string; barberName: string; amountCents: number; photo?: string };
 type Prepared = { barberId: string; barberName: string; amountCents: number; payerEmail: string; trialEndsAt: string | null; publicKey: string };
 type OrderPayment = { ticketUrl?: string | null; qrCode?: string | null; qrCodeBase64?: string | null; barcodeContent?: string | null; digitableLine?: string | null };
 type TransparentOrder = { barberId: string; method: 'pix' | 'boleto'; amountCents: number; orderId: string; expiresAt: string; payment: OrderPayment };
@@ -285,7 +286,7 @@ export default function Billing() {
       const legacy = !!sub?.provider_id && !['authorized', 'cancelled'].includes(sub.state);
       const canReactivate = cancelled && !paid;
       const canPay = !!sub && !sub.provider_id && !paid && !cancelled;
-      const payTarget: Target = { barberId: barber.id, barberName: barber.name, amountCents: amount };
+      const payTarget: Target = { barberId: barber.id, barberName: barber.name, amountCents: amount, photo: barber.photo };
       const status = cancelled ? { tone: 'bad', label: 'Cancelada' }
         : paid ? { tone: 'ok', label: 'Em dia' }
         : sub?.state === 'authorized' ? { tone: 'ok', label: 'Assinatura ativa' }
@@ -296,9 +297,13 @@ export default function Billing() {
       const open = !!bookingAccess[barber.id];
       return <article className="bill-card" key={barber.id}>
         <header className="bill-head">
-          <span className="bill-avatar" aria-hidden="true">{String(barber.name || '?').trim().charAt(0).toUpperCase()}</span>
-          <div className="bill-who"><h2>{barber.name}</h2><small>{barber.active ? 'Perfil ativo' : 'Perfil inativo'}</small></div>
-          <span className={`bill-status bill-${status.tone}`}>{status.label}</span>
+          {barber.photo
+            ? <SiteImage src={barber.photo} alt={`Foto de ${barber.name}`} className="bill-avatar bill-photo" loading="lazy" decoding="async" />
+            : <span className="bill-avatar" aria-hidden="true">{String(barber.name || '?').trim().charAt(0).toUpperCase()}</span>}
+          <div className="bill-who">
+            <h2>{barber.name}</h2>
+            <div className="bill-tags"><span className={`bill-status bill-${status.tone}`}>{status.label}</span><small>{barber.active ? 'Perfil ativo' : 'Perfil inativo'}</small></div>
+          </div>
         </header>
         <p className="bill-price">{amount ? <><strong>{money(amount)}</strong><span> / mês</span></> : <strong>Valor a definir</strong>}</p>
         <ul className="bill-meta">
@@ -325,6 +330,7 @@ export default function Billing() {
       <section className={`cko-dialog${step === 'details' ? ' cko-wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby="cko-title" tabIndex={-1}>
         <header className="cko-header">
           {(step === 'details' || step === 'card') && <button type="button" className="cko-icon" disabled={!!busy} onClick={() => { setError(''); setStep('method'); }} aria-label="Voltar"><ArrowLeft size={18} /></button>}
+          {target.photo && step !== 'done' && <SiteImage src={target.photo} alt={`Foto de ${target.barberName}`} className="cko-photo" decoding="async" />}
           <div>
             <p className="cko-kicker"><Lock size={11} /> Pagamento seguro · Mercado Pago</p>
             <h2 id="cko-title">{step === 'done' ? 'Tudo certo' : `Mensalidade de ${target.barberName}`}</h2>
