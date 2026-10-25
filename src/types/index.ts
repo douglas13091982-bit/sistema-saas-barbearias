@@ -57,6 +57,8 @@ export interface Service {
   active: boolean;
   featured: boolean;
   image: string;
+  /** Link (https) do plano de assinatura da barbearia; opcional. */
+  subscriptionUrl?: string;
   createdAt: string;
 }
 

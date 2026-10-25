@@ -1,25 +1,30 @@
 // @ts-nocheck -- imported code, kept as written
 import { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
-import { Plus, Edit, Trash2, X, Scissors, Clock, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Scissors, Clock, DollarSign, Link2 } from 'lucide-react';
 import { Service } from '../../types';
+import { normalizeSubscriptionUrl } from '../../lib/subscription-link';
 
 export default function AdminServices() {
   const { services, addService, updateService, deleteService, appointments } = useData();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', price: 0, duration: 30, category: 'Cortes', active: true, featured: false, image: '' });
+  const [form, setForm] = useState({ name: '', description: '', price: 0, duration: 30, category: 'Cortes', active: true, featured: false, image: '', subscriptionUrl: '' });
+  const [linkError, setLinkError] = useState('');
 
-  const openNew = () => { setEditing(null); setForm({ name: '', description: '', price: 0, duration: 30, category: 'Cortes', active: true, featured: false, image: '' }); setShowModal(true); };
-  const openEdit = (s: Service) => { setEditing(s); setForm({ name: s.name, description: s.description, price: s.price, duration: s.duration, category: s.category, active: s.active, featured: s.featured, image: s.image }); setShowModal(true); };
+  const openNew = () => { setEditing(null); setLinkError(''); setForm({ name: '', description: '', price: 0, duration: 30, category: 'Cortes', active: true, featured: false, image: '', subscriptionUrl: '' }); setShowModal(true); };
+  const openEdit = (s: Service) => { setEditing(s); setLinkError(''); setForm({ name: s.name, description: s.description, price: s.price, duration: s.duration, category: s.category, active: s.active, featured: s.featured, image: s.image, subscriptionUrl: s.subscriptionUrl || '' }); setShowModal(true); };
 
   const handleSave = async () => {
     try {
     if (!form.name) return;
+    const link = normalizeSubscriptionUrl(form.subscriptionUrl);
+    if (!link.ok) { setLinkError(link.error); return; }
+    const payload = { ...form, subscriptionUrl: link.url };
     if (editing) {
-      await updateService(editing.id, form);
+      await updateService(editing.id, payload);
     } else {
-      await addService(form);
+      await addService(payload);
     }
     setShowModal(false);
     } catch {}
@@ -53,7 +58,10 @@ export default function AdminServices() {
                   <Scissors className="w-5 h-5" style={{ color: '#c9a96e' }} />
                   <h3 className="font-semibold text-white">{service.name}</h3>
                 </div>
-                {service.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">Destaque</span>}
+                <div className="flex items-center gap-1.5">
+                  {service.subscriptionUrl && <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300"><Link2 className="w-3 h-3" /> Assinatura</span>}
+                  {service.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">Destaque</span>}
+                </div>
               </div>
               <p className="text-white/50 text-sm mb-3">{service.description}</p>
               <div className="flex items-center gap-4 text-sm mb-4">
@@ -111,6 +119,11 @@ export default function AdminServices() {
                   <option value="Tratamentos">Tratamentos</option>
                   <option value="Acabamento">Acabamento</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm text-white/70 mb-1" htmlFor="service-subscription-url">Link de assinatura (opcional)</label>
+                <input id="service-subscription-url" type="text" inputMode="url" autoComplete="off" spellCheck={false} placeholder="https://seu-link-de-pagamento.com/plano" value={form.subscriptionUrl} onChange={e => { setForm({ ...form, subscriptionUrl: e.target.value }); setLinkError(''); }} aria-invalid={!!linkError} className={`w-full px-3 py-2.5 rounded-lg bg-white/5 border text-white text-sm outline-none focus:border-white/30 ${linkError ? 'border-red-400/70' : 'border-white/10'}`} />
+                {linkError ? <p role="alert" className="text-xs text-red-300 mt-1">{linkError}</p> : <p className="text-xs text-white/40 mt-1">Cole o link do plano que você criou (Mercado Pago, Asaas, Stripe etc.). O card do serviço no site ganha o botão "Assinar plano".</p>}
               </div>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 text-sm text-white/70">

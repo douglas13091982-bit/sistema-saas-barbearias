@@ -2,7 +2,8 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '@/contexts/DataContext';
 import { Link } from '@/lib/router-compat';
-import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, UsersRound, ArrowRight, Menu, X, MessageCircle, Youtube, Gift } from 'lucide-react';
+import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, UsersRound, ArrowRight, Menu, X, MessageCircle, Youtube, Gift, CreditCard } from 'lucide-react';
+import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import '@/styles/barbershop-home.css';
 import { getServiceImage } from '@/lib/service-images';
 import type { Service, Barber, Testimonial, GalleryImage, SiteSettings, ThemeSettings } from '@/types';
@@ -63,7 +64,11 @@ export default function Home() {
         <div className="bb-service-photo"><SiteImage src={servicePhoto(service)} fallbackSrc={getServiceImage(service.name, service.category)} alt={service.name} loading="lazy" decoding="async" />
         </div>
         <div className="bb-service-body"><h3>{service.name}</h3><div className="bb-service-meta"><strong>{site.currency} {Number(service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><span><Clock size={13} aria-hidden="true" />{service.duration} min</span></div>
-          <p>{service.description}</p><Link to={`/agendar?service=${encodeURIComponent(service.id)}`} className="bb-text-link" aria-label={`Agendar ${service.name}`}>Agendar serviço <ArrowRight size={16} aria-hidden="true" /></Link>
+          <p>{service.description}</p>
+          <div className="bb-service-actions">
+            {safeSubscriptionUrl(service.subscriptionUrl) && <a href={safeSubscriptionUrl(service.subscriptionUrl) as string} target="_blank" rel="noopener noreferrer" className="bb-button bb-service-subscribe" aria-label={`Assinar plano ${service.name} (abre em nova aba)`}><CreditCard size={16} aria-hidden="true" />Assinar plano</a>}
+            <Link to={`/agendar?service=${encodeURIComponent(service.id)}`} className="bb-text-link" aria-label={`Agendar ${service.name}`}>Agendar serviço <ArrowRight size={16} aria-hidden="true" /></Link>
+          </div>
         </div>
       </article>)}</div>
     </section>,

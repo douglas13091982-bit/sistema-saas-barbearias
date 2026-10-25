@@ -25,3 +25,8 @@
 @media(max-width:540px){.bb-loyalty{grid-template-columns:1fr;margin-block:35px;padding:26px 22px;gap:18px}.bb-loyalty-copy h2{font-size:29px}.bb-loyalty-mark{min-height:0;padding-top:18px;border-left:0;border-top:1px solid #ffffff18}.bb-loyalty-mark>strong{font-size:43px}}
 
 .bb-review-author{display:flex;align-items:center;gap:12px}.bb-review-photo{width:46px;height:46px;flex:0 0 46px;object-fit:cover;border-radius:50%;border:1px solid color-mix(in srgb,var(--bb-accent) 55%,transparent)}
+
+/* Botão "Assinar plano" nos cards de serviço */
+.bb-service-actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:auto}
+.bb-service-actions .bb-text-link{margin-top:0}
+.bb-service-actions .bb-service-subscribe{width:100%;gap:10px;min-height:46px}
