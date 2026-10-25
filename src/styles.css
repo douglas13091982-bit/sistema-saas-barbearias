@@ -232,3 +232,29 @@
     overflow: hidden;
   }
 }
+
+
+/* Reforço global da navegação por cards no painel administrativo em telas móveis. */
+@media(max-width:767px){
+  .ba-shell .ba-sidebar,
+  .ba-shell .ba-overlay,
+  .ba-shell .ba-close,
+  .ba-shell .ba-topbar>div>button{display:none!important}
+  .ba-shell .ba-mobile-home-link{display:inline-flex!important;align-items:center;gap:7px;min-height:48px;padding:0 10px;color:var(--ba-accent);font-size:12px;text-decoration:none}
+  .ba-shell .ba-topbar{min-height:66px!important;padding:9px 12px!important}
+  .ba-shell .ba-topbar-label{display:block!important;flex:1;min-width:0;margin-left:7px}
+  .ba-shell .ba-topbar-label>span{display:block;color:#d4cfc2;font-size:12px}
+  .ba-shell .ba-topbar-label>p{display:block;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+  .ba-shell .ba-content{padding:16px 13px 26px!important}
+  .ba-shell .ba-mobile-module-hub{display:block!important;margin:0 0 22px}
+  .ba-shell .ba-mobile-module-heading{margin:0 2px 12px}
+  .ba-shell .ba-mobile-module-heading h2{margin:4px 0 0;color:#f4f0e7;font:500 22px/1.2 'Playfair Display',Georgia,serif}
+  .ba-shell .ba-mobile-module-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .ba-shell .ba-mobile-module-card{position:relative;min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:13px 7px;border:1px solid color-mix(in srgb,var(--ba-accent) 19%,transparent);border-radius:16px;background:#191918;color:#e8e2d5;text-align:center;text-decoration:none;font-size:12px;font-weight:450;line-height:1.25;transition:transform .15s,border-color .15s,background .15s}
+  .ba-shell .ba-mobile-module-card:active{transform:scale(.97)}
+  .ba-shell .ba-mobile-module-card:focus-visible{outline:2px solid var(--ba-accent);outline-offset:2px}
+  .ba-shell .ba-mobile-module-card svg{width:27px;height:27px;color:var(--ba-accent);stroke-width:1.7;flex:0 0 auto}
+  .ba-shell .ba-mobile-module-card small{position:absolute;top:6px;right:7px;min-width:19px;height:19px;display:grid;place-items:center;border-radius:999px;padding:0 5px;background:var(--ba-accent);color:#101010;font-size:10px;font-weight:650}
+  .ba-shell .ba-mobile-module-card span{max-width:100%;overflow-wrap:anywhere}
+}
+@media(max-width:360px){.ba-shell .ba-mobile-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
