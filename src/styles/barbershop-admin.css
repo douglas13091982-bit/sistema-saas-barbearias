@@ -3,3 +3,29 @@
 @media(max-width:1023px){.ba-sidebar{position:fixed!important;z-index:60!important;left:0;top:0;width:270px!important}.ba-close{display:block}.ba-topbar{padding:12px 18px!important;min-height:70px}.ba-topbar-label{display:none}.ba-content{padding:22px!important}.ba-overlay{z-index:55!important}}
 @media(max-width:639px){.ba-content{padding:18px 14px!important}.ba-content h1{font-size:26px!important}.ba-welcome{padding:23px 20px;gap:20px}.ba-welcome h1{font-size:28px!important}.ba-quick-actions{width:100%}.ba-quick-actions a{flex:1;white-space:normal;text-align:center}.ba-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.ba-stats>div{padding:16px!important}.ba-stats>div>p:first-of-type{font-size:23px;overflow-wrap:anywhere}.ba-stats>div>p:last-child{font-size:10px!important}.ba-content [class~="fixed"]{padding:12px}.ba-content [class~="fixed"]>[class~="bg-[#1f2937]"]{padding:20px!important}.ba-content table{min-width:550px}.ba-content [class~="overflow-x-auto"]{overscroll-behavior-x:contain}}
 @media(prefers-reduced-motion:reduce){.ba-shell *{transition:none!important}}
+
+
+/* Hub de módulos mobile: usa o dourado definido pelo tema da barbearia. */
+.ba-mobile-module-hub{display:none}
+.ba-mobile-home-link{display:none}
+@media(max-width:639px){
+  .ba-mobile-module-hub{display:block;margin:0 0 22px}
+  .ba-mobile-module-heading{margin:0 2px 12px}
+  .ba-mobile-module-heading h2{margin:4px 0 0;color:#f4f0e7;font:500 22px/1.2 'Playfair Display',Georgia,serif}
+  .ba-mobile-module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .ba-mobile-module-card{position:relative;min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:13px 7px;border:1px solid color-mix(in srgb,var(--ba-accent) 19%,transparent);border-radius:16px;background:#191918;color:#e8e2d5;text-align:center;text-decoration:none;font-size:12px;font-weight:450;line-height:1.25;transition:transform .15s,border-color .15s,background .15s}
+  .ba-mobile-module-card:active{transform:scale(.97)}
+  .ba-mobile-module-card:focus-visible{outline:2px solid var(--ba-accent);outline-offset:2px}
+  .ba-mobile-module-card svg{width:27px;height:27px;color:var(--ba-accent);stroke-width:1.7;flex:0 0 auto}
+  .ba-mobile-module-card small{position:absolute;top:6px;right:7px;min-width:19px;height:19px;display:grid;place-items:center;border-radius:999px;padding:0 5px;background:var(--ba-accent);color:#101010;font-size:10px;font-weight:650}
+  .ba-sidebar{display:none!important}
+  .ba-close,.ba-menu-toggle{display:none!important}
+  .ba-mobile-home-link{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 10px;color:var(--ba-accent);font-size:12px;text-decoration:none}
+  .ba-topbar{min-height:66px!important;padding:9px 12px!important}
+  .ba-topbar-label{display:block!important;flex:1;min-width:0;margin-left:7px}
+  .ba-topbar-label>span{display:block;color:#d4cfc2;font-size:12px}
+  .ba-topbar-label>p{display:block;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+  .ba-content{padding:16px 13px 26px!important}
+  .ba-mobile-module-card span{max-width:100%;overflow-wrap:anywhere}
+}
+@media(max-width:360px){.ba-mobile-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
