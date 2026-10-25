@@ -104,7 +104,7 @@ export default function AdminLayout() {
         {/* Top Bar */}
         <header className="ba-topbar sticky top-0 z-30 bg-[#111827]/80 backdrop-blur-md border-b border-white/5 px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
-            <a href="/admin/dashboard" aria-label="Voltar aos módulos do painel" className="ba-mobile-home-link"><LayoutDashboard className="w-5 h-5" /><span>Painel</span></a>
+            <a href="/admin" aria-label="Voltar aos módulos do painel" className="ba-mobile-home-link"><LayoutDashboard className="w-5 h-5" /><span>Painel</span></a>
             <div className="ba-topbar-label"><span>Painel administrativo</span><p>{siteSettings.barbershopName}</p></div>
             <div className="flex items-center gap-3">
               <a href={tenant ? `/${tenant.slug}` : "/"} target="_blank" rel="noopener noreferrer" className="text-xs text-white/50 hover:text-white transition flex items-center gap-1">
