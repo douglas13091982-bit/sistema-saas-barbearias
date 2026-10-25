@@ -9,3 +9,69 @@
 @media(max-width:600px){.saas-payment-methods{grid-template-columns:1fr}}
 .saas-invoice-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.saas-invoice-fields h3{grid-column:1/-1;margin:0;color:#f3e8d4}.saas-invoice-fields label,.saas-transparent-order label{display:flex;flex-direction:column;gap:6px;color:#e6dfd2;font-size:13px}.saas-invoice-fields input,.saas-transparent-order input,.saas-transparent-order textarea{box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;background:#ffffff08;border:1px solid #ffffff25;border-radius:5px;color:#eee8dc;font:15px Inter,sans-serif}.saas-invoice-fields button{grid-column:1/-1}.saas-transparent-order{max-width:540px}.saas-transparent-order textarea{min-height:100px;resize:vertical;overflow-wrap:anywhere}.saas-transparent-order label{margin:12px 0}.saas-pix-qr{display:block;width:min(240px,80%);aspect-ratio:1;object-fit:contain;margin:16px auto;background:#fff;border-radius:8px;padding:8px}.saas-order-ticket{display:block;margin:14px 0;padding:12px 16px;border-radius:5px;background:#c9a96e;color:#171614;text-align:center;font-weight:700}
 @media(max-width:600px){.saas-invoice-fields{grid-template-columns:1fr}.saas-invoice-fields h3,.saas-invoice-fields button{grid-column:auto}}
+
+/* ===== Checkout (cko) — modal único em etapas ===== */
+.saas-admin .cko-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:#050505d9;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.saas-admin .cko-dialog{position:relative;box-sizing:border-box;width:min(480px,100%);max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain;padding:26px;background:linear-gradient(180deg,#1d1c1a,#161614);border:1px solid #c9a96e40;border-radius:18px;box-shadow:0 30px 90px #000c,0 0 0 1px #ffffff08 inset;scrollbar-width:thin;scrollbar-color:#68583b transparent;animation:cko-in .22s ease-out}
+.saas-admin .cko-dialog.cko-wide{width:min(560px,100%)}
+@keyframes cko-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.saas-admin .cko-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.saas-admin .cko-header>div{flex:1;min-width:0}
+.saas-admin .cko-header h2{margin:2px 0 0;font-size:22px;line-height:1.25}
+.saas-admin .cko-kicker{display:flex;align-items:center;gap:6px;margin:0;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#c9a96e}
+.saas-admin button.cko-icon{flex:none;min-width:36px;min-height:36px;width:36px;height:36px;padding:0;border-radius:50%;background:#ffffff10;border:1px solid #ffffff1c;color:#eee8dc!important;transition:background .15s}
+.saas-admin button.cko-icon:hover:not(:disabled){background:#ffffff1f}
+.saas-admin .cko-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;margin-bottom:18px;padding:14px 16px;border-radius:12px;background:#c9a96e12;border:1px solid #c9a96e33}
+.saas-admin .cko-summary span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#b7b1a6}
+.saas-admin .cko-summary strong{font-size:26px;font-family:'Playfair Display',Georgia,serif;font-weight:600;color:#f3e8d4}
+.saas-admin .cko-summary strong small{font:12px Inter,sans-serif;color:#b7b1a6}
+.saas-admin .cko-summary em{margin-left:auto;font-style:normal;font-size:11.5px;color:#d1b47c;background:#c9a96e1f;padding:3px 9px;border-radius:99px}
+.saas-admin .cko-lead{margin:0 0 14px;color:#e6dfd2;font-size:14.5px}
+.saas-admin .cko-alert{margin:0 0 14px;padding:11px 14px;border-radius:10px;background:#c4453a1f;border:1px solid #c4453a66;color:#ffb4aa;font-size:13px;line-height:1.5}
+.saas-admin .cko-hint{display:block;margin:10px 0 0;color:#b7b1a6;font-size:12px;line-height:1.5}
+.saas-admin .cko-methods{display:grid;gap:10px}
+.saas-admin button.cko-method{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:14px;width:100%;min-height:68px;padding:14px 16px;text-align:left;background:#ffffff08;border:1px solid #ffffff1f;border-radius:14px;color:#eee8dc!important;transition:border-color .15s,background .15s,transform .1s}
+.saas-admin button.cko-method:hover:not(:disabled){border-color:#c9a96e99;background:#c9a96e12}
+.saas-admin button.cko-method:active:not(:disabled){transform:scale(.99)}
+.saas-admin .cko-method-icon{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#c9a96e22;color:#d9bd86}
+.saas-admin .cko-method-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.saas-admin .cko-method-text strong{font-size:15px;font-weight:600;color:#f3e8d4}
+.saas-admin .cko-method-text small{font-size:12px;line-height:1.4;color:#b7b1a6}
+.saas-admin .cko-badge{margin-left:auto;flex:none;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#13110d;background:#c9a96e;padding:3px 8px;border-radius:99px;font-weight:700}
+.saas-admin .cko-privacy{display:flex;align-items:flex-start;gap:7px;margin:16px 0 0;font-size:12px;line-height:1.5;color:#9a9488}
+.saas-admin .cko-privacy svg{flex:none;margin-top:2px;color:#c9a96e}
+.saas-admin .cko-form{display:flex;flex-direction:column;gap:14px}
+.saas-admin .cko-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.saas-admin .cko-span{grid-column:1/-1}
+.saas-admin .cko-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.saas-admin .cko-field>span{font-size:12px;letter-spacing:.03em;color:#cfc8ba}
+.saas-admin .cko-field input,.saas-admin .cko-field select,.saas-admin .cko-mp-field{box-sizing:border-box;width:100%;height:48px;padding:0 14px;background:#ffffff0a;border:1px solid #ffffff26;border-radius:10px;color:#eee8dc;font:16px Inter,sans-serif;transition:border-color .15s,box-shadow .15s}
+.saas-admin .cko-mp-field{padding:0 12px;display:flex;align-items:center;overflow:hidden}
+.saas-admin .cko-mp-field iframe{width:100%!important;height:46px!important}
+.saas-admin .cko-field select option{background:#191918;color:#eee8dc}
+.saas-admin .cko-field input:focus,.saas-admin .cko-field select:focus{outline:0;border-color:#c9a96e;box-shadow:0 0 0 3px #c9a96e33}
+.saas-admin .cko-field input[aria-invalid=true]{border-color:#c4453a;box-shadow:0 0 0 3px #c4453a26}
+.saas-admin .cko-field em{font-style:normal;font-size:12px;color:#ff9d92}
+.saas-admin .cko-hidden{display:none!important}
+.saas-admin button.cko-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;padding:0 20px;font-size:15px;font-weight:700;letter-spacing:.01em;background:linear-gradient(180deg,#d6b97d,#c1a064);color:#13110d!important;border:0;border-radius:12px;box-shadow:0 8px 22px #c9a96e33;transition:filter .15s,transform .1s}
+.saas-admin button.cko-primary:hover:not(:disabled){filter:brightness(1.06)}
+.saas-admin button.cko-primary:active:not(:disabled){transform:scale(.99)}
+.saas-admin .cko-secondary,.saas-admin a.cko-secondary,.saas-admin button.cko-secondary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin-top:10px;padding:0 18px;box-sizing:border-box;background:#ffffff0f;border:1px solid #ffffff24;border-radius:12px;color:#eee8dc!important;font-size:14px;text-decoration:none;cursor:pointer}
+.saas-admin .cko-secondary:hover:not(:disabled){background:#ffffff1a}
+.saas-admin .cko-order{display:flex;flex-direction:column}
+.saas-admin .cko-qr{display:block;width:min(230px,70%);aspect-ratio:1;margin:4px auto 10px;padding:10px;object-fit:contain;background:#fff;border-radius:14px;box-shadow:0 10px 30px #0008}
+.saas-admin .cko-qr-empty{display:grid;place-items:center;color:#999}
+.saas-admin .cko-timer{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 0 14px;font-size:13px;color:#d1b47c}
+.saas-admin .cko-code input{box-sizing:border-box;width:100%;height:46px;margin-bottom:10px;padding:0 14px;background:#ffffff0a;border:1px dashed #c9a96e66;border-radius:10px;color:#cfc8ba;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;text-overflow:ellipsis}
+.saas-admin .cko-steps{margin:16px 0 4px;padding:0 0 0 20px;color:#b7b1a6;font-size:13px;line-height:1.7}
+.saas-admin .cko-waiting{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:11px;border-radius:10px;background:#ffffff08;color:#cfc8ba;font-size:13px}
+.saas-admin .cko-loading{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 0;color:#b7b1a6}
+.saas-admin .cko-loading-inline{flex-direction:row;justify-content:center;padding:6px 0}
+.saas-admin .cko-done{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:6px 0 0}
+.saas-admin .cko-done-icon{display:grid;place-items:center;width:68px;height:68px;margin-bottom:6px;border-radius:50%;background:#2f9e6a26;border:1px solid #2f9e6a80;color:#58d69c}
+.saas-admin .cko-done p{margin:0 0 14px;color:#e6dfd2;font-size:14.5px;line-height:1.6}
+.saas-admin .cko-spin{animation:cko-spin .9s linear infinite}
+@keyframes cko-spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){.saas-admin .cko-backdrop{align-items:flex-end;padding:0}.saas-admin .cko-dialog,.saas-admin .cko-dialog.cko-wide{width:100%;max-height:94dvh;padding:22px 18px 26px;border-radius:20px 20px 0 0;animation:cko-up .25s ease-out}.saas-admin .cko-header h2{font-size:20px}.saas-admin .cko-summary strong{font-size:23px}}
+@keyframes cko-up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.saas-admin .cko-dialog,.saas-admin .cko-spin{animation:none}}

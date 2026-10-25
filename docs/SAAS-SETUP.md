@@ -32,3 +32,11 @@ Aplique em ordem as migrações `20261021160000_saas_tenants.sql` e `20261021160
 `supabase/tests/saas_assertions.sql` é um roteiro transacional: execute as migrações e os asserts entre `BEGIN` e `ROLLBACK` em ambiente ainda sem a migração, retirando os BEGIN/COMMIT internos. Valida isolamento, teste de sete dias, bloqueio sem pagamento, confirmação, replay, estorno e permissões. Não executá-lo isoladamente em produção.
 
 Validação local: `npm test`, `npx tsc --noEmit`, `npm run build`. Notificações têm HMAC validado antes de acesso privilegiado e a API oficial é consultada para conciliar os pagamentos. Identificadores de pagamento são únicos; reenvios não ampliam o período pago.
+
+## Pix, boleto e cartão (Checkout Transparente)
+
+- Uma única aplicação Mercado Pago de **produção** (credenciais `APP_USR-...`) atende Pix, boleto e cartão. A Public Key e o Access Token precisam ser da **mesma** aplicação. Credenciais de teste (`TEST-...`) não funcionam na API de Orders.
+- Pix e boleto usam a API de Orders (`POST /v1/orders`). Só são enviados campos documentados: `capture_mode` não existe nesse pedido e provocava erro `property_value`. O CPF informado é validado pelos dígitos verificadores e a descrição é enviada sem acentos/símbolos.
+- Quando o Mercado Pago recusa um pedido, o erro mostra o(s) campo(s) recusado(s) (`Campo(s): payer.email`) e o diagnóstico completo fica nos logs do servidor (`[mercadopago] request failed`). A tabela `subscription_payment_orders` guarda `payment_data.error` com o código e os campos.
+- Na aplicação Mercado Pago, cadastre a URL `${APP_URL}/api/mercadopago/webhook` com os tópicos **Orders (order)**, `payment`, `subscription_preapproval` e `subscription_authorized_payment`. Além do webhook, a tela de pagamento consulta o status a cada 6 segundos enquanto o Pix/boleto está aberto.
+- O cartão cria uma assinatura recorrente (`/preapproval`), que exige a API de Assinaturas habilitada na aplicação. Use "Testar conexão e meios de pagamento" no Super Admin para conferir.
