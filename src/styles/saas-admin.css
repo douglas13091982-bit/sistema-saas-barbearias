@@ -134,3 +134,10 @@
   .sa-breadcrumb{flex:1}
   .sa-content{padding-top:17px}
 }
+
+
+.sa-mobile-shop-link{display:none}
+@media(max-width:760px){
+  .sa-mobile-shop-link{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 10px;border:1px solid var(--sa-line);border-radius:10px;background:var(--sa-panel);color:#eeeadd;text-decoration:none;font-size:10px;white-space:nowrap}
+  .sa-mobile-shop-link svg{flex:0 0 auto;color:var(--sa-gold)}
+}
