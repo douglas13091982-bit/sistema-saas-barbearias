@@ -1,10 +1,11 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { z } from 'zod';
+import { isValidCpf, safeDescription } from '@/lib/cpf';
 
 export const billingAction = createServerFn({ method: 'POST' })
  .middleware([requireSupabaseAuth])
- .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(), paymentMethod:z.enum(['pix','boleto']).optional(), payer:z.object({firstName:z.string().trim().min(1).max(80),lastName:z.string().trim().min(1).max(80),cpf:z.string().regex(/^\d{11}$/),zipCode:z.string().regex(/^\d{8}$/).optional(),street:z.string().trim().min(2).max(120).optional(),number:z.string().trim().min(1).max(20).optional(),neighborhood:z.string().trim().min(2).max(80).optional(),city:z.string().trim().min(2).max(80).optional(),state:z.string().regex(/^[A-Z]{2}$/).optional()}).optional() }))
+ .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(), paymentMethod:z.enum(['pix','boleto']).optional(), payer:z.object({firstName:z.string().trim().min(1).max(80),lastName:z.string().trim().min(1).max(80),cpf:z.string().regex(/^\d{11}$/).refine(isValidCpf,'CPF inválido. Confira os 11 números.'),zipCode:z.string().regex(/^\d{8}$/).optional(),street:z.string().trim().min(2).max(120).optional(),number:z.string().trim().min(1).max(20).optional(),neighborhood:z.string().trim().min(2).max(80).optional(),city:z.string().trim().min(2).max(80).optional(),state:z.string().regex(/^[A-Z]{2}$/).optional()}).optional() }))
  .handler(async ({ data, context }) => {
   const { data: membership } = await context.supabase.from('user_roles').select('tenant_id,role,active').eq('user_id',context.userId).maybeSingle();
   if (!membership?.active || membership.role!=='admin') throw new Error('Acesso restrito ao proprietário da barbearia.');
@@ -37,8 +38,10 @@ export const billingAction = createServerFn({ method: 'POST' })
     if(!sub.provider_id) {
       if(!mpConfig.ordersAccessToken) throw new Error('A aplicação de Checkout Transparente ainda não está configurada.');
       const {data:attempt}=await db.from('subscription_payment_orders').select('provider_order_id').eq('subscription_id',sub.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
-      if(attempt?.provider_order_id) await reconcileTransparentOrder(db,attempt.provider_order_id);
-      return {synced:true};
+      let orderState:string|null=null;
+      if(attempt?.provider_order_id) orderState=(await reconcileTransparentOrder(db,attempt.provider_order_id))?.attempt?.state||null;
+      const {data:fresh}=await db.from('barber_subscriptions').select('paid_until').eq('id',sub.id).single();
+      return {synced:true,state:orderState,paid:!!fresh?.paid_until&&new Date(fresh.paid_until).getTime()>Date.now()};
     }
     if(!sub.provider_id) {
       const found=await mercado(`/preapproval/search?external_reference=${encodeURIComponent(sub.id)}`);
@@ -133,23 +136,24 @@ export const billingAction = createServerFn({ method: 'POST' })
       const money=(claim.amount_cents/100).toFixed(2);
       const paymentMethod=data.paymentMethod==='pix'?{id:'pix',type:'bank_transfer'}:{id:'boleto',type:'ticket'};
       const body:any={
-        type:'online',external_reference:String(claim.id),processing_mode:'automatic',capture_mode:'automatic',
-        total_amount:money,description:`Mensalidade MenuBarber — ${tenant?.name||'Barbearia'} — ${String(barber?.data?.name||'Barbeiro')}`.slice(0,120),
-        payer:{email:account.user.email,first_name:payer.firstName,last_name:payer.lastName,identification:{type:'CPF',number:payer.cpf},...(address?{address:{zip_code:address.zipCode,street_name:address.street,street_number:address.number,neighborhood:address.neighborhood,city:address.city,state:address.state}}:{})},
+        // Only fields documented for POST /v1/orders. `capture_mode` is not part of the request and made Pix orders fail with property_value.
+        type:'online',external_reference:String(claim.id),processing_mode:'automatic',
+        total_amount:money,description:safeDescription(`Mensalidade MenuBarber - ${tenant?.name||'Barbearia'} - ${String(barber?.data?.name||'Barbeiro')}`),
+        payer:{email:account.user.email.trim().toLowerCase(),first_name:payer.firstName,last_name:payer.lastName,identification:{type:'CPF',number:payer.cpf},...(address?{address:{zip_code:address.zipCode,street_name:address.street,street_number:address.number,neighborhood:address.neighborhood,city:address.city,state:address.state}}:{})},
         transactions:{payments:[{amount:money,payment_method:paymentMethod,...(data.paymentMethod==='pix'?{expiration_time:'PT24H'}:{expiration_time:'P3D'})}]},
       };
       if(address) body.config={location:{state_id:`BR-${address.state}`}};
       try {
         remote=await mercadoOrders('/v1/orders','POST',body,String(claim.id));
       } catch (error) {
-        const diagnostic=error as Error&{providerStatus?:number;providerCode?:string|null;requestId?:string|null};
+        const diagnostic=error as Error&{providerStatus?:number;providerCode?:string|null;providerFields?:string[];requestId?:string|null};
         // A definitive HTTP rejection must not leave this attempt in `creating`;
         // otherwise claim_subscription_payment_order would reuse its idempotency key forever.
         // Keep transport/timeout failures untouched because Mercado Pago may have received them.
         if (diagnostic.providerStatus) {
           await db.from('subscription_payment_orders').update({
             state:'rejected',
-            payment_data:{error:{httpStatus:diagnostic.providerStatus,code:diagnostic.providerCode||null,requestId:diagnostic.requestId||null}},
+            payment_data:{error:{httpStatus:diagnostic.providerStatus,code:diagnostic.providerCode||null,fields:diagnostic.providerFields||[],requestId:diagnostic.requestId||null}},
             updated_at:new Date().toISOString(),
           }).eq('id',claim.id).is('provider_order_id',null);
         }

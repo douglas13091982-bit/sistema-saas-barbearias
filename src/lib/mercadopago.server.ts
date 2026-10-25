@@ -36,11 +36,14 @@ async function mercadoRequest(token:string,path:string,method='GET',body?:unknow
     const details:any=await result.json().catch(()=>({}));
     const providerCode=details.error||details.cause?.[0]?.code||details.errors?.[0]?.code||null;
     const requestId=result.headers.get('x-request-id');
-    // Keep provider diagnostics on the server; never return raw API details or credentials to the browser.
-    console.error('[mercadopago] request failed', {path,method,status:result.status,code:providerCode,message:details.message,requestId});
-    const diagnostic=[`HTTP ${result.status}.`,providerCode?`Código: ${providerCode}.`:null,requestId?`Protocolo: ${requestId}.`:null].filter(Boolean).join(' ');
-    const error=new Error(`O Mercado Pago recusou a operação. Confira o meio de pagamento e tente novamente.${diagnostic?` ${diagnostic}`:''}`);
-    Object.assign(error,{providerStatus:result.status,providerCode,requestId});
+    // Names of the rejected fields (for example "payer.email") are not sensitive and tell the user what to fix.
+    const rawFields=[...(Array.isArray(details.errors)?details.errors.flatMap((e:any)=>Array.isArray(e?.details)?e.details:[e?.details]):[]),...(Array.isArray(details.cause)?details.cause.map((c:any)=>c?.description):[])];
+    const providerFields:string[]=[...new Set(rawFields.filter((f:unknown):f is string=>typeof f==='string'&&/^[\w.\[\]-]{1,80}$/.test(f)))].slice(0,5);
+    // Keep full provider diagnostics on the server; never return raw API payloads or credentials to the browser.
+    console.error('[mercadopago] request failed', {path,method,status:result.status,code:providerCode,fields:providerFields,message:details.message,errors:details.errors,requestId});
+    const diagnostic=[`HTTP ${result.status}.`,providerCode?`Código: ${providerCode}.`:null,providerFields.length?`Campo(s): ${providerFields.join(', ')}.`:null,requestId?`Protocolo: ${requestId}.`:null].filter(Boolean).join(' ');
+    const error=new Error(`O Mercado Pago recusou a operação. Confira os dados informados e tente novamente. ${diagnostic}`.trim());
+    Object.assign(error,{providerStatus:result.status,providerCode,providerFields,requestId});
     throw error;
   }
   return result.json();
@@ -66,7 +69,7 @@ export async function validateMercadoPagoMethods() {
   const types=new Set(methods.map((item:any)=>`${item.id||''}:${item.payment_type_id||''}`));
   return {
     authenticated:true,
-    subscriptionsApi:true,
+    subscriptionsApi,
     pix:[...types].some(value=>value.startsWith('pix:')||value.endsWith(':bank_transfer')),
     boleto:[...types].some(value=>value.startsWith('boleto:')||value.startsWith('bolbradesco:')||value.endsWith(':ticket')),
     card:[...types].some(value=>value.endsWith(':credit_card')),
@@ -90,11 +93,12 @@ function orderPaymentData(payment:any) {
 }
 
 export async function reconcileTransparentOrder(db:any,id:string) {
-  const {data:attempt,error}=await db.from('subscription_payment_orders').select('*').eq('provider_order_id',id).maybeSingle();
+  // Order IDs are alphanumeric and notifications may carry them in a different letter case.
+  const {data:attempt,error}=await db.from('subscription_payment_orders').select('*').ilike('provider_order_id',id).maybeSingle();
   if(error) throw new Error('Falha ao localizar a cobrança transparente.');
   if(!attempt) return null;
-  const order=await mercadoOrders(`/v1/orders/${encodeURIComponent(id)}`);
-  if(String(order.id)!==id || String(order.external_reference)!==attempt.id || Math.round(Number(order.total_amount)*100)!==attempt.amount_cents || (order.currency && order.currency!=='BRL') || (order.currency_id && order.currency_id!=='BRL')) throw new Error('Order incompatível com a cobrança local.');
+  const order=await mercadoOrders(`/v1/orders/${encodeURIComponent(attempt.provider_order_id)}`);
+  if(String(order.id).toLowerCase()!==String(attempt.provider_order_id).toLowerCase() || String(order.external_reference)!==attempt.id || Math.round(Number(order.total_amount)*100)!==attempt.amount_cents || (order.currency && order.currency!=='BRL') || (order.currency_id && order.currency_id!=='BRL')) throw new Error('Order incompatível com a cobrança local.');
   const payment=orderPayment(order),paymentData=orderPaymentData(payment);
   const expectedMethod=attempt.payment_method==='pix'?'pix':'boleto';
   if(paymentData.methodId && paymentData.methodId!==expectedMethod) throw new Error('Meio de pagamento incompatível com a cobrança local.');
