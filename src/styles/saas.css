@@ -75,3 +75,38 @@
 @media(max-width:600px){.saas-admin .cko-backdrop{align-items:flex-end;padding:0}.saas-admin .cko-dialog,.saas-admin .cko-dialog.cko-wide{width:100%;max-height:94dvh;padding:22px 18px 26px;border-radius:20px 20px 0 0;animation:cko-up .25s ease-out}.saas-admin .cko-header h2{font-size:20px}.saas-admin .cko-summary strong{font-size:23px}}
 @keyframes cko-up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.saas-admin .cko-dialog,.saas-admin .cko-spin{animation:none}}
+
+/* ===== Cards da mensalidade (bill) ===== */
+.saas-admin .bill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px;margin:26px 0 8px}
+.saas-admin .bill-card{display:flex;flex-direction:column;gap:14px;padding:22px;background:linear-gradient(180deg,#1d1c1a,#171715);border:1px solid #ffffff1c;border-radius:18px;box-shadow:0 14px 40px #0006;transition:border-color .15s,transform .15s}
+.saas-admin .bill-card:hover{border-color:#c9a96e55;transform:translateY(-2px)}
+.saas-admin .bill-head{display:flex;align-items:center;gap:12px}
+.saas-admin .bill-avatar{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#d6b97d,#a98a4f);color:#13110d;font:700 18px 'Playfair Display',Georgia,serif}
+.saas-admin .bill-who{flex:1;min-width:0}
+.saas-admin .bill-who h2{margin:0;font-size:19px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saas-admin .bill-who small{color:#9a9488;font-size:12px}
+.saas-admin .bill-status{flex:none;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.04em;white-space:nowrap;border:1px solid transparent}
+.saas-admin .bill-ok{background:#2f9e6a22;color:#62d9a3;border-color:#2f9e6a66}
+.saas-admin .bill-trial{background:#c9a96e22;color:#e0c48a;border-color:#c9a96e66}
+.saas-admin .bill-wait{background:#d9a13a22;color:#f0c066;border-color:#d9a13a66}
+.saas-admin .bill-warn{background:#d9783a22;color:#f0a26a;border-color:#d9783a66}
+.saas-admin .bill-bad{background:#c4453a22;color:#ff9d92;border-color:#c4453a66}
+.saas-admin p.bill-ok{margin:0;padding:10px 12px;border-radius:10px;font-size:13px;text-align:center}
+.saas-admin .bill-price{margin:0;display:flex;align-items:baseline;gap:6px}
+.saas-admin .bill-price strong{font:600 32px/1 'Playfair Display',Georgia,serif;color:#f3e8d4}
+.saas-admin .bill-price span{color:#9a9488;font-size:14px}
+.saas-admin .bill-meta{list-style:none;margin:0;padding:12px 0 0;border-top:1px solid #ffffff14;display:grid;gap:8px;color:#cfc8ba;font-size:13.5px}
+.saas-admin .bill-meta li{display:flex;align-items:center;gap:9px}
+.saas-admin .bill-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#777}
+.saas-admin .bill-dot.on{background:#58d69c;box-shadow:0 0 0 3px #58d69c26}
+.saas-admin .bill-dot.off{background:#e0675b;box-shadow:0 0 0 3px #e0675b26}
+.saas-admin .bill-dot.idle{background:#c9a96e}
+.saas-admin .bill-actions{display:flex;flex-direction:column;gap:8px;margin-top:auto;padding-top:4px}
+.saas-admin button.bill-primary{width:100%;min-height:48px;padding:0 18px;font-size:14.5px;font-weight:700;text-align:center;background:linear-gradient(180deg,#d6b97d,#c1a064);color:#13110d!important;border:0;border-radius:12px;box-shadow:0 8px 20px #c9a96e2e;transition:filter .15s,transform .1s}
+.saas-admin button.bill-primary:hover:not(:disabled){filter:brightness(1.07)}
+.saas-admin button.bill-primary:active:not(:disabled){transform:scale(.99)}
+.saas-admin button.bill-ghost{width:100%;min-height:40px;padding:0 14px;font-size:13px;background:transparent;color:#cfc8ba!important;border:1px solid #ffffff22;border-radius:10px}
+.saas-admin button.bill-ghost:hover:not(:disabled){background:#ffffff0d}
+.saas-admin button.bill-danger{color:#ff9d92!important;border-color:#c4453a55}
+.saas-admin .bill-note{color:#9a9488;font-size:12px;line-height:1.5}
+@media(max-width:600px){.saas-admin .bill-grid{grid-template-columns:1fr}.saas-admin .bill-price strong{font-size:28px}}

@@ -5,7 +5,7 @@ import { isValidCpf, safeDescription } from '@/lib/cpf';
 
 export const billingAction = createServerFn({ method: 'POST' })
  .middleware([requireSupabaseAuth])
- .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(), paymentMethod:z.enum(['pix','boleto']).optional(), payer:z.object({firstName:z.string().trim().min(1).max(80),lastName:z.string().trim().min(1).max(80),cpf:z.string().regex(/^\d{11}$/).refine(isValidCpf,'CPF inválido. Confira os 11 números.'),zipCode:z.string().regex(/^\d{8}$/).optional(),street:z.string().trim().min(2).max(120).optional(),number:z.string().trim().min(1).max(20).optional(),neighborhood:z.string().trim().min(2).max(80).optional(),city:z.string().trim().min(2).max(80).optional(),state:z.string().regex(/^[A-Z]{2}$/).optional()}).optional() }))
+ .inputValidator(z.object({ action: z.enum(['status','prepare','subscribe','checkout','sync','cancel','reactivate']), barberId: z.string().min(1).max(100).optional(), cardToken: z.string().min(8).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(), paymentMethod:z.enum(['pix','boleto']).optional(), payer:z.object({firstName:z.string().trim().min(1).max(80),lastName:z.string().trim().min(1).max(80),cpf:z.string().regex(/^\d{11}$/).refine(isValidCpf,'CPF inválido. Confira os 11 números.'),zipCode:z.string().regex(/^\d{8}$/).optional(),street:z.string().trim().min(2).max(120).optional(),number:z.string().trim().min(1).max(20).optional(),neighborhood:z.string().trim().min(2).max(80).optional(),city:z.string().trim().min(2).max(80).optional(),state:z.string().regex(/^[A-Z]{2}$/).optional()}).optional() }))
  .handler(async ({ data, context }) => {
   const { data: membership } = await context.supabase.from('user_roles').select('tenant_id,role,active').eq('user_id',context.userId).maybeSingle();
   if (!membership?.active || membership.role!=='admin') throw new Error('Acesso restrito ao proprietário da barbearia.');
@@ -19,8 +19,42 @@ export const billingAction = createServerFn({ method: 'POST' })
     return {ready:cardReady&&transparentReady,cardReady,transparentReady,publicKey:config.publicKey};
   }
   if (!data.barberId) throw new Error('Selecione o barbeiro.');
-  const { data: sub } = await db.from('barber_subscriptions').select('*').eq('tenant_id',membership.tenant_id).eq('barber_id',data.barberId).maybeSingle();
+  let { data: sub } = await db.from('barber_subscriptions').select('*').eq('tenant_id',membership.tenant_id).eq('barber_id',data.barberId).maybeSingle();
   if (!sub) throw new Error('Barbeiro não encontrado.');
+  const priceNow=async():Promise<number|null>=>{
+    const {data:settings}=await db.from('saas_settings').select('price_per_barber_cents').eq('id',true).single();
+    return (settings?.price_per_barber_cents as number|null|undefined)??null;
+  };
+  // Attempts that were never sent to Mercado Pago keep a stale amount; discard them so the next one uses the current price.
+  const discardUnsentAttempts=async()=>{
+    await db.from('subscription_payment_orders').update({state:'cancelled',updated_at:new Date().toISOString()}).eq('subscription_id',sub.id).is('provider_order_id',null).eq('state','creating');
+  };
+  // A subscription that was never paid and has no charge in flight must follow the price the platform has now.
+  // Contracts that already received a payment, or have a live charge, keep the amount they were issued with.
+  const refreshUnpaidPrice=async()=>{
+    if(sub.provider_id||sub.paid_until||sub.state==='authorized') return sub;
+    const price=await priceNow();
+    if(!price||price===sub.amount_cents) return sub;
+    const {count:approved}=await db.from('subscription_payments').select('provider_payment_id',{count:'exact',head:true}).eq('subscription_id',sub.id).eq('approved',true);
+    if(approved) return sub;
+    const {data:live}=await db.from('subscription_payment_orders').select('id').eq('subscription_id',sub.id).not('provider_order_id','is',null).in('state',['creating','pending']).gt('expires_at',new Date().toISOString()).limit(1);
+    if(live?.length) return sub;
+    await discardUnsentAttempts();
+    const {data:updated,error:priceError}=await db.from('barber_subscriptions').update({amount_cents:price}).eq('id',sub.id).select('*').single();
+    if(priceError||!updated) throw new Error('Não foi possível atualizar o valor da mensalidade.');
+    return updated;
+  };
+  if (data.action==='reactivate') {
+    if (sub.state!=='cancelled') throw new Error('Esta assinatura não está cancelada.');
+    if (sub.paid_until&&new Date(sub.paid_until).getTime()>Date.now()) throw new Error('O período já pago ainda está vigente. Reative depois do vencimento.');
+    if (!(await priceNow())) throw new Error('O administrador da plataforma ainda não definiu o valor.');
+    await discardUnsentAttempts();
+    // The old Mercado Pago subscription is already cancelled there; clearing the link lets a new Pix, boleto or card contract start at today's price.
+    const {error:reactivateError}=await db.from('barber_subscriptions').update({state:'new',provider_id:null,checkout_url:null,amount_cents:null}).eq('id',sub.id).eq('state','cancelled');
+    if (reactivateError) throw new Error('Não foi possível reativar este barbeiro. Tente novamente.');
+    return { reactivated:true };
+  }
+  if (data.action==='prepare'||data.action==='subscribe'||data.action==='checkout') sub=await refreshUnpaidPrice();
   const mpConfig=await getMercadoConfig();
   const cardReady=Boolean(mpConfig.accessToken&&mpConfig.webhookSecret&&mpConfig.publicKey&&mpConfig.appUrl);
   const transparentReady=Boolean(mpConfig.ordersAccessToken&&mpConfig.ordersWebhookSecret);

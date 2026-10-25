@@ -80,7 +80,7 @@ export default function Billing() {
     setCardReady(!!status.cardReady); setTransparentReady(!!status.transparentReady); setReady(!!status.cardReady || !!status.transparentReady);
     setOrdersLoadError(''); setOrdersStoreReady(false);
     const ids = (rows.data || []).map((s: any) => s.id);
-    const orders = ids.length ? await supabase.from('subscription_payment_orders').select('id,subscription_id,payment_method,state,provider_order_id,expires_at,created_at').in('subscription_id', ids).order('created_at', { ascending: false }) : { data: [], error: null };
+    const orders = ids.length ? await supabase.from('subscription_payment_orders').select('id,subscription_id,payment_method,state,provider_order_id,expires_at,created_at,amount_cents').in('subscription_id', ids).order('created_at', { ascending: false }) : { data: [], error: null };
     if (orders.error) { setPaymentOrders([]); setOrdersLoadError(orders.error.message || 'A tabela de cobranças não está disponível.'); return; }
     setPaymentOrders(orders.data || []); setOrdersStoreReady(true);
   }, [tenant?.id, action]);
@@ -142,6 +142,17 @@ export default function Billing() {
       else if (type === 'sync') setNotice(result.paid ? 'Pagamento confirmado. A agenda está liberada.' : 'Consulta concluída. O estado da agenda depende da confirmação do pagamento.');
       await refresh(); await load();
     } catch (e) { setError(messageOf(e, 'Não foi possível concluir.')); }
+    finally { setBusy(''); }
+  };
+
+  const reactivateAndPay = async (t: Target) => {
+    if (busy) return;
+    setBusy(t.barberId); setError(''); setNotice('');
+    try {
+      await action({ data: { action: 'reactivate', barberId: t.barberId } });
+      await refresh(); await load();
+      setBusy(''); openCheckout(t);
+    } catch (e) { setError(messageOf(e, 'Não foi possível reativar este barbeiro.')); }
     finally { setBusy(''); }
   };
 
@@ -262,26 +273,50 @@ export default function Billing() {
     {!ready && <p className="saas-notice">A integração aguarda a configuração das credenciais do Mercado Pago pela plataforma. Pagamentos indisponíveis.</p>}
     {ordersLoadError && <p role="alert" className="saas-notice">O banco ainda não liberou o histórico de cobranças Pix/boleto. Aplique a migração 20261024120000_transparent_subscription_payments.sql no banco do MenuBarber. Detalhe: {ordersLoadError}</p>}
     {!target && error && <p role="alert" className="saas-notice">{error}</p>}{!target && notice && <p role="status" className="saas-notice">{notice}</p>}
-    <div className="saas-grid">{barbers.map((barber: any) => {
+    <div className="bill-grid">{barbers.map((barber: any) => {
       const sub = subscriptions.find(s => s.barber_id === barber.id);
-      const paid = sub?.paid_until && new Date(sub.paid_until).getTime() > Date.now();
+      const paid = !!sub?.paid_until && new Date(sub.paid_until).getTime() > Date.now();
+      const cancelled = sub?.state === 'cancelled';
       const pendingOrder = paymentOrders.find(o => o.subscription_id === sub?.id && ['creating', 'pending'].includes(o.state) && (!o.expires_at || new Date(o.expires_at).getTime() > Date.now()));
       const hasPrice = !!price;
-      const amount = sub?.amount_cents || price || 0;
-      return <article className="saas-card" key={barber.id}>
-        <h2>{barber.name}</h2>
-        <p>{bookingAccess[barber.id] ? 'Agenda liberada' : 'Agenda bloqueada'} · {barber.active ? 'Perfil ativo' : 'Perfil inativo'}</p>
-        <p>{amount ? money(amount) : 'Valor a definir'} / mês</p>
-        <p>{sub?.paid_until ? 'Pago até ' + new Date(sub.paid_until).toLocaleDateString('pt-BR') : trial ? 'Em teste grátis' : 'Aguardando pagamento'}</p>
-        <div className="saas-actions">
-          {!sub?.provider_id && !paid && <button disabled={!!busy || !hasPrice || sub?.state === 'cancelled'} onClick={() => openCheckout({ barberId: barber.id, barberName: barber.name, amountCents: amount }, pendingOrder)}>{pendingOrder ? 'Continuar pagamento ' + (pendingOrder.payment_method === 'pix' ? 'Pix' : 'boleto') : sub?.state === 'creating' ? 'Continuar configuração' : 'Contratar mensalidade'}</button>}
-          {sub?.provider_id && sub.state !== 'authorized' && <button disabled={!!busy} onClick={() => void run('checkout', barber.id)}>Continuar pagamento iniciado antes do checkout transparente</button>}
-          {(sub?.provider_id || sub?.state === 'creating' || sub?.state === 'review' || pendingOrder) && <button disabled={!!busy} onClick={() => void run('sync', barber.id)}>Consultar pagamento</button>}
-          {sub?.provider_id && sub.state !== 'cancelled' && <button disabled={!!busy} onClick={() => void run('cancel', barber.id)}>Cancelar assinatura</button>}
+      // Charges already issued or paid keep their amount; anything else follows the platform's current price.
+      const contracted = !!sub && (!!sub.paid_until || sub.state === 'authorized');
+      const amount = pendingOrder?.amount_cents || (contracted ? sub.amount_cents || price || 0 : price || sub?.amount_cents || 0);
+      const legacy = !!sub?.provider_id && !['authorized', 'cancelled'].includes(sub.state);
+      const canReactivate = cancelled && !paid;
+      const canPay = !!sub && !sub.provider_id && !paid && !cancelled;
+      const payTarget: Target = { barberId: barber.id, barberName: barber.name, amountCents: amount };
+      const status = cancelled ? { tone: 'bad', label: 'Cancelada' }
+        : paid ? { tone: 'ok', label: 'Em dia' }
+        : sub?.state === 'authorized' ? { tone: 'ok', label: 'Assinatura ativa' }
+        : pendingOrder ? { tone: 'wait', label: 'Aguardando pagamento' }
+        : trial ? { tone: 'trial', label: 'Teste grátis' }
+        : { tone: 'warn', label: 'Pagamento pendente' };
+      const period = sub?.paid_until ? `Pago até ${new Date(sub.paid_until).toLocaleDateString('pt-BR')}` : trial ? `Teste grátis até ${new Date(tenant.trial_ends_at).toLocaleDateString('pt-BR')}` : 'Aguardando pagamento';
+      const open = !!bookingAccess[barber.id];
+      return <article className="bill-card" key={barber.id}>
+        <header className="bill-head">
+          <span className="bill-avatar" aria-hidden="true">{String(barber.name || '?').trim().charAt(0).toUpperCase()}</span>
+          <div className="bill-who"><h2>{barber.name}</h2><small>{barber.active ? 'Perfil ativo' : 'Perfil inativo'}</small></div>
+          <span className={`bill-status bill-${status.tone}`}>{status.label}</span>
+        </header>
+        <p className="bill-price">{amount ? <><strong>{money(amount)}</strong><span> / mês</span></> : <strong>Valor a definir</strong>}</p>
+        <ul className="bill-meta">
+          <li><i className={`bill-dot ${open ? 'on' : 'off'}`} />{open ? 'Agenda liberada' : 'Agenda bloqueada'}</li>
+          <li><i className="bill-dot idle" />{period}</li>
+        </ul>
+        <div className="bill-actions">
+          {canReactivate && <button type="button" className="bill-primary" disabled={!!busy || !hasPrice || !ready} onClick={() => void reactivateAndPay(payTarget)}>{busy === barber.id ? 'Aguarde...' : 'Reativar e pagar mensalidade'}</button>}
+          {legacy && <button type="button" className="bill-primary" disabled={!!busy} onClick={() => void run('checkout', barber.id)}>Retomar pagamento pendente</button>}
+          {canPay && <button type="button" className="bill-primary" disabled={!!busy || !hasPrice || !ready} onClick={() => openCheckout(payTarget, pendingOrder)}>{pendingOrder ? `Continuar pagamento ${pendingOrder.payment_method === 'pix' ? 'Pix' : 'boleto'}` : 'Pagar mensalidade'}</button>}
+          {paid && !cancelled && <p className="bill-ok">Mensalidade em dia. Nada a pagar agora.</p>}
+          {(legacy || pendingOrder || (!cancelled && (sub?.state === 'creating' || sub?.state === 'review'))) && <button type="button" className="bill-ghost" disabled={!!busy} onClick={() => void run('sync', barber.id)}>Consultar pagamento</button>}
+          {sub?.provider_id && !cancelled && <button type="button" className="bill-ghost bill-danger" disabled={!!busy} onClick={() => void run('cancel', barber.id)}>Cancelar assinatura</button>}
         </div>
-        {!hasPrice && sub?.state !== 'cancelled' && <small>A contratação durante o teste está liberada, mas o superadministrador precisa definir o valor mensal para habilitar o pagamento.</small>}
-        {!ready && sub?.state !== 'cancelled' && <small>Pagamento indisponível: a integração Mercado Pago ainda precisa ser configurada pela plataforma.</small>}
-        {sub?.state === 'cancelled' && <small>Assinatura cancelada. Entre em contato com a plataforma para reativar este cadastro.</small>}
+        {!hasPrice && !cancelled && <small className="bill-note">O superadministrador ainda precisa definir o valor mensal para habilitar o pagamento.</small>}
+        {hasPrice && !ready && !cancelled && <small className="bill-note">Pagamento indisponível: a integração com o Mercado Pago ainda não foi configurada.</small>}
+        {pendingOrder?.amount_cents && hasPrice && pendingOrder.amount_cents !== price && <small className="bill-note">Esta cobrança foi gerada por {money(pendingOrder.amount_cents)}, antes da mudança de valor, e segue válida{pendingOrder.expires_at ? ` até ${new Date(pendingOrder.expires_at).toLocaleString('pt-BR')}` : ''}. Depois disso, a próxima usará {money(price)}.</small>}
+        {cancelled && paid && <small className="bill-note">Assinatura cancelada. A agenda segue liberada até o fim do período já pago.</small>}
       </article>;
     })}</div>
     {barbers.length === 0 && <p>Cadastre seu primeiro profissional em Barbeiros para começar.</p>}
