@@ -3,19 +3,34 @@ import { Building2, ShieldCheck } from 'lucide-react';
 
 export function AdminPanelSwitcher({ active }: { active: 'platform' | 'shop' }) {
   const { isPlatformAdmin, currentUser, tenant } = useData();
-  if (!isPlatformAdmin) return null;
-  const canManageShop = currentUser?.role === 'admin' && tenant;
-  return <nav aria-label="Alternar painel administrativo" className="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-[#c9a96e]/30 bg-[#191918] p-3 text-sm text-white">
-    <span className="mr-2 text-xs text-white/60">Alternar painel</span>
-    <a href="/super-admin" aria-current={active === 'platform' ? 'page' : undefined}
-      className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 py-2"
-      style={{ borderColor: active === 'platform' ? '#c9a96e' : '#ffffff25', background: active === 'platform' ? '#c9a96e20' : 'transparent', color: '#e5cf9e' }}>
-      <ShieldCheck size={17} aria-hidden="true" /> Super Admin
-    </a>
-    {canManageShop && <a href="/admin/dashboard" aria-current={active === 'shop' ? 'page' : undefined}
-      className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 py-2"
-      style={{ borderColor: active === 'shop' ? '#c9a96e' : '#ffffff25', background: active === 'shop' ? '#c9a96e20' : 'transparent', color: '#e5cf9e' }}>
-      <Building2 size={17} aria-hidden="true" /> Minha barbearia · {tenant.name}
-    </a>}
-  </nav>;
+  if (!isPlatformAdmin && !tenant) return null;
+  const canManageShop = isPlatformAdmin && currentUser?.role === 'admin' && tenant;
+  const trialIsActive = tenant && new Date(tenant.trial_ends_at) > new Date();
+  const trialLabel = tenant
+    ? trialIsActive
+      ? `Teste grátis até ${new Date(tenant.trial_ends_at).toLocaleDateString('pt-BR')}`
+      : 'Consultar agendas e mensalidades'
+    : '';
+
+  return (
+    <nav aria-label={isPlatformAdmin ? 'Alternar painel administrativo' : 'Informações da barbearia'} className="ba-panel-switcher mb-5">
+      {isPlatformAdmin && <span className="ba-panel-switcher-label">Alternar painel</span>}
+      {isPlatformAdmin && (
+        <a href="/super-admin" aria-current={active === 'platform' ? 'page' : undefined} className={`ba-panel-switcher-action ${active === 'platform' ? 'is-active' : ''}`}>
+          <ShieldCheck size={17} aria-hidden="true" /> Super Admin
+        </a>
+      )}
+      {canManageShop && (
+        <a href="/admin" aria-current={active === 'shop' ? 'page' : undefined} className={`ba-panel-switcher-action ${active === 'shop' ? 'is-active' : ''}`}>
+          <Building2 size={17} aria-hidden="true" /> Minha barbearia · {tenant.name}
+        </a>
+      )}
+      {tenant && (
+        <div className="ba-panel-switcher-meta">
+          <a href={`/${tenant.slug}`} target="_blank" rel="noopener noreferrer">Site da barbearia: /{tenant.slug}</a>
+          <a href="/admin/mensalidade">{trialLabel}</a>
+        </div>
+      )}
+    </nav>
+  );
 }
