@@ -25,11 +25,6 @@ export default function AdminHome() {
 
   return (
     <section className="ba-home-hub" aria-labelledby="ba-home-title">
-      <header className="ba-home-heading">
-        <p className="ba-eyebrow">GESTÃO DA BARBEARIA</p>
-        <h1 id="ba-home-title">Painel administrativo</h1>
-        <p>Escolha um módulo para continuar.</p>
-      </header>
       <nav className="ba-home-module-grid" aria-label="Módulos administrativos">
         {modules.map(module => (
           <Link key={module.route} to={module.route} className="ba-home-module-card">
