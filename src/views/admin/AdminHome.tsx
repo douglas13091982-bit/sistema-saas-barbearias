@@ -24,7 +24,7 @@ export default function AdminHome() {
   ];
 
   return (
-    <section className="ba-home-hub" aria-labelledby="ba-home-title">
+    <section className="ba-home-hub" aria-label="Módulos do painel administrativo">
       <nav className="ba-home-module-grid" aria-label="Módulos administrativos">
         {modules.map(module => (
           <Link key={module.route} to={module.route} className="ba-home-module-card">
