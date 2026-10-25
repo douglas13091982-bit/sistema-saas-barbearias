@@ -110,3 +110,13 @@
 .saas-admin button.bill-danger{color:#ff9d92!important;border-color:#c4453a55}
 .saas-admin .bill-note{color:#9a9488;font-size:12px;line-height:1.5}
 @media(max-width:600px){.saas-admin .bill-grid{grid-template-columns:1fr}.saas-admin .bill-price strong{font-size:28px}}
+
+/* Foto do barbeiro no card da mensalidade */
+.saas-admin .bill-avatar{width:60px;height:60px;font-size:22px}
+.saas-admin img.bill-photo,.saas-admin span.bill-photo{box-sizing:border-box;object-fit:cover;border:2px solid #c9a96e;background:#292524;box-shadow:0 6px 18px #0007}
+.saas-admin .bill-head{align-items:center;gap:14px}
+.saas-admin .bill-who{display:flex;flex-direction:column;gap:7px}
+.saas-admin .bill-who h2{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;font-size:20px}
+.saas-admin .bill-tags{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.saas-admin .bill-tags small{color:#9a9488;font-size:12px}
+.saas-admin img.cko-photo,.saas-admin span.cko-photo{flex:none;box-sizing:border-box;width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #c9a96e;background:#292524}
