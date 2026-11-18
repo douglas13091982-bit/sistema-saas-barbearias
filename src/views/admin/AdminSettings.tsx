@@ -26,6 +26,7 @@ export default function AdminSettings() {
     loyaltyProgram: { enabled: false, cutsRequired: 5, rewardServiceId: '', rewardName: '', ...(siteSettings.loyaltyProgram || {}) },
   }));
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [logoError, setLogoError] = useState('');
   const [readingLogo, setReadingLogo] = useState(false);
@@ -60,6 +61,8 @@ export default function AdminSettings() {
   };
 
   const handleSave = async () => {
+    if (saving || readingLogo) return;
+    setSaved(false);
     if (form.businessHours.some(day => day.active && (!day.start || !day.end || day.start >= day.end))) {
       setFormError('Confira os horários: a abertura precisa ser anterior ao fechamento em todos os dias abertos.');
       setSaved(false);
@@ -80,15 +83,17 @@ export default function AdminSettings() {
       return;
     }
     setFormError('');
+    setSaving(true);
     try {
       await updateSiteSettings({ ...form, loyaltyProgram });
       setLogoError('');
-    } catch {
-      setLogoError('Não foi possível salvar. Verifique sua conexão e tente novamente.');
-      return;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      setFormError(error instanceof Error ? `Não foi possível salvar: ${error.message}` : 'Não foi possível salvar. Verifique sua conexão e tente novamente.');
+    } finally {
+      setSaving(false);
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const handleAddHoliday = () => {
@@ -100,16 +105,17 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Configurações</h1>
           <p className="text-white/50 text-sm">Configurações gerais do sistema</p>
         </div>
-        <button onClick={handleSave} disabled={readingLogo} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
-          <Save className="w-4 h-4" /> {saved ? 'Salvo!' : 'Salvar'}
+        <button type="button" onClick={handleSave} disabled={readingLogo || saving} aria-busy={saving} className="relative z-10 pointer-events-auto flex shrink-0 cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a96e] disabled:cursor-wait disabled:opacity-60" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
+          <Save className="w-4 h-4" /> {saving ? 'Salvando...' : saved ? 'Salvo!' : readingLogo ? 'Processando logo...' : 'Salvar'}
         </button>
       </div>
       {formError && <p role="alert" className="text-sm text-red-300">{formError}</p>}
+      {saved && <p role="status" className="text-sm text-green-300">Configurações salvas com sucesso.</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
