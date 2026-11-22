@@ -273,3 +273,60 @@
 .ba-shell .ba-home-module-card small{position:absolute;top:7px;right:8px;min-width:20px;height:20px;display:grid;place-items:center;border-radius:999px;padding:0 5px;background:var(--ba-accent);color:#101010;font-size:10px;font-weight:650}
 @media(max-width:767px){.ba-shell .ba-home-module-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.ba-shell .ba-home-module-card{min-height:104px;padding:13px 7px;font-size:12px}}
 @media(max-width:360px){.ba-shell .ba-home-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Premium violet visual refresh — scoped to existing views.
+   The barbershop mobile module-card navigation is intentionally untouched. */
+@media (prefers-reduced-motion: no-preference) {
+  .sa-shell .sa-panel,.sa-shell .sa-metric,.saas-landing .saas-card,
+  .ba-shell .ba-content .rounded-xl,.bb-home .bb-service-card {
+    transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease;
+  }
+  .sa-shell .sa-panel:hover,.sa-shell .sa-metric:hover,
+  .saas-landing .saas-card:hover,.bb-home .bb-service-card:hover {
+    transform:translateY(-3px);
+    box-shadow:0 18px 42px #0005,0 0 22px #9c5cff12;
+  }
+}
+.sa-shell{--sa-bg:#0b0b12;--sa-panel:#171622;--sa-line:#a78bfa22;--sa-gold:#b98aff;--sa-muted:#a6a2b8;background:var(--sa-bg);color:#f4f1ff}
+.sa-shell .sa-sidebar{background:#11101c;border-right-color:#a78bfa22}
+.sa-shell .sa-topbar{background:#11101ceF;border-bottom-color:#a78bfa22}
+.sa-shell .sa-nav button.active{background:linear-gradient(100deg,#6631b5,#8b4be0);border-color:#ad7aff55;color:#fff}
+.sa-shell .sa-nav button:hover{background:#a78bfa17;color:#fff}
+.sa-shell .sa-panel,.sa-shell .sa-metric{background:linear-gradient(145deg,#1c1a2b,#15141e);border-color:#a78bfa20;border-radius:16px}
+.sa-shell .sa-metric-icon,.sa-shell .sa-panel-icon{background:#a78bfa1b;border-color:#a78bfa30}
+.sa-shell .sa-primary{background:linear-gradient(110deg,#9b55ed,#7533d5);border-color:#c49bff66;color:#fff;border-radius:10px;box-shadow:0 8px 24px #8b4be02c}
+.sa-shell .sa-primary:hover{background:#aa6cf5}
+.sa-shell .sa-bar-track i{background:linear-gradient(0deg,#6b30c2,#c28bff)}
+.sa-shell .sa-progress i{background:linear-gradient(90deg,#7336d0,#c38aff)}
+.sa-shell .sa-page-heading h1,.sa-shell .sa-panel-heading h2{font-family:Inter,system-ui,sans-serif;font-weight:650;letter-spacing:-.035em}
+.saas-page.saas-landing{background:#0b0b12}
+.saas-landing .sl-cover:after{background:linear-gradient(0deg,#0b0b12 0%,#0b0b1233 40%,#0b0b1288 100%),linear-gradient(90deg,#0b0b12f5,#0b0b12a8 52%,#0b0b1222)}
+.saas-landing .sl-brand>svg,.saas-landing .sl-hero h1 em,.saas-landing .sl-feature-icon,
+.saas-landing .saas-kicker,.saas-landing .sl-assurances svg{color:#bd8aff}
+.saas-landing .sl-hero h1{font-family:Inter,system-ui,sans-serif;font-weight:750;letter-spacing:-.055em}
+.saas-landing .sl-hero .saas-kicker span{background:#ae70ff;box-shadow:0 0 18px #ae70ff99}
+.saas-landing .sl-actions .saas-button,.saas-landing .sl-plan-action .saas-button{
+ background:linear-gradient(110deg,#9d55ef,#7431d4);color:white!important;border-radius:12px;box-shadow:0 10px 32px #8538dc55
+}
+.saas-landing .sl-benefits .saas-card{background:linear-gradient(140deg,#201a30,#14131d);border-color:#a78bfa2b;border-radius:17px}
+.saas-landing .sl-model{border-color:#ad75ff88;background:#a78bfa12;border-radius:12px;color:#f4eaff}
+.saas-landing .sl-price strong{color:#c494ff}
+.saas-page:not(.saas-landing),.saas-admin{--premium-purple:#b987ff}
+.saas-page:not(.saas-landing) .saas-card,.saas-admin .saas-card{background:#191725;border-color:#ad86ff30;border-radius:16px}
+.saas-page:not(.saas-landing) button:not(.cko-icon),.saas-admin .saas-button{
+ border-radius:10px
+}
+@media(min-width:768px){
+ .ba-shell{--ba-card:#1a1826;background:#0d0c15!important}
+ .ba-shell .ba-sidebar{background:#13111e!important;border-right-color:#a78bfa1f!important}
+ .ba-shell .ba-topbar{background:#12101eeF!important;border-bottom-color:#a78bfa25!important}
+ .ba-shell .ba-nav-item{border-radius:11px!important}
+ .ba-shell .ba-nav-item.ba-active{background:#a78bfa20!important;border-color:#a78bfa55;color:#caa6ff!important}
+ .ba-shell .ba-content [class~="bg-[#1f2937]"]{background:#1b1928!important;border-color:#a78bfa25!important;border-radius:15px!important}
+ .ba-shell .ba-content h1{font-family:Inter,system-ui,sans-serif;font-weight:700!important;letter-spacing:-.045em}
+ .ba-shell .ba-content{background:radial-gradient(ellipse at 85% 0%,#5b2b9218,transparent 42%)}
+}
+@media(prefers-reduced-motion:reduce){
+ .sa-shell *, .saas-landing *, .bb-home *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
