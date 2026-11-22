@@ -330,3 +330,34 @@
 @media(prefers-reduced-motion:reduce){
  .sa-shell *, .saas-landing *, .bb-home *{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+
+/* Desktop management hub: mobile card menu remains unchanged */
+@media(min-width:768px){
+.ba-hub-desktop-intro{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,.8fr);gap:20px;align-items:stretch;margin-bottom:34px}
+.ba-hub-intro-copy{position:relative;overflow:hidden;padding:clamp(28px,4vw,52px);border-radius:24px;background:radial-gradient(circle at 95% 10%,#a04bff50,transparent 48%),linear-gradient(125deg,#24163c,#12111c 75%);border:1px solid #b88aff33}
+.ba-hub-intro-copy:after{content:"✦";position:absolute;right:7%;top:10%;font-size:100px;color:#b987ff13;pointer-events:none}
+.ba-hub-kicker,.ba-hub-modules-title span{font:700 10px/1.5 Inter,system-ui,sans-serif;letter-spacing:.19em;color:#c7a4ff}
+.ba-hub-kicker span{margin-left:8px}
+.ba-hub-intro-copy h1{margin:22px 0 16px!important;font:750 clamp(34px,4vw,58px)/1.04 Inter,system-ui,sans-serif!important;letter-spacing:-.06em;color:#fff}
+.ba-hub-intro-copy h1 em{font-style:normal;color:#bd8aff}
+.ba-hub-intro-copy p{max-width:470px;color:#c0b8ce;font-size:14px;line-height:1.8}
+.ba-hub-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.ba-hub-hero-actions a{display:inline-flex;align-items:center;gap:13px;min-height:45px;padding:0 17px;border-radius:11px;background:#9147e3;color:white;font-weight:650;font-size:12px;text-decoration:none;transition:transform .2s,background .2s}
+.ba-hub-hero-actions a:nth-child(2){background:#ffffff0b;border:1px solid #ffffff30}
+.ba-hub-hero-actions a:hover{transform:translateY(-2px);background:#ac70ed}
+.ba-hub-summary{display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:28px;border-radius:24px;border:1px solid #b88aff2c;background:linear-gradient(150deg,#211b31,#171521)}
+.ba-hub-summary-title{display:flex;align-items:center;gap:10px;color:#caa7ff;font-size:11px;letter-spacing:.12em;font-weight:700}
+.ba-hub-summary-value{font:750 clamp(56px,7vw,88px)/1 Inter,system-ui,sans-serif;letter-spacing:-.08em;color:#fff;margin:24px 0}
+.ba-hub-summary-value small{display:block;font-size:13px;letter-spacing:0;font-weight:450;color:#a9a2b5;margin-top:10px}
+.ba-hub-summary-foot{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:#aaa3b8;font-size:11px;border-top:1px solid #ffffff1a;padding-top:17px}
+.ba-hub-summary-foot strong{margin-left:auto;color:#b9edcf;font-weight:600}
+.ba-hub-modules-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 0 19px}
+.ba-hub-modules-title h2{font:700 24px Inter,system-ui,sans-serif;color:#f6f3ff;margin:6px 0 0;letter-spacing:-.04em}
+.ba-hub-modules-title p{color:#9790a8;font-size:12px}
+.ba-shell .ba-home-module-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.ba-shell .ba-home-module-card{min-height:140px;border-radius:18px;background:linear-gradient(145deg,#211c31,#171520);border:1px solid #b98aff29;align-items:flex-start;text-align:left;padding:22px;gap:18px;font-weight:600;font-size:13px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.ba-shell .ba-home-module-card svg{width:26px;height:26px;color:#c398ff}
+.ba-shell .ba-home-module-card:hover{transform:translateY(-4px);border-color:#b98aff80;box-shadow:0 14px 34px #0005}
+}
+@media(max-width:767px){.ba-hub-desktop-intro,.ba-hub-modules-title{display:none!important}}
