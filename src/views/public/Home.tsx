@@ -1,3 +1,4 @@
+import { contrastingText } from "@/lib/theme-colors";
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '@/contexts/DataContext';
@@ -6,6 +7,7 @@ import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays
 import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import '@/styles/barbershop-home.css';
 import { getServiceImage } from '@/lib/service-images';
+import { defaultThemeSettings } from '@/data/demoData';
 import type { Service, Barber, Testimonial, GalleryImage, SiteSettings, ThemeSettings } from '@/types';
 
 export default function Home() {
@@ -41,8 +43,10 @@ export default function Home() {
     '--bb-panel': panel || '#151514',
     '--bb-text': theme.textColor || '#ffffff',
     '--bb-button': theme.buttonColor || accent,
-    '--bb-button-text': colorOn(theme.buttonColor || accent),
-    '--bb-radius': theme.buttonStyle === 'pill' ? '999px' : theme.buttonStyle === 'sharp' ? '0px' : '4px',
+    '--bb-button-text': contrastingText(theme.buttonColor || accent),
+    '--bb-hero-button': theme.buttonColor === defaultThemeSettings.buttonColor ? 'var(--pine-peach)' : (theme.buttonColor || accent),
+    '--bb-hero-button-text': theme.buttonColor === defaultThemeSettings.buttonColor ? 'var(--pine-ink)' : contrastingText(theme.buttonColor || accent),
+    '--bb-radius': theme.buttonStyle === 'pill' ? '999px' : theme.buttonStyle === 'sharp' ? '0px' : '8px',
     fontFamily: theme.fontFamily || 'Inter, sans-serif',
   } as CSSProperties;
   const links = [

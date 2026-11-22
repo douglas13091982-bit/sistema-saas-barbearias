@@ -125,11 +125,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const logout = async () => { await queryClient.cancelQueries(); queryClient.clear(); ++generation.current; setRecords([]); setUsers([]); setCurrentUser(null); await supabase.auth.signOut(); await refresh(); };
   if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
   if(error) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-background text-foreground"><p role="alert">{error}</p><Button onClick={()=>void refresh()}>Tentar novamente</Button></div>;
+  const themeSettings = { ...defaultThemeSettings, ...settings('themeSettings') };
   return <DataContext.Provider value={{...actions,users,currentUser,tenant,bookingAccess,isPlatformAdmin:platformAdmin,isAuthenticated:!!currentUser,login,logout,refresh,
     clients:list('clients'), appointments:currentUser ? list('appointments'):busy, services:list('services'),barbers:list('barbers'),testimonials:list('testimonials'),gallery:list('gallery'),holidays:list('holidays'),
-    siteSettings:settings('siteSettings') || defaultSiteSettings, themeSettings:settings('themeSettings') || defaultThemeSettings,
+    siteSettings:settings('siteSettings') || defaultSiteSettings, themeSettings,
     updateSiteSettings:data=>save('siteSettings','main',{...(settings('siteSettings')||defaultSiteSettings),...data}),
-    updateThemeSettings:data=>save('themeSettings','main',{...(settings('themeSettings')||defaultThemeSettings),...data})
+    updateThemeSettings:data=>save('themeSettings','main',{...themeSettings,...data})
   }}>{children}</DataContext.Provider>;
 }
 export function useData() { const value=useContext(DataContext); if(!value) throw new Error('useData must be used within DataProvider'); return value; }

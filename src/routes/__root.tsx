@@ -98,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap",
       },
     ],
   }),
@@ -149,7 +149,7 @@ function ClientData() {
   const scope = useRouterState({select:s=>s.location.pathname.split('/')[1] || 'root'});
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
-  if (!ready) return <div className="min-h-screen" style={{ backgroundColor: "#111827" }} />;
+  if (!ready) return <div className="min-h-screen" style={{ backgroundColor: "var(--pine-paper)" }} />;
   return (
     <DataProvider key={scope}>
       <Outlet />

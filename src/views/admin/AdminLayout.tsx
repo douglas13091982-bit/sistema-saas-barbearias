@@ -8,10 +8,9 @@ import { Outlet, NavLink, useNavigate, Navigate } from '@/lib/router-compat';
 import { LayoutDashboard, Calendar, CalendarDays, Scissors, Users, UserCircle, Clock, Palette, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin, appointments } = useData();
+  const { currentUser, isAuthenticated, logout, siteSettings, tenant, isPlatformAdmin, appointments } = useData();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const theme = themeSettings;
   const pendingAppointments = appointments.filter(appointment => appointment.status === 'pending').length;
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="ba-shell min-h-screen flex" style={{ backgroundColor: '#101010', fontFamily: theme.fontFamily, '--ba-accent': theme.accentColor || '#c9a96e' } as React.CSSProperties}>
+    <div className="ba-shell min-h-screen flex">
       {/* Sidebar Overlay */}
       {sidebarOpen && (
         <button type="button" aria-label="Fechar navegação" className="ba-overlay fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -55,7 +54,7 @@ export default function AdminLayout() {
         <div className="flex flex-col h-full">
           <div className="ba-brand p-5 border-b border-white/5">
             <div className="flex items-center gap-2">
-              {siteSettings.logo ? <SiteImage src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
+              {siteSettings.logo ? <SiteImage src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" />}
               <span className="font-bold text-white" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
             </div>
             <p className="text-xs text-white/40 mt-1">GESTÃO DA BARBEARIA</p>
@@ -84,7 +83,7 @@ export default function AdminLayout() {
 
           <div className="p-4 border-t border-white/5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: theme.accentColor, color: '#000' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--pine-peach)', color: 'var(--pine-ink)' }}>
                 {currentUser?.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
