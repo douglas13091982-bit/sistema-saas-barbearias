@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { useRouterState } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { AdminPanelSwitcher } from '@/components/AdminPanelSwitcher';
 import { SiteImage } from '@/components/SiteImage';
@@ -10,6 +11,7 @@ import { LayoutDashboard, Calendar, CalendarDays, Scissors, Users, UserCircle, C
 export default function AdminLayout() {
   const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin, appointments } = useData();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: state => state.location.pathname.replace(/\/$/, '') });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const theme = themeSettings;
   const pendingAppointments = appointments.filter(appointment => appointment.status === 'pending').length;
@@ -42,6 +44,14 @@ export default function AdminLayout() {
     ...(isPlatformAdmin ? [{ to: '/super-admin', icon: Shield, label: 'Superadministrador' }] : []),
     { to: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
   ];
+
+  const groups = [
+    { label: 'Atendimento', paths: ['dashboard', 'agenda', 'agendamentos', 'clientes'] },
+    { label: 'Equipe e gestão', paths: ['servicos', 'barbeiros', 'relatorios', 'usuarios', 'mensalidade', 'configuracoes'] },
+    { label: 'Site da barbearia', paths: ['conteudo', 'tema', 'galeria', 'depoimentos'] },
+  ];
+  const section = groups.find(group => group.paths.some(path => pathname === `/admin/${path}`));
+  const sectionItems = section ? navItems.filter(item => section.paths.some(path => item.to === `/admin/${path}`)) : [];
 
   return (
     <div className="ba-shell min-h-screen flex" style={{ backgroundColor: '#101010', fontFamily: theme.fontFamily, '--ba-accent': theme.accentColor || '#c9a96e' } as React.CSSProperties}>
@@ -118,7 +128,23 @@ export default function AdminLayout() {
         <main id="admin-main" className="ba-content flex-1 p-4 lg:p-6 overflow-y-auto">
           <AdminPanelSwitcher active="shop" />
 
-          <Outlet />
+          {section ? (
+            <div className="ba-workspace">
+              <nav className="ba-section-nav" aria-label={section.label}>
+                <span>{section.label}</span>
+                <ul>
+                  {sectionItems.map(item => (
+                    <li key={item.to}>
+                      <NavLink to={item.to} className={({ isActive }) => isActive ? 'ba-section-active' : ''}>
+                        <item.icon size={16} aria-hidden="true" />{item.label}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+              <div className="ba-workspace-page"><Outlet /></div>
+            </div>
+          ) : <Outlet />}
         </main>
       </div>
     </div>
