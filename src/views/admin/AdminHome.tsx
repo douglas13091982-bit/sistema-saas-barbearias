@@ -3,12 +3,10 @@ import { useData } from '../../contexts/DataContext';
 import { LayoutDashboard, CalendarDays, Calendar, Scissors, Users, UserCircle, MessageSquare, Image, Home, Palette, Shield, BarChart3, Settings } from 'lucide-react';
 
 export default function AdminHome() {
-  const { isPlatformAdmin, appointments } = useData();
-  const pendingAppointments = appointments.filter(item => item.status === 'pending').length;
+  const { isPlatformAdmin } = useData();
   const modules = [
     { label: 'Dashboard', icon: LayoutDashboard, route: '/admin/dashboard' },
-    { label: 'Agenda', icon: CalendarDays, route: '/admin/agenda' },
-    { label: 'Agendamentos', icon: Calendar, route: '/admin/agendamentos', badge: pendingAppointments },
+    { label: 'Agendamentos', icon: Calendar, route: '/admin/agendamentos' },
     { label: 'Serviços', icon: Scissors, route: '/admin/servicos' },
     { label: 'Barbeiros', icon: Users, route: '/admin/barbeiros' },
     { label: 'Clientes', icon: UserCircle, route: '/admin/clientes' },
@@ -30,7 +28,6 @@ export default function AdminHome() {
           <Link key={module.route} to={module.route} className="ba-home-module-card">
             <module.icon aria-hidden="true" />
             <span>{module.label}</span>
-            {!!module.badge && <small aria-label={`${module.badge} agendamentos pendentes`}>{module.badge > 99 ? '99+' : module.badge}</small>}
           </Link>
         ))}
       </nav>

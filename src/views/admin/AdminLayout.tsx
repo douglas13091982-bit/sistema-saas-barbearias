@@ -5,14 +5,13 @@ import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import '@/styles/barbershop-admin.css';
 import { Outlet, NavLink, useNavigate, Navigate } from '@/lib/router-compat';
-import { LayoutDashboard, Calendar, CalendarDays, Scissors, Users, UserCircle, Clock, Palette, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Users, UserCircle, Clock, Palette, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin, appointments } = useData();
+  const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin } = useData();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const theme = themeSettings;
-  const pendingAppointments = appointments.filter(appointment => appointment.status === 'pending').length;
 
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -27,7 +26,6 @@ export default function AdminLayout() {
 
   const navItems = [
     { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/admin/agenda', icon: CalendarDays, label: 'Agenda' },
     { to: '/admin/agendamentos', icon: Calendar, label: 'Agendamentos' },
     { to: '/admin/servicos', icon: Scissors, label: 'Serviços' },
     { to: '/admin/barbeiros', icon: Users, label: 'Barbeiros' },
@@ -73,11 +71,6 @@ export default function AdminLayout() {
               >
                 <item.icon className="w-4 h-4" />
                 <span>{item.label}</span>
-                {item.to === '/admin/agendamentos' && pendingAppointments > 0 && (
-                  <span aria-label={`${pendingAppointments} agendamentos pendentes`} aria-live="polite" className="ml-auto inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white shadow-sm shadow-red-950/50">
-                    {pendingAppointments > 99 ? '99+' : pendingAppointments}
-                  </span>
-                )}
               </NavLink>
             ))}
           </nav>

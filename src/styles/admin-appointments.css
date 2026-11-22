@@ -1,0 +1,59 @@
+.appointments {min-width:0;color:#f5f1eb}
+.appointments h1 {font:700 2rem/1.2 "Playfair Display",Georgia,serif;margin:0 0 18px}
+.appointments-toolbar {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.appointments-toolbar button,.appointments-date,.appointments-actions button {
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;
+  padding:8px 12px;border:1px solid #514639;border-radius:8px;background:#191817;color:#edd8ae;
+}
+.appointments-date {position:relative;flex-wrap:wrap;font-size:.875rem}
+.appointments-date input {position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;color-scheme:dark}
+.appointments-date:focus-within {outline:2px solid #e8c67c;outline-offset:2px}
+.appointments-scroll {
+  max-width:100%;max-height:72vh;overflow:auto;border:1px solid #36312a;
+  border-radius:12px;background:#161514;scrollbar-color:#8f7851 #211d19;
+}
+.appointments-grid {display:grid;grid-template-columns:4rem repeat(var(--barbers),minmax(9rem,1fr))}
+.appointments-axis {position:sticky;left:0;z-index:3;background:#191816;border-right:1px solid #36312a}
+.appointments-heading {
+  position:sticky;top:0;z-index:2;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;gap:5px;height:80px;padding:4px;text-align:center;background:#1a1816;
+  border-bottom:1px solid #36312a;font-size:.83rem;font-weight:650;color:#edd8ae;
+}
+.appointments-heading>span:last-child {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appointments-avatar {
+  display:grid;place-items:center;width:36px;height:36px;border:1px solid #c9a96e;
+  overflow:hidden;border-radius:50%;background:#292219;
+}
+.appointments-avatar img {width:100%;height:100%;object-fit:cover}
+.appointments-hour {
+  height:var(--hour-height);padding-top:5px;text-align:center;
+  border-top:1px solid #36312a;font-size:.8rem;font-variant-numeric:tabular-nums;
+}
+.appointments-column {min-width:0;border-right:1px solid #36312a}
+.appointments-column-slots {
+  position:relative;background:repeating-linear-gradient(to bottom,#36312a 0 1px,transparent 1px var(--hour-height));
+}
+.appointments-card {
+  position:absolute;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  padding:0 6px;overflow:hidden;border:1px solid #91764a;border-radius:6px;background:#332a1b;
+  color:#f5ead6;text-align:left;font-size:.75rem;line-height:1.2;
+}
+.appointments-card :is(span,strong) {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appointments-card[data-status="cancelled"],.appointments-card[data-status="no_show"] {background:#272221;border-color:#6d5e5b;color:#e3c8c3}
+.appointments-card[data-status="cancelled"] strong,.appointments-card[data-status="no_show"] strong {text-decoration:line-through}
+.appointments-card[data-status="completed"] {background:#253026;border-color:#58745d}
+.appointments-card:focus-visible,.appointments-toolbar :is(button,input):focus-visible,.appointments-scroll:focus-visible,.appointments-actions button:focus-visible {
+  outline:2px solid #e8c67c;outline-offset:-2px;
+}
+.appointments-dialog {background:#191817;color:#f5f1eb;border-color:#514639;max-height:90dvh;overflow:auto}
+.appointments-dialog dl {display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;font-size:.875rem}
+.appointments-dialog dt,.appointments-note {color:#d4c5ae}
+.appointments-dialog dd {overflow-wrap:anywhere}
+.appointments-status {border-top:1px solid #514639;padding-top:12px;color:#a3e2ad;font-weight:650}
+.appointments-status[data-status="cancelled"] {color:#ff9d92}
+.appointments-status[data-status="no_show"] {color:#f3c375}
+.appointments-actions {display:grid;gap:8px}
+.appointments-actions button[data-action="cancelled"] {color:#ff9d92;border-color:#9c4942}
+.appointments-actions button[data-action="no_show"] {color:#f3c375;border-color:#8f6b39}
+.appointments-actions button:disabled {opacity:.6}
+.appointments-note {font-size:.8rem}

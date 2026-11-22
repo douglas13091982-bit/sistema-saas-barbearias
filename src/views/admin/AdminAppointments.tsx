@@ -1,154 +1,206 @@
-// @ts-nocheck -- imported code, kept as written
-import { useState } from 'react';
-import { useData } from '../../contexts/DataContext';
-import { Search, Filter, Check, X, Clock, Eye, Ban, Calendar } from 'lucide-react';
+import { useRef, useState, type CSSProperties } from 'react';
+import { CalendarDays, ChevronLeft, ChevronRight, Check, UserX, XCircle } from 'lucide-react';
+import { useData } from '@/contexts/DataContext';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { resolveSiteImage } from '@/lib/site-images';
+import type { Appointment, Barber, Client, Service, SiteSettings } from '@/types';
+import '@/styles/admin-appointments.css';
+
+const statuses = {
+  pending: 'Agendado',
+  confirmed: 'Confirmado',
+  completed: 'Concluído',
+  cancelled: 'Cancelado',
+  no_show: 'Não compareceu',
+};
+
+const shopDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' });
+const dayLabel = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full', timeZone: 'UTC' });
+const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+const clock = (minute: number) => `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`;
+const rowHeight = 104;
+
+function BarberPhoto({ barber }: { barber: Pick<Barber, 'name' | 'photo'> }) {
+  const [failed, setFailed] = useState<string>();
+  const source = resolveSiteImage(barber.photo);
+  const initials = barber.name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('');
+  return <span className="appointments-avatar" aria-hidden="true">
+    {source && source !== failed ? <img src={source} alt="" onError={() => setFailed(source)} /> : initials}
+  </span>;
+}
+
+type Status = Appointment['status'];
+type StatusAction = 'completed' | 'cancelled' | 'no_show';
+type Booking = { appointment: Appointment; client?: Client; service?: Service; start: number; end: number };
+
+function positionBookings(bookings: Booking[]) {
+  const sorted = [...bookings].sort((a, b) => a.start - b.start || b.end - a.end);
+  let lanes: number[] = [];
+  let groupEnd = -1;
+  let group: Array<Booking & { lane: number }> = [];
+  const positioned: Array<Booking & { lane: number; laneCount: number }> = [];
+  function flush() {
+    positioned.push(...group.map(booking => ({ ...booking, laneCount: lanes.length })));
+    lanes = [];
+    group = [];
+  }
+  for (const booking of sorted) {
+    if (booking.start >= groupEnd) {
+      flush();
+      groupEnd = booking.end;
+    }
+    const availableLane = lanes.findIndex(end => end <= booking.start);
+    const lane = availableLane < 0 ? lanes.length : availableLane;
+    lanes[lane] = booking.end;
+    groupEnd = Math.max(groupEnd, booking.end);
+    group.push({ ...booking, lane });
+  }
+  flush();
+  return positioned;
+}
 
 export default function AdminAppointments() {
-  const { appointments, services, barbers, clients, updateAppointment, siteSettings } = useData();
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterBarber, setFilterBarber] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAppt, setSelectedAppt] = useState<string | null>(null);
+  const { appointments, services, barbers, clients, updateAppointment, siteSettings }: {
+    appointments: Appointment[]; services: Service[]; barbers: Barber[]; clients: Client[]; siteSettings: SiteSettings;
+    updateAppointment: (id: string, data: { status: Status }, expectedStatus: Status) => Promise<unknown>;
+  } = useData();
+  const [date, setDate] = useState(() => shopDate.format(new Date()));
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [pendingAction, setPendingAction] = useState<StatusAction | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const updating = useRef(false);
 
-  const filtered = appointments.filter(a => {
-    if (filterStatus !== 'all' && a.status !== filterStatus) return false;
-    if (filterBarber !== 'all' && a.barberId !== filterBarber) return false;
-    if (searchTerm) {
-      const client = clients.find(c => c.id === a.clientId);
-      const service = services.find(s => s.id === a.serviceId);
-      const search = searchTerm.toLowerCase();
-      if (!client?.name.toLowerCase().includes(search) && !service?.name.toLowerCase().includes(search)) return false;
+  const day = new Date(date + 'T12:00:00Z');
+  const bookings = appointments.filter(appointment => appointment.date === date).map(appointment => {
+    const service = services.find(item => item.id === appointment.serviceId);
+    const start = minutes(appointment.time);
+    const end = start + (Number(service?.duration) || 30);
+    return { appointment, service, start, end, client: clients.find(item => item.id === appointment.clientId) };
+  });
+  const bookedBarbers = new Set(bookings.map(({ appointment }) => appointment.barberId));
+  const columns = barbers.filter(barber => barber.active || bookedBarbers.has(barber.id))
+    .sort((a, b) => a.order - b.order);
+  const missingIds = [...bookedBarbers].filter(id => !barbers.some(barber => barber.id === id));
+  const team = [...columns, ...missingIds.map(id => ({ id, name: 'Barbeiro removido', photo: '' }))];
+  const workHours = [
+    ...(siteSettings.businessHours ?? []),
+    ...columns.flatMap(barber => barber.workingHours ?? []),
+  ].filter(hours => hours.active && hours.dayOfWeek === day.getUTCDay());
+  const startHour = Math.floor(Math.min(480, ...workHours.map(hours => minutes(hours.start)), ...bookings.map(booking => booking.start)) / 60);
+  const endHour = Math.ceil(Math.max(1080, ...workHours.map(hours => minutes(hours.end)), ...bookings.map(booking => booking.end)) / 60);
+  const hours = Array.from({ length: endHour - startHour }, (_, index) => startHour + index);
+  const selected = bookings.find(({ appointment }) => appointment.id === selectedId);
+  const status = selected?.appointment.status;
+  const canUpdate = status === 'pending' || status === 'confirmed';
+
+  function moveDay(offset: number) {
+    const next = new Date(day);
+    next.setUTCDate(next.getUTCDate() + offset);
+    setDate(next.toISOString().slice(0, 10));
+  }
+
+  async function changeStatus(next: StatusAction) {
+    if (!selected || !canUpdate || updating.current) return;
+    updating.current = true;
+    setSaving(true);
+    setError('');
+    try {
+      await updateAppointment(selected.appointment.id, { status: next }, selected.appointment.status);
+      setPendingAction(null);
+    } catch {
+      setError('Não foi possível atualizar o agendamento. Confira o status e tente novamente.');
+    } finally {
+      updating.current = false;
+      setSaving(false);
     }
-    return true;
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-500/20 text-yellow-400',
-    confirmed: 'bg-green-500/20 text-green-400',
-    completed: 'bg-blue-500/20 text-blue-400',
-    cancelled: 'bg-red-500/20 text-red-400',
-    no_show: 'bg-gray-500/20 text-gray-400',
-  };
-
-  const statusLabels: Record<string, string> = {
-    pending: 'Pendente', confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu'
-  };
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Agendamentos</h1>
-          <p className="text-white/50 text-sm">Gerencie todos os agendamentos</p>
-        </div>
+    <section className="appointments">
+      <h1>Agendamentos</h1>
+      <div className="appointments-toolbar">
+        <button type="button" aria-label="Dia anterior" onClick={() => moveDay(-1)}><ChevronLeft size={18} /></button>
+        <label className="appointments-date">
+          <CalendarDays size={16} aria-hidden="true" /><span>{dayLabel.format(day)}</span>
+          <input type="date" aria-label="Escolher data" value={date} onClick={event => { try { event.currentTarget.showPicker?.(); } catch { /* Keep the native date control available. */ } }} onChange={event => { if (event.target.value) setDate(event.target.value); }} />
+        </label>
+        <button type="button" aria-label="Próximo dia" onClick={() => moveDay(1)}><ChevronRight size={18} /></button>
+        <button type="button" onClick={() => setDate(shopDate.format(new Date()))}>Hoje</button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-          <input
-            type="text"
-            placeholder="Buscar por cliente ou serviço..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/30 outline-none focus:border-white/30"
-          />
-        </div>
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none"
-        >
-          <option value="all">Todos os status</option>
-          <option value="pending">Pendente</option>
-          <option value="confirmed">Confirmado</option>
-          <option value="completed">Concluído</option>
-          <option value="cancelled">Cancelado</option>
-          <option value="no_show">Não compareceu</option>
-        </select>
-        <select
-          value={filterBarber}
-          onChange={e => setFilterBarber(e.target.value)}
-          className="px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none"
-        >
-          <option value="all">Todos os barbeiros</option>
-          {barbers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-xl border border-white/5 bg-[#1f2937] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Cliente</th>
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Serviço</th>
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Barbeiro</th>
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Data/Hora</th>
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Valor</th>
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Status</th>
-                <th className="text-left py-3 px-4 text-white/50 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(appt => {
-                const client = clients.find(c => c.id === appt.clientId);
-                const service = services.find(s => s.id === appt.serviceId);
-                const barber = barbers.find(b => b.id === appt.barberId);
-                return (
-                  <tr key={appt.id} className="border-b border-white/5 hover:bg-white/5 transition">
-                    <td className="py-3 px-4 text-white">{client?.name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-white/70">{service?.name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-white/70">{barber?.name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-white/70">
-                      <div>{new Date(appt.date + 'T12:00:00').toLocaleDateString('pt-BR')}</div>
-                      <div className="text-xs text-white/50">{appt.time}</div>
-                    </td>
-                    <td className="py-3 px-4 font-medium" style={{ color: '#c9a96e' }}>{siteSettings.currency} {service?.price.toFixed(2)}</td>
-                    <td className="py-3 px-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${statusColors[appt.status]}`}>
-                        {statusLabels[appt.status]}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1">
-                        {appt.status === 'pending' && (
-                          <button onClick={() => updateAppointment(appt.id, { status: 'confirmed' })} className="p-1.5 rounded-lg hover:bg-green-500/20 text-green-400 transition" title="Confirmar">
-                            <Check className="w-4 h-4" />
-                          </button>
-                        )}
-                        {(appt.status === 'pending' || appt.status === 'confirmed') && (
-                          <>
-                            <button onClick={() => updateAppointment(appt.id, { status: 'completed' })} className="p-1.5 rounded-lg hover:bg-blue-500/20 text-blue-400 transition" title="Concluir">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => updateAppointment(appt.id, { status: 'cancelled' })} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition" title="Cancelar">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                        {appt.status === 'confirmed' && (
-                          <button onClick={() => updateAppointment(appt.id, { status: 'no_show' })} className="p-1.5 rounded-lg hover:bg-gray-500/20 text-gray-400 transition" title="Não compareceu">
-                            <Ban className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-white/40">
-            <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Nenhum agendamento encontrado</p>
+      {!team.length ? <p>Nenhum barbeiro cadastrado para exibir na agenda.</p> : (
+        <div className="appointments-scroll" role="region" aria-label="Grade de horários por barbeiro" tabIndex={0}>
+          <div className="appointments-grid" style={{ '--barbers': team.length, '--hour-height': `${rowHeight}px` } as CSSProperties}>
+            <div className="appointments-axis">
+              <div className="appointments-heading">Horário</div>
+              {hours.map(hour => <div key={hour} className="appointments-hour">{clock(hour * 60)}</div>)}
+            </div>
+            {team.map(barber => (
+              <div className="appointments-column" key={barber.id}>
+                <div className="appointments-heading"><BarberPhoto barber={barber} /><span>{barber.name}</span></div>
+                <div className="appointments-column-slots" style={{ height: hours.length * rowHeight }}>
+                  {positionBookings(bookings.filter(booking => booking.appointment.barberId === barber.id)).map(({ appointment, client, start, end, lane, laneCount }) => (
+                    <button
+                      type="button"
+                      className="appointments-card"
+                      key={appointment.id}
+                      data-status={appointment.status}
+                      aria-label={`${client?.name || 'Cliente'}, ${clock(start)} a ${clock(end)}, ${statuses[appointment.status]}`}
+                      style={{
+                        top: (start / 60 - startHour) * rowHeight,
+                        height: Math.max(16, (end - start) / 60 * rowHeight - 2),
+                        left: `calc(${lane / laneCount * 100}% + 2px)`,
+                        width: `calc(${100 / laneCount}% - 4px)`,
+                      }}
+                      onClick={event => {
+                        trigger.current = event.currentTarget;
+                        setError('');
+                        setPendingAction(null);
+                        setSelectedId(appointment.id);
+                      }}
+                    >
+                      <span>{clock(start)}–{clock(end)}</span>
+                      <strong>{client?.name || 'Cliente'}</strong>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+
+      <Dialog open={!!selected} onOpenChange={open => { if (!open && !saving) setSelectedId(null); }}>
+        {selected && <DialogContent className="appointments-dialog" onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }}>
+          <DialogTitle>Detalhes do agendamento</DialogTitle>
+          <DialogDescription className="sr-only">Informações e status da reserva.</DialogDescription>
+          <dl>
+            <dt>Cliente</dt><dd>{selected.client?.name || '—'}</dd>
+            <dt>Telefone</dt><dd>{selected.client?.phone || '—'}</dd>
+            <dt>Barbeiro</dt><dd>{team.find(barber => barber.id === selected.appointment.barberId)?.name || '—'}</dd>
+            <dt>Serviço</dt><dd>{selected.service?.name || '—'}</dd>
+            <dt>Horário</dt><dd>{clock(selected.start)}–{clock(selected.end)}</dd>
+            <dt>Valor</dt><dd>{selected.service ? `${siteSettings.currency} ${Number(selected.service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}</dd>
+            {selected.appointment.notes && <><dt>Observações</dt><dd>{selected.appointment.notes}</dd></>}
+          </dl>
+          <p className="appointments-status" data-status={status} role="status">{statuses[selected.appointment.status]}</p>
+          {canUpdate && <div className="appointments-actions">
+            {pendingAction ? <>
+              <p>Registrar como <strong>{statuses[pendingAction].toLowerCase()}</strong>?</p>
+              <button type="button" disabled={saving} onClick={() => void changeStatus(pendingAction)}>{saving ? 'Salvando…' : 'Salvar status'}</button>
+              <button type="button" disabled={saving} onClick={() => { setPendingAction(null); setError(''); }}>Voltar</button>
+            </> : <>
+              <button type="button" onClick={() => setPendingAction('completed')}><Check size={16} /> Concluir atendimento</button>
+              <button type="button" data-action="no_show" onClick={() => setPendingAction('no_show')}><UserX size={16} /> Marcar como não compareceu</button>
+              <button type="button" data-action="cancelled" onClick={() => setPendingAction('cancelled')}><XCircle size={16} /> Cancelar agendamento</button>
+            </>}
+          </div>}
+          {error && <p role="alert">{error}</p>}
+          <p className="appointments-note">Só atendimentos concluídos entram no faturamento.</p>
+        </DialogContent>}
+      </Dialog>
+    </section>
   );
 }

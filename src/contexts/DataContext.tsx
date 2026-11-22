@@ -106,6 +106,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     actions['update'+singular] = (id,data) => update(kind,id,data);
     actions['delete'+singular] = id => remove(kind,id);
   }
+  actions.updateAppointment = (id, data, expectedStatus) => {
+    if (expectedStatus === undefined) return update('appointments', id, data);
+    const existing = list('appointments').find(appointment => appointment.id === id);
+    if (!existing) return Promise.reject(new Error('Agendamento não encontrado.'));
+    return mutate(async () => {
+      const result = await supabase.from('barbershop_records')
+        .update({ data: { ...existing, ...data, id } })
+        .eq('tenant_id', tenant.id)
+        .eq('kind', 'appointments')
+        .eq('id', id)
+        .eq('data->>status', expectedStatus)
+        .select('id');
+      if (!result.error && !result.data.length) {
+        await refresh();
+        throw new Error('O status do agendamento já foi alterado.');
+      }
+      return result;
+    });
+  };
   actions.deleteService = id => list('appointments').some(a=>a.serviceId===id) ? update('services',id,{active:false}) : remove('services',id);
   for(const action of ['create','update','delete']) {
     actions[action==='create'?'addUser':action==='update'?'updateUser':'deleteUser'] = async (id,user) => {

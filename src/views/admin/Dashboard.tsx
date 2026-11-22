@@ -6,17 +6,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function Dashboard() {
   const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
   const todayAppointments = appointments.filter(a => a.date === today && a.status !== 'cancelled');
-  const weekStart = new Date();
+  const weekStart = new Date(today + 'T12:00:00');
   weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setHours(0, 0, 0, 0);
   const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setDate(weekEnd.getDate() + 7);
 
   const weekAppointments = appointments.filter(a => {
-    const d = new Date(a.date);
-    return d >= weekStart && d <= weekEnd && a.status !== 'cancelled';
+    const d = new Date(a.date + 'T12:00:00');
+    return d >= weekStart && d < weekEnd && a.status !== 'cancelled';
   });
 
   const totalRevenue = appointments.filter(a => a.status === 'completed').reduce((sum, a) => {
@@ -24,7 +25,7 @@ export default function Dashboard() {
     return sum + (service?.price || 0);
   }, 0);
 
-  const weekRevenue = weekAppointments.reduce((sum, a) => {
+  const weekRevenue = weekAppointments.filter(a => a.status === 'completed').reduce((sum, a) => {
     const service = services.find(s => s.id === a.serviceId);
     return sum + (service?.price || 0);
   }, 0);
@@ -66,7 +67,7 @@ export default function Dashboard() {
     <div className="ba-dashboard space-y-6">
       <div className="ba-welcome">
         <div><p className="ba-eyebrow">VISÃO GERAL</p><h1 className="text-2xl font-bold text-white">Seu negócio, em boas mãos.</h1><p className="text-white/50 text-sm">Acompanhe os atendimentos e cuide de cada detalhe da sua barbearia.</p></div>
-        <div className="ba-quick-actions"><Link to="/admin/agenda">Ver agenda</Link><Link to="/admin/agendamentos">Gerenciar agendamentos</Link></div>
+        <div className="ba-quick-actions"><Link to="/admin/agendamentos">Gerenciar agendamentos</Link></div>
       </div>
 
       {/* Stats Grid */}
@@ -150,7 +151,7 @@ export default function Dashboard() {
                       appt.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
                       'bg-red-500/20 text-red-400'
                     }`}>
-                      {appt.status === 'pending' ? 'Pendente' : appt.status === 'confirmed' ? 'Confirmado' : appt.status === 'completed' ? 'Concluído' : appt.status === 'cancelled' ? 'Cancelado' : 'Não compareceu'}
+                      {appt.status === 'pending' ? 'Agendado' : appt.status === 'confirmed' ? 'Confirmado' : appt.status === 'completed' ? 'Concluído' : appt.status === 'cancelled' ? 'Cancelado' : 'Não compareceu'}
                     </span>
                   </div>
                 );
