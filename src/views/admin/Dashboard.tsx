@@ -3,26 +3,21 @@ import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
 import { Calendar, DollarSign, Users, Scissors, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { addDays, format, startOfWeek } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export default function Dashboard() {
-  const { appointments, services, barbers, clients, siteSettings } = useData();
-  const now = new Date();
-  const today = format(now, 'yyyy-MM-dd');
+  const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
+  const today = new Date().toISOString().split('T')[0];
 
   const todayAppointments = appointments.filter(a => a.date === today && a.status !== 'cancelled');
-  const weekStart = startOfWeek(now);
-  const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
-  const weeklyActivity = weekDays.map(day => {
-    const date = format(day, 'yyyy-MM-dd');
-    return {
-      name: format(day, 'EEE', { locale: ptBR }),
-      count: appointments.filter(a => a.date === date && a.status !== 'cancelled').length,
-    };
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const weekAppointments = appointments.filter(a => {
+    const d = new Date(a.date);
+    return d >= weekStart && d <= weekEnd && a.status !== 'cancelled';
   });
-  const weekDates = new Set(weekDays.map(day => format(day, 'yyyy-MM-dd')));
-  const weekAppointments = appointments.filter(a => weekDates.has(a.date) && a.status !== 'cancelled');
 
   const totalRevenue = appointments.filter(a => a.status === 'completed').reduce((sum, a) => {
     const service = services.find(s => s.id === a.serviceId);
@@ -51,17 +46,17 @@ export default function Dashboard() {
     appointments: appointments.filter(a => a.barberId === b.id && a.status !== 'cancelled').length
   })).sort((a, b) => b.appointments - a.appointments);
 
-  const COLORS = ['#173a30', '#608774', '#b7cbbb', '#c88450', '#eed3b9'];
+  const COLORS = [themeSettings.accentColor || '#c9a96e', '#9e8864', '#d8c49c', '#746c5c', '#eee1c4'];
 
   // Recent clients
   const recentClients = [...clients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
 
   const stats = [
-    { label: 'Agendamentos Hoje', value: todayAppointments.length, icon: Calendar, color: '#173a30' },
-    { label: 'Faturamento Total', value: `${siteSettings.currency} ${totalRevenue.toFixed(0)}`, icon: DollarSign, color: '#173a30' },
-    { label: 'Faturamento Semanal', value: `${siteSettings.currency} ${weekRevenue.toFixed(0)}`, icon: TrendingUp, color: '#173a30' },
-    { label: 'Total Clientes', value: clients.length, icon: Users, color: '#173a30' },
-    { label: 'Agendamentos Semana', value: weekAppointments.length, icon: Clock, color: '#173a30' },
+    { label: 'Agendamentos Hoje', value: todayAppointments.length, icon: Calendar, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Faturamento Total', value: `${siteSettings.currency} ${totalRevenue.toFixed(0)}`, icon: DollarSign, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Faturamento Semanal', value: `${siteSettings.currency} ${weekRevenue.toFixed(0)}`, icon: TrendingUp, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Total Clientes', value: clients.length, icon: Users, color: themeSettings.accentColor || '#c9a96e' },
+    { label: 'Agendamentos Semana', value: weekAppointments.length, icon: Clock, color: themeSettings.accentColor || '#c9a96e' },
     { label: 'Taxa Cancelamento', value: `${cancelRate}%`, icon: AlertTriangle, color: '#ef4444' },
   ];
 
@@ -70,7 +65,7 @@ export default function Dashboard() {
   return (
     <div className="ba-dashboard space-y-6">
       <div className="ba-welcome">
-        <div><h1 className="text-2xl font-bold text-white">Visão geral</h1><p className="text-white/50 text-sm">Acompanhe os atendimentos e cuide de cada detalhe da sua barbearia.</p></div>
+        <div><p className="ba-eyebrow">VISÃO GERAL</p><h1 className="text-2xl font-bold text-white">Seu negócio, em boas mãos.</h1><p className="text-white/50 text-sm">Acompanhe os atendimentos e cuide de cada detalhe da sua barbearia.</p></div>
         <div className="ba-quick-actions"><Link to="/admin/agenda">Ver agenda</Link><Link to="/admin/agendamentos">Gerenciar agendamentos</Link></div>
       </div>
 
@@ -89,55 +84,6 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
-        {/* Today's Appointments */}
-        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
-          <h3 className="text-lg font-semibold text-white mb-4">Agendamentos de Hoje</h3>
-          {todayAppointments.length > 0 ? (
-            <div className="space-y-3">
-              {todayAppointments.map(appt => {
-                const client = clients.find(c => c.id === appt.clientId);
-                const service = services.find(s => s.id === appt.serviceId);
-                const barber = barbers.find(b => b.id === appt.barberId);
-                return (
-                  <div key={appt.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
-                    <div className="text-center min-w-[50px]">
-                      <p className="text-sm font-bold text-white">{appt.time}</p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{client?.name}</p>
-                      <p className="text-xs text-white/50">{service?.name} • {barber?.name}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      appt.status === 'confirmed' ? 'bg-green-500/20 text-green-900' :
-                      appt.status === 'pending' ? 'bg-yellow-500/20 text-yellow-900' :
-                      appt.status === 'completed' ? 'bg-blue-500/20 text-blue-900' :
-                      'bg-red-500/20 text-red-900'
-                    }`}>
-                      {appt.status === 'pending' ? 'Pendente' : appt.status === 'confirmed' ? 'Confirmado' : appt.status === 'completed' ? 'Concluído' : appt.status === 'cancelled' ? 'Cancelado' : 'Não compareceu'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-white/40 text-center py-6">Nenhum agendamento para hoje</p>
-          )}
-        </div>
-        <section className="rounded-xl border border-white/5 bg-[#1f2937] p-5" aria-labelledby="weekly-activity">
-          <h3 id="weekly-activity" className="text-lg font-semibold mb-4">Atendimentos na semana</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={weeklyActivity}>
-              <CartesianGrid vertical={false} />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#173a30" radius={[4, 4, 0, 0]} name="Agendamentos" isAnimationActive={false} />
-            </BarChart>
-          </ResponsiveContainer>
-        </section>
-      </div>
-
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Service Popularity */}
@@ -150,7 +96,7 @@ export default function Dashboard() {
                 <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 12 }} />
                 <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} labelStyle={{ color: '#fff' }} />
-                <Bar dataKey="count" fill={'#173a30'} radius={[4, 4, 0, 0]} name="Agendamentos" />
+                <Bar dataKey="count" fill={themeSettings.accentColor || '#c9a96e'} radius={[4, 4, 0, 0]} name="Agendamentos" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -180,13 +126,48 @@ export default function Dashboard() {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Today's Appointments */}
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Agendamentos de Hoje</h3>
+          {todayAppointments.length > 0 ? (
+            <div className="space-y-3">
+              {todayAppointments.map(appt => {
+                const client = clients.find(c => c.id === appt.clientId);
+                const service = services.find(s => s.id === appt.serviceId);
+                const barber = barbers.find(b => b.id === appt.barberId);
+                return (
+                  <div key={appt.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+                    <div className="text-center min-w-[50px]">
+                      <p className="text-sm font-bold text-white">{appt.time}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{client?.name}</p>
+                      <p className="text-xs text-white/50">{service?.name} • {barber?.name}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      appt.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                      appt.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                      appt.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-red-500/20 text-red-400'
+                    }`}>
+                      {appt.status === 'pending' ? 'Pendente' : appt.status === 'confirmed' ? 'Confirmado' : appt.status === 'completed' ? 'Concluído' : appt.status === 'cancelled' ? 'Cancelado' : 'Não compareceu'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-white/40 text-center py-6">Nenhum agendamento para hoje</p>
+          )}
+        </div>
+
         {/* Recent Clients */}
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
           <h3 className="text-lg font-semibold text-white mb-4">Clientes Recentes</h3>
           <div className="space-y-3">
             {recentClients.map(client => (
               <div key={client.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: '#173a3020', color: '#173a30' }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: '#c9a96e20', color: '#c9a96e' }}>
                   {client.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -195,7 +176,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-white/50">{client.totalVisits} visitas</p>
-                  <p className="text-xs font-medium" style={{ color: '#173a30' }}>R$ {client.totalSpent}</p>
+                  <p className="text-xs font-medium" style={{ color: '#c9a96e' }}>R$ {client.totalSpent}</p>
                 </div>
               </div>
             ))}

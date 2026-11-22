@@ -1,4 +1,3 @@
-import { bookingTheme, contrastingText } from "@/lib/theme-colors";
 // @ts-nocheck -- imported code, kept as written
 import { supabase } from '@/integrations/supabase/client';
 import { safeSubscriptionUrl } from '@/lib/subscription-link';
@@ -154,7 +153,7 @@ export default function Booking() {
   const selectedBarberData = activeBarbers.find(b => b.id === selectedBarber);
 
   return (
-    <div className="bb-booking min-h-screen" style={bookingTheme(theme)}>
+    <div className="min-h-screen" style={{ ...cssVars, fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-md bg-black/80 border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -187,7 +186,7 @@ export default function Booking() {
                   key={service.id}
                   onClick={() => { setSelectedService(service.id); setStep(2); }}
                   className={`text-left p-5 rounded-xl border transition-all hover:scale-[1.02] ${selectedService === service.id ? 'border-opacity-100' : 'border-white/10 hover:border-white/30'}`}
-                  style={{ borderColor: selectedService === service.id ? theme.accentColor : undefined, backgroundColor: selectedService === service.id ? `${theme.accentColor}15` : 'var(--booking-surface)' }}
+                  style={{ borderColor: selectedService === service.id ? theme.accentColor : undefined, backgroundColor: selectedService === service.id ? `${theme.accentColor}15` : 'rgba(255,255,255,0.03)' }}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-bold text-lg">{service.name}</h3>
@@ -230,7 +229,7 @@ export default function Booking() {
                   key={barber.id}
                   onClick={() => { setSelectedBarber(barber.id); setStep(3); }}
                   className={`text-left p-5 rounded-xl border transition-all hover:scale-[1.02] ${selectedBarber === barber.id ? 'border-opacity-100' : 'border-white/10 hover:border-white/30'}`}
-                  style={{ borderColor: selectedBarber === barber.id ? theme.accentColor : undefined, backgroundColor: selectedBarber === barber.id ? `${theme.accentColor}15` : 'var(--booking-surface)' }}
+                  style={{ borderColor: selectedBarber === barber.id ? theme.accentColor : undefined, backgroundColor: selectedBarber === barber.id ? `${theme.accentColor}15` : 'rgba(255,255,255,0.03)' }}
                 >
                   <div className="flex items-center gap-4">
                     <SiteImage src={barber.photo} alt={barber.name} className="w-16 h-16 rounded-full object-cover border-2" style={{ borderColor: theme.accentColor }} />
@@ -269,7 +268,7 @@ export default function Booking() {
                       key={date}
                       onClick={() => { setSelectedDate(date); setSelectedTime(''); }}
                       className={`flex-shrink-0 w-16 py-3 rounded-xl text-center transition-all ${selectedDate === date ? 'scale-105' : 'hover:bg-white/10'}`}
-                      style={{ backgroundColor: selectedDate === date ? theme.accentColor : 'var(--booking-surface)', color: selectedDate === date ? contrastingText(theme.accentColor) : theme.textColor }}
+                      style={{ backgroundColor: selectedDate === date ? theme.accentColor : 'rgba(255,255,255,0.05)', color: selectedDate === date ? '#000' : theme.textColor }}
                     >
                       <div className="text-xs opacity-70">{dayNames[d.getDay()]}</div>
                       <div className="text-xl font-bold">{d.getDate()}</div>
@@ -293,7 +292,7 @@ export default function Booking() {
                         key={time}
                         onClick={() => { setSelectedTime(time); }}
                         className={`py-3 rounded-xl text-center font-medium transition-all ${selectedTime === time ? 'scale-105' : 'hover:bg-white/10'}`}
-                        style={{ backgroundColor: selectedTime === time ? theme.accentColor : 'var(--booking-surface)', color: selectedTime === time ? contrastingText(theme.accentColor) : theme.textColor }}
+                        style={{ backgroundColor: selectedTime === time ? theme.accentColor : 'rgba(255,255,255,0.05)', color: selectedTime === time ? '#000' : theme.textColor }}
                       >
                         {time}
                       </button>
@@ -313,7 +312,7 @@ export default function Booking() {
                 <button
                   onClick={() => setStep(4)}
                   className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all hover:scale-105"
-                  style={{ backgroundColor: theme.buttonColor, color: contrastingText(theme.buttonColor, theme.darkMode ? '#000' : '#fff') }}
+                  style={{ backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
                 >
                   Próximo <ArrowRight className="w-4 h-4" />
                 </button>
@@ -417,7 +416,7 @@ export default function Booking() {
                 onClick={handleSubmit}
                 disabled={submitting || !clientName || !clientPhone}
                 className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ backgroundColor: theme.buttonColor, color: contrastingText(theme.buttonColor, theme.darkMode ? '#000' : '#fff') }}
+                style={{ backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
               >
                 <Check className="w-5 h-5" /> {submitting ? 'Salvando...' : 'Confirmar Agendamento'}
               </button>

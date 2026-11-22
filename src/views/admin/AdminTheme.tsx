@@ -93,7 +93,6 @@ export default function AdminTheme() {
           <div>
             <label className="block text-sm text-white/70 mb-1">Fonte</label>
             <select value={form.fontFamily} onChange={e => setForm({ ...form, fontFamily: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none">
-              <option value="DM Sans">DM Sans</option>
               <option value="Inter">Inter</option>
               <option value="Playfair Display">Playfair Display</option>
               <option value="system-ui">System UI</option>

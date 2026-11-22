@@ -1,4 +1,3 @@
-import { bookingTheme } from "@/lib/theme-colors";
 // @ts-nocheck -- imported code, kept as written
 import { useState, useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
@@ -43,7 +42,7 @@ export default function BookingConfirmation() {
   } as React.CSSProperties;
 
   return (
-    <div className="bb-booking min-h-screen flex items-center justify-center px-4" style={bookingTheme(theme)}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ ...cssVars, fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
           <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-6" style={{ backgroundColor: `${theme.accentColor}20` }}>

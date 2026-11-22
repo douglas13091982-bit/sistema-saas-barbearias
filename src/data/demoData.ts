@@ -176,14 +176,14 @@ export const defaultSiteSettings: SiteSettings = {
 };
 
 export const defaultThemeSettings: ThemeSettings = {
-  primaryColor: '#173a30',
-  secondaryColor: '#fffefa',
-  accentColor: '#275747',
-  backgroundColor: '#f5f4ee',
-  buttonColor: '#275747',
-  textColor: '#172c26',
-  fontFamily: 'DM Sans',
-  darkMode: false,
+  primaryColor: '#1a1a2e',
+  secondaryColor: '#16213e',
+  accentColor: '#c9a96e',
+  backgroundColor: '#0f0f0f',
+  buttonColor: '#c9a96e',
+  textColor: '#ffffff',
+  fontFamily: 'Inter',
+  darkMode: true,
   buttonStyle: 'rounded'
 };
 
