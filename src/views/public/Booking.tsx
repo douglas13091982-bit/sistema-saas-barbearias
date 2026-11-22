@@ -1,6 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
 import { supabase } from '@/integrations/supabase/client';
-import '@/styles/booking-layout.css';
 import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import { useState, useMemo } from 'react';
 import { SiteImage } from '@/components/SiteImage';
@@ -168,29 +167,13 @@ export default function Booking() {
           </div>
           <div className="text-sm text-white/50">Passo {step} de 4</div>
         </div>
+        {/* Progress bar */}
+        <div className="h-1 bg-white/10">
+          <div className="h-full transition-all duration-300" style={{ width: `${(step / 4) * 100}%`, backgroundColor: theme.accentColor }} />
+        </div>
       </div>
 
-      <main className="booking-workspace">
-        <aside className="booking-sidebar" aria-label="Etapas e resumo">
-          <h1>Agendar horário</h1>
-          <ol className="booking-steps">
-            {['Serviço', 'Barbeiro', 'Data e horário', 'Seus dados'].map((label, index) => (
-              <li key={label} aria-current={step === index + 1 ? 'step' : undefined} data-complete={step > index + 1}>
-                <span aria-hidden="true">{step > index + 1 ? '✓' : index + 1}</span>{label}
-              </li>
-            ))}
-          </ol>
-          {step > 1 && selectedServiceData && (
-            <dl className="booking-summary">
-              <div><dt>Serviço</dt><dd>{selectedServiceData.name}</dd></div>
-              <div><dt>Duração</dt><dd>{selectedServiceData.duration} min</dd></div>
-              <div><dt>Valor</dt><dd>{siteSettings.currency} {selectedServiceData.price.toFixed(2)}</dd></div>
-              {step > 2 && <div><dt>Barbeiro</dt><dd>{selectedBarber === 'any' ? 'Qualquer disponível' : selectedBarberData?.name}</dd></div>}
-              {step === 4 && <div><dt>Horário</dt><dd>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')} · {selectedTime}</dd></div>}
-            </dl>
-          )}
-        </aside>
-        <section className="booking-stage" aria-label="Etapa atual">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {submitError && <p role="alert" className="text-destructive mb-4">{submitError}</p>}
         {/* Step 1: Choose Service */}
         {step === 1 && (
@@ -350,13 +333,43 @@ export default function Booking() {
             <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display' }}>Seus Dados</h2>
             <p className="text-white/60 mb-8">Preencha suas informações para confirmar o agendamento</p>
 
+            {/* Summary */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-5 mb-8">
+              <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-white/50">Resumo do Agendamento</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-white/50">Serviço:</span>
+                  <p className="font-medium">{selectedServiceData?.name}</p>
+                </div>
+                <div>
+                  <span className="text-white/50">Barbeiro:</span>
+                  <p className="font-medium">{selectedBarber === 'any' ? 'Qualquer disponível' : selectedBarberData?.name}</p>
+                </div>
+                <div>
+                  <span className="text-white/50">Data:</span>
+                  <p className="font-medium">{new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                </div>
+                <div>
+                  <span className="text-white/50">Horário:</span>
+                  <p className="font-medium">{selectedTime}</p>
+                </div>
+                <div>
+                  <span className="text-white/50">Duração:</span>
+                  <p className="font-medium">{selectedServiceData?.duration} minutos</p>
+                </div>
+                <div>
+                  <span className="text-white/50">Valor:</span>
+                  <p className="font-medium" style={{ color: theme.accentColor }}>{siteSettings.currency} {selectedServiceData?.price.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+
             {/* Client Form */}
             <div className="space-y-4 mb-8">
               <div>
-                <label htmlFor="booking-name" className="block text-sm font-medium mb-2">Nome Completo *</label>
+                <label className="block text-sm font-medium mb-2">Nome Completo *</label>
                 <input
                   type="text"
-                  id="booking-name" autoComplete="name"
                   value={clientName}
                   onChange={e => setClientName(e.target.value)}
                   placeholder="Seu nome completo"
@@ -364,10 +377,9 @@ export default function Booking() {
                 />
               </div>
               <div>
-                <label htmlFor="booking-phone" className="block text-sm font-medium mb-2">WhatsApp *</label>
+                <label className="block text-sm font-medium mb-2">WhatsApp *</label>
                 <input
                   type="tel"
-                  id="booking-phone" autoComplete="tel"
                   value={clientPhone}
                   onChange={e => setClientPhone(e.target.value)}
                   placeholder="(11) 99999-9999"
@@ -375,10 +387,9 @@ export default function Booking() {
                 />
               </div>
               <div>
-                <label htmlFor="booking-email" className="block text-sm font-medium mb-2">E-mail (opcional)</label>
+                <label className="block text-sm font-medium mb-2">E-mail (opcional)</label>
                 <input
                   type="email"
-                  id="booking-email" autoComplete="email"
                   value={clientEmail}
                   onChange={e => setClientEmail(e.target.value)}
                   placeholder="seu@email.com"
@@ -386,9 +397,8 @@ export default function Booking() {
                 />
               </div>
               <div>
-                <label htmlFor="booking-notes" className="block text-sm font-medium mb-2">Observações (opcional)</label>
+                <label className="block text-sm font-medium mb-2">Observações (opcional)</label>
                 <textarea
-                  id="booking-notes"
                   value={clientNotes}
                   onChange={e => setClientNotes(e.target.value)}
                   placeholder="Alguma preferência ou observação?"
@@ -398,7 +408,7 @@ export default function Booking() {
               </div>
             </div>
 
-            <div className="booking-submit">
+            <div className="flex items-center justify-between">
               <button onClick={() => setStep(3)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
                 <ArrowLeft className="w-4 h-4" /> Voltar
               </button>
@@ -413,8 +423,7 @@ export default function Booking() {
             </div>
           </div>
         )}
-        </section>
-      </main>
+      </div>
     </div>
   );
 }

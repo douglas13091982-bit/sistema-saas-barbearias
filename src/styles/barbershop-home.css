@@ -29,27 +29,3 @@
 /* Botão "Assinar plano" nos cards de serviço */
 .bb-service-actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:auto}
 .bb-service-actions .bb-service-cta{width:100%;gap:10px;min-height:46px}
-
-.bb-home .bb-hero-split {
-  min-height:auto;
-  display:grid;
-  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
-  align-items:center;
-  gap:clamp(24px,5vw,80px);
-  padding-block:clamp(28px,6vw,90px);
-}
-.bb-hero-split h1 {color:var(--bb-text);font-size:clamp(37px,5.2vw,76px);overflow-wrap:anywhere}
-.bb-hero-split .bb-hero-description {color:var(--bb-text);opacity:.78}
-.bb-hero-portrait {
-  overflow:hidden;
-  background:var(--bb-panel);
-  border:1px solid color-mix(in srgb,var(--bb-text) 16%,transparent);
-  border-radius:var(--bb-radius);
-}
-.bb-hero-portrait img,.bb-hero-portrait>span {display:block;width:100%;aspect-ratio:1.2;object-fit:cover}
-.bb-hero-portrait figcaption a {display:flex;align-items:center;gap:10px;padding:14px 18px;overflow-wrap:anywhere}
-.bb-hero-portrait figcaption svg {flex:none;color:var(--bb-accent)}
-@media(max-width:767px) {
-  .bb-home .bb-hero-split {grid-template-columns:1fr}
-  .bb-hero-portrait img,.bb-hero-portrait>span {aspect-ratio:1.65}
-}

@@ -1,8 +1,8 @@
 // @ts-nocheck -- imported code, kept as written
 import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
-import { Calendar, DollarSign, Users, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Calendar, DollarSign, Users, Scissors, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Dashboard() {
   const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
@@ -29,6 +29,7 @@ export default function Dashboard() {
     return sum + (service?.price || 0);
   }, 0);
 
+  const completedCount = appointments.filter(a => a.status === 'completed').length;
   const cancelledCount = appointments.filter(a => a.status === 'cancelled').length;
   const cancelRate = appointments.length > 0 ? ((cancelledCount / appointments.length) * 100).toFixed(1) : '0';
 
@@ -64,14 +65,14 @@ export default function Dashboard() {
   return (
     <div className="ba-dashboard space-y-6">
       <div className="ba-welcome">
-        <div><p className="ba-eyebrow">VISÃO GERAL</p><h1 className="text-2xl font-bold text-white">Dashboard</h1><p className="text-white/50 text-sm">{siteSettings.barbershopName}</p></div>
+        <div><p className="ba-eyebrow">VISÃO GERAL</p><h1 className="text-2xl font-bold text-white">Seu negócio, em boas mãos.</h1><p className="text-white/50 text-sm">Acompanhe os atendimentos e cuide de cada detalhe da sua barbearia.</p></div>
         <div className="ba-quick-actions"><Link to="/admin/agenda">Ver agenda</Link><Link to="/admin/agendamentos">Gerenciar agendamentos</Link></div>
       </div>
 
       {/* Stats Grid */}
-      <div className="ba-dashboard-metrics">
-        {stats.map((stat) => (
-          <article key={stat.label} className="ba-dashboard-metric">
+      <div className="grid ba-stats grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.map((stat, idx) => (
+          <div key={idx} className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}20` }}>
                 <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
@@ -79,15 +80,55 @@ export default function Dashboard() {
             </div>
             <p className="text-2xl font-bold text-white">{stat.value}</p>
             <p className="text-sm text-white/50">{stat.label}</p>
-          </article>
+          </div>
         ))}
       </div>
 
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Service Popularity */}
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Serviços Mais Populares</h3>
+          {servicePopularity.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={servicePopularity}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} labelStyle={{ color: '#fff' }} />
+                <Bar dataKey="count" fill={themeSettings.accentColor || '#c9a96e'} radius={[4, 4, 0, 0]} name="Agendamentos" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-white/40 text-center py-10">Nenhum dado disponível</p>
+          )}
+        </div>
+
+        {/* Barber Workload */}
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Carga dos Barbeiros</h3>
+          {barberWorkload.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={barberWorkload} cx="50%" cy="50%" outerRadius={80} dataKey="appointments" label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                  {barberWorkload.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-white/40 text-center py-10">Nenhum dado disponível</p>
+          )}
+        </div>
+      </div>
+
       {/* Recent Activity */}
-      <div className="ba-dashboard-pair ba-dashboard-activity">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Today's Appointments */}
-        <div className="ba-work-panel">
-          <div className="ba-work-panel-heading"><h2>Agenda de hoje</h2><Link to="/admin/agenda">Abrir agenda</Link></div>
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Agendamentos de Hoje</h3>
           {todayAppointments.length > 0 ? (
             <div className="space-y-3">
               {todayAppointments.map(appt => {
@@ -121,9 +162,8 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Clients */}
-        <div className="ba-work-panel">
-          <div className="ba-work-panel-heading"><h2>Clientes recentes</h2><Link to="/admin/clientes">Ver clientes</Link></div>
-          {recentClients.length === 0 && <p className="text-white/60">Nenhum cliente cadastrado.</p>}
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">Clientes Recentes</h3>
           <div className="space-y-3">
             {recentClients.map(client => (
               <div key={client.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
@@ -143,47 +183,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      {/* Charts Row */}
-      <div className="ba-dashboard-pair">
-        {/* Service Popularity */}
-        <div className="ba-work-panel">
-          <h2 className="text-lg font-semibold text-white mb-4">Serviços Mais Populares</h2>
-          {servicePopularity.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={servicePopularity}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} labelStyle={{ color: '#fff' }} />
-                <Bar dataKey="count" fill={themeSettings.accentColor || '#c9a96e'} radius={[4, 4, 0, 0]} name="Agendamentos" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-white/40 text-center py-10">Nenhum dado disponível</p>
-          )}
-        </div>
-
-        {/* Barber Workload */}
-        <div className="ba-work-panel">
-          <h2 className="text-lg font-semibold text-white mb-4">Carga dos Barbeiros</h2>
-          {barberWorkload.some(barber => barber.appointments > 0) ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={barberWorkload} cx="50%" cy="50%" innerRadius={46} outerRadius={74} dataKey="appointments">
-                  {barberWorkload.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1b1b19', border: '1px solid #504634', borderRadius: '8px' }} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-white/40 text-center py-10">Nenhum dado disponível</p>
-          )}
-        </div>
-      </div>
-
     </div>
   );
 }

@@ -38,7 +38,7 @@ export default function AdminServices() {
 
   return (
     <div className="space-y-6">
-      <header className="ba-work-heading">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Serviços</h1>
           <p className="text-white/50 text-sm">Gerencie os serviços oferecidos</p>
@@ -46,7 +46,7 @@ export default function AdminServices() {
         <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:scale-105" style={{ backgroundColor: '#c9a96e', color: '#000' }}>
           <Plus className="w-4 h-4" /> Novo Serviço
         </button>
-      </header>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {services.map(service => {

@@ -42,27 +42,27 @@ export default function AdminSchedule() {
 
   return (
     <div className="space-y-6">
-      <header className="ba-work-heading">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Agenda</h1>
           <p className="text-white/50 text-sm">Visualize e gerencie os agendamentos</p>
         </div>
         <div className="flex items-center gap-2">
-          <button aria-pressed={view === 'day'} onClick={() => setView('day')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'day' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}>Dia</button>
-          <button aria-pressed={view === 'week'} onClick={() => setView('week')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'week' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}>Semana</button>
+          <button onClick={() => setView('day')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'day' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}>Dia</button>
+          <button onClick={() => setView('week')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'week' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}>Semana</button>
         </div>
-      </header>
+      </div>
 
       {/* Navigation */}
-      <div className="ba-calendar-toolbar">
-        <button aria-label="Período anterior" onClick={() => navigateDate(-1)} className="p-2 rounded-lg hover:bg-white/10 text-white/70"><ChevronLeft className="w-5 h-5" /></button>
+      <div className="flex items-center justify-between">
+        <button onClick={() => navigateDate(-1)} className="p-2 rounded-lg hover:bg-white/10 text-white/70"><ChevronLeft className="w-5 h-5" /></button>
         <h2 className="text-lg font-semibold text-white">
           {view === 'day'
             ? currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
             : `${weekDays[0].toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })} - ${weekDays[6].toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' })}`
           }
         </h2>
-        <button aria-label="Próximo período" onClick={() => navigateDate(1)} className="p-2 rounded-lg hover:bg-white/10 text-white/70"><ChevronRight className="w-5 h-5" /></button>
+        <button onClick={() => navigateDate(1)} className="p-2 rounded-lg hover:bg-white/10 text-white/70"><ChevronRight className="w-5 h-5" /></button>
       </div>
 
       {/* Day View */}

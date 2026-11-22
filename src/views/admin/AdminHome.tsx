@@ -1,4 +1,3 @@
-import { ArrowUpRight, CalendarCheck2, Clock3 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
 import { LayoutDashboard, CalendarDays, Calendar, Scissors, Users, UserCircle, MessageSquare, Image, Home, Palette, Shield, BarChart3, Settings } from 'lucide-react';
@@ -6,9 +5,6 @@ import { LayoutDashboard, CalendarDays, Calendar, Scissors, Users, UserCircle, M
 export default function AdminHome() {
   const { isPlatformAdmin, appointments } = useData();
   const pendingAppointments = appointments.filter(item => item.status === 'pending').length;
-  const today = new Date().toLocaleDateString('en-CA');
-  const todayCount = appointments.filter(item => item.date === today && item.status !== 'cancelled').length;
-  const completedCount = appointments.filter(item => item.date === today && item.status === 'completed').length;
   const modules = [
     { label: 'Dashboard', icon: LayoutDashboard, route: '/admin/dashboard' },
     { label: 'Agenda', icon: CalendarDays, route: '/admin/agenda' },
@@ -29,23 +25,6 @@ export default function AdminHome() {
 
   return (
     <section className="ba-home-hub" aria-label="Módulos do painel administrativo">
-      <div className="ba-hub-desktop-intro">
-        <div className="ba-hub-intro-copy">
-          <span className="ba-hub-kicker">CENTRAL DE GESTÃO <span aria-hidden="true">✦</span></span>
-          <h1>Sua barbearia.<br/><em>Seu controle.</em></h1>
-          <p>Um espaço para acompanhar o movimento do dia e acessar tudo o que faz seu negócio crescer.</p>
-          <div className="ba-hub-hero-actions">
-            <Link to="/admin/agenda">Abrir agenda <ArrowUpRight size={17}/></Link>
-            <Link to="/admin/dashboard">Ver indicadores <ArrowUpRight size={17}/></Link>
-          </div>
-        </div>
-        <div className="ba-hub-summary">
-          <div className="ba-hub-summary-title"><CalendarCheck2 size={19}/><span>RESUMO DE HOJE</span></div>
-          <div className="ba-hub-summary-value">{todayCount}<small>agendamentos</small></div>
-          <div className="ba-hub-summary-foot"><Clock3 size={16}/><span>{pendingAppointments} pendentes</span><strong>{completedCount} concluídos</strong></div>
-        </div>
-      </div>
-      <div className="ba-hub-modules-title"><div><span>ACESSO RÁPIDO</span><h2>Gerencie seu negócio</h2></div><p>Escolha uma área para começar</p></div>
       <nav className="ba-home-module-grid" aria-label="Módulos administrativos">
         {modules.map(module => (
           <Link key={module.route} to={module.route} className="ba-home-module-card">

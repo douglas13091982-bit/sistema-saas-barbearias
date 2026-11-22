@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { supabase } from '@/integrations/supabase/client';
 import { useData } from '../../contexts/DataContext';
-import '@/styles/booking-layout.css';
 import { Link } from '@/lib/router-compat';
 import { Check, Calendar, Clock, Scissors, User, MessageCircle, Home } from 'lucide-react';
 
@@ -43,20 +42,20 @@ export default function BookingConfirmation() {
   } as React.CSSProperties;
 
   return (
-    <main className="booking-receipt min-h-screen flex items-center justify-center p-4" style={{ ...cssVars, fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
-      <article className="booking-receipt-card">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ ...cssVars, fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
+      <div className="max-w-md w-full text-center">
         <div className="mb-8">
           <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-6" style={{ backgroundColor: `${theme.accentColor}20` }}>
             <Check className="w-10 h-10" style={{ color: theme.accentColor }} />
           </div>
           <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: 'Playfair Display' }}>Agendamento Confirmado!</h1>
-          <p className="booking-muted">{siteSettings.barbershopName}</p>
+          <p className="text-white/60">Seu horário foi reservado com sucesso. Estamos ansiosos para atendê-lo!</p>
         </div>
 
         {lastAppointment && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 mb-8 text-left">
-            <h2 className="font-semibold mb-4">Detalhes da reserva</h2>
-            <div className="booking-receipt-details">
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-white/50">Detalhes</h3>
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Scissors className="w-5 h-5" style={{ color: theme.accentColor }} />
                 <div>
@@ -94,7 +93,7 @@ export default function BookingConfirmation() {
                   </div>
                 </div>
               )}
-              <div className="booking-receipt-total">
+              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                 <span className="text-white/50">Valor</span>
                 <span className="text-xl font-bold" style={{ color: theme.accentColor }}>{siteSettings.currency} {service?.price.toFixed(2)}</span>
               </div>
@@ -119,7 +118,7 @@ export default function BookingConfirmation() {
             <Home className="w-5 h-5" /> Voltar ao Início
           </Link>
         </div>
-      </article>
-    </main>
+      </div>
+    </div>
   );
 }

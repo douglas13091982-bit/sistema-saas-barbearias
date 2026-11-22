@@ -69,54 +69,11 @@ export default function SuperAdmin(){
    <main className="sa-content">{error&&<div className="sa-alert" role="alert">{error}<button onClick={()=>void load()}>Tentar novamente</button></div>}{notice&&<div className="sa-alert sa-success" role="status"><CheckCircle2 size={17}/>{notice}<button onClick={()=>setNotice('')} aria-label="Fechar"><X size={16}/></button></div>}{loading&&<div className="sa-loading">Carregando dados da plataforma...</div>}
     {!loading&&tab==='overview'&&<nav className="sa-mobile-hub" aria-label="Módulos do Super Admin">{tabs.map(t=><button key={t.id} className={'sa-mobile-module '+(tab===t.id?'active':'')} onClick={()=>selectTab(t.id)}><t.icon size={27} strokeWidth={1.7}/><span>{t.label}</span></button>)}</nav>}
     {!loading&&tab==='overview'&&<><Heading kicker="PAINEL DA PLATAFORMA" title="Visão geral" text="Acompanhe as barbearias, as agendas e o faturamento do SaaS." action={<button className="sa-primary" onClick={()=>selectTab('shops')}><Store size={16}/>Ver barbearias</button>}/>
-     <section className="sa-platform-summary" aria-label="Resumo da plataforma">
-       <article className="sa-platform-revenue">
-         <CircleDollarSign size={24} aria-hidden="true" />
-         <h2>Receita recorrente mensal</h2>
-         <strong>{money(mrr)}</strong>
-         <p>{paid.length} agendas pagas vigentes</p>
-         <button type="button" className="sa-link-button" onClick={() => selectTab('sales')}>Ver vendas e planos <ChevronRight size={15} /></button>
-       </article>
-       <div className="sa-platform-counts">
-         <Metric icon={Store} label="Barbearias" value={shops.length} hint={active+' ativas'}/>
-         <Metric icon={Clock3} label="Em teste grátis" value={trials} hint="Teste de 7 dias"/>
-         <Metric icon={Users} label="Barbeiros cadastrados" value={seats.length} hint={paid.length+' com agenda paga'}/>
-         <Metric icon={BadgeDollarSign} label="Vendas aprovadas" value={approved.length} hint={money(gross)+' no histórico'}/>
-         <Metric icon={Activity} label="Bloqueadas" value={shops.length-active} hint="Acesso suspenso"/>
-       </div>
-     </section>
+     <section className="sa-metrics"><Metric icon={Store} label="Barbearias" value={shops.length} hint={active+' ativas'}/><Metric icon={Clock3} label="Em teste grátis" value={trials} hint="Teste de 7 dias"/><Metric icon={Users} label="Barbeiros cadastrados" value={seats.length} hint={paid.length+' com agenda paga'}/><Metric icon={CircleDollarSign} label="Receita recorrente mensal" value={money(mrr)} hint="Agendas pagas vigentes"/><Metric icon={BadgeDollarSign} label="Vendas aprovadas" value={approved.length} hint={money(gross)+' no histórico'}/><Metric icon={Activity} label="Bloqueadas" value={shops.length-active} hint="Acesso suspenso" /></section>
      <section className="sa-overview-grid"><article className="sa-panel sa-chart-panel"><PanelTitle title="Receita aprovada" subtitle="Por mês de confirmação · últimos seis meses"/>{approved.length===0?<Empty icon={BadgeDollarSign} title="As vendas aparecerão aqui" text="Ainda não há pagamentos aprovados no histórico."/>:<div className="sa-chart">{months.map(m=><div className="sa-bar-wrap" key={m.key}><span>{m.value?money(m.value):'—'}</span><div className="sa-bar-track"><i style={{height:(m.value?Math.max(8,m.value/max*100):0)+'%'}}/></div><small>{m.label}</small></div>)}</div>}</article><article className="sa-panel"><PanelTitle title="Saúde da plataforma" subtitle="Resumo da operação"/><Health label="Barbearias ativas" value={active} total={shops.length}/><Health label="Em teste grátis" value={trials} total={shops.length}/><Health label="Agendas pagas" value={paid.length} total={seats.length}/><div className="sa-health-foot"><span>Mensalidade atual</span><strong>{price?money(Math.round(Number(price.replace(',','.'))*100)):'A definir'} / barbeiro</strong></div></article></section>
      <SalesTable rows={sales.slice(0,6)} compact seeAll={()=>selectTab('sales')}/>
     </>}
-    {!loading&&tab==='shops'&&<><Heading kicker="CONTAS E OPERAÇÃO" title="Barbearias" text="Contas cadastradas, período de teste, agendas pagas e acesso."/><section className="sa-shop-summary"><span><Store size={18}/>{shops.length} no total</span><span><CheckCircle2 size={18}/>{active} ativas</span><span><Clock3 size={18}/>{trials} em teste</span><span><Users size={18}/>{seats.length} barbeiros</span></section><div className="sa-shop-directory">
-      {shops.map(shop => {
-        const shopSeats = seats.filter(seat => seat.tenant_id === shop.id);
-        const paidCount = shopSeats.filter(seat => seat.paid_until && new Date(seat.paid_until).getTime() > Date.now()).length;
-        const remainingDays = Math.max(0, Math.ceil((new Date(shop.trial_ends_at).getTime() - Date.now()) / 86400000));
-        const isActive = shop.status === 'active';
-        return (
-          <article className="sa-panel sa-shop-card" key={shop.id}>
-            <header>
-              <div><h2>{shop.name}</h2><p>/{shop.slug}{shop.owner_id === currentUser?.id ? ' · sua barbearia' : ''}</p></div>
-              <span className={`sa-status ${isActive ? 'active' : 'blocked'}`}>{isActive ? 'Ativa' : 'Bloqueada'}</span>
-            </header>
-            <dl>
-              <div><dt>Cadastro</dt><dd>{date(shop.created_at)}</dd></div>
-              <div><dt>Teste grátis</dt><dd>{remainingDays ? remainingDays + ' dias restantes' : 'Encerrado · ' + date(shop.trial_ends_at)}</dd></div>
-              <div><dt>Barbeiros</dt><dd>{shopSeats.length}</dd></div>
-              <div><dt>Agendas pagas</dt><dd>{paidCount}</dd></div>
-            </dl>
-            <footer className="sa-row-actions">
-              <a href={'/' + shop.slug} target="_blank" rel="noreferrer" aria-label={`Abrir site de ${shop.name}`}><ExternalLink size={15} /></a>
-              {shop.id === tenant?.id && <a href="/admin/dashboard" aria-label="Administrar minha barbearia"><Scissors size={15} /></a>}
-              <button type="button" onClick={() => setManualShop(shop)}>Liberar barbeiros</button>
-              <button type="button" onClick={() => void toggle(shop)}>{isActive ? 'Bloquear' : 'Liberar'}</button>
-            </footer>
-          </article>
-        );
-      })}
-      {shops.length === 0 && <p className="sa-panel">Nenhuma barbearia cadastrada.</p>}
-    </div></>}
+    {!loading&&tab==='shops'&&<><Heading kicker="CONTAS E OPERAÇÃO" title="Barbearias" text="Contas cadastradas, período de teste, agendas pagas e acesso."/><section className="sa-shop-summary"><span><Store size={18}/>{shops.length} no total</span><span><CheckCircle2 size={18}/>{active} ativas</span><span><Clock3 size={18}/>{trials} em teste</span><span><Users size={18}/>{seats.length} barbeiros</span></section><div className="sa-panel sa-table-wrap"><table className="sa-table"><thead><tr><th>BARBEARIA</th><th>CADASTRADA</th><th>TESTE GRÁTIS</th><th>BARBEIROS</th><th>AGENDA PAGA</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody>{shops.map(s=>{const list=seats.filter(x=>x.tenant_id===s.id),count=list.filter(x=>x.paid_until&&new Date(x.paid_until).getTime()>Date.now()).length,left=Math.max(0,Math.ceil((new Date(s.trial_ends_at).getTime()-Date.now())/86400000));return <tr key={s.id}><td><strong>{s.name}</strong><small>/{s.slug}{s.owner_id===currentUser?.id?' · sua barbearia':''}</small></td><td>{date(s.created_at)}</td><td>{left?left+' dias restantes':'Encerrado · '+date(s.trial_ends_at)}</td><td>{list.length}</td><td>{count}</td><td><span className={'sa-status '+(s.status==='active'?'active':'blocked')}>{s.status==='active'?'Ativa':'Bloqueada'}</span></td><td><div className="sa-row-actions"><a href={'/'+s.slug} target="_blank" rel="noreferrer" title="Abrir site"><ExternalLink size={15}/></a>{s.id===tenant?.id&&<a href="/admin/dashboard" title="Administrar minha barbearia"><Scissors size={15}/></a>}<button type="button" onClick={()=>setManualShop(s)}>Liberar barbeiros</button><button onClick={()=>void toggle(s)}>{s.status==='active'?'Bloquear':'Liberar'}</button></div></td></tr>})}{!shops.length&&<tr><td colSpan={7} className="sa-empty-row">Nenhuma barbearia cadastrada.</td></tr>}</tbody></table></div></>}
     {!loading&&tab==='sales'&&<><Heading kicker="FATURAMENTO" title="Vendas e planos" text="Histórico de pagamentos confirmados e reversões das assinaturas."/><section className="sa-sales-metrics"><Metric icon={BadgeDollarSign} label="Vendas aprovadas" value={filtered.filter(x=>x.approved).length} hint={money(filtered.filter(x=>x.approved).reduce((n,x)=>n+x.amount_cents,0))+' no período'}/><Metric icon={ArrowDownRight} label="Estornos / reversões" value={filtered.filter(x=>!x.approved).length} hint="Excluídos da receita vigente"/><Metric icon={CircleDollarSign} label="Receita recorrente atual" value={money(mrr)} hint={paid.length+' agendas pagas'}/></section><div className="sa-filters"><label className="sa-search">Buscar barbearia ou profissional<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Digite para filtrar..."/></label><label>Período<select value={period} onChange={e=>setPeriod(e.target.value)}><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="all">Todo o histórico</option></select></label></div><SalesTable rows={filtered}/></>}
     {!loading&&tab==='settings'&&<><Heading kicker="APARÊNCIA E COBRANÇA" title="Configurações" text="Identidade da plataforma e regras de mensalidade."/><div className="sa-settings-grid"><form className="sa-panel sa-settings-form" onSubmit={saveBrand}><PanelTitle title="Identidade do SaaS" subtitle="Nome e logo da página inicial"/><label>Nome exibido<input value={name} minLength={2} maxLength={120} required onChange={e=>setName(e.target.value)}/></label><PhotoUpload id="saas-logo" label="Logo do SaaS" value={logo} onChange={setLogo} onBusyChange={setPhotoBusy} disabled={brandBusy} maxEdge={640}/><button className="sa-primary" disabled={brandBusy||photoBusy}>{photoBusy?'Preparando...':brandBusy?'Salvando...':'Salvar identidade'}</button></form><form className="sa-panel sa-settings-form" onSubmit={savePrice}><PanelTitle title="Preço dos planos" subtitle="Valor por barbeiro cadastrado"/><label>Mensalidade mensal<input type="text" inputMode="decimal" required value={price} onChange={e=>setPrice(e.target.value)} placeholder="Ex.: 29,90"/></label><div className="sa-plan-info"><span>Teste grátis</span><strong>7 dias por barbearia</strong><span>Contagem</span><strong>Inclui barbeiros inativos</strong><span>Atualização</span><strong>Preço novo vale para novos contratos</strong></div><button className="sa-primary" disabled={busy}>{busy?'Salvando...':'Salvar preço'}</button></form></div>
      <form className="sa-panel sa-settings-form sa-mp-config" onSubmit={saveMercadoPago}>
