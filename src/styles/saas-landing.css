@@ -96,3 +96,26 @@
 .saas-landing .sl-section-heading>div{width:100%;text-align:center}
 .saas-landing .sl-section-heading h2{margin-inline:auto}
 .saas-landing .sl-section-heading .sl-section-intro{margin-inline:auto}
+
+.saas-landing .sl-hero {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,.94fr);
+  align-items:center;
+  gap:clamp(24px,5vw,76px);
+  max-width:none;
+  padding-block:clamp(46px,7vw,105px);
+}
+.saas-landing .sl-hero h1 {font-size:clamp(38px,4.5vw,68px)}
+.sl-hero-photo {position:relative;margin:0;min-width:0}
+.sl-hero-photo img {display:block;width:100%;aspect-ratio:1.1;object-fit:cover;border-radius:22px}
+.sl-hero-photo figcaption {
+  position:absolute;inset:auto 14px 14px;
+  display:flex;align-items:center;gap:14px;padding:16px;
+  border:1px solid #ffffff30;border-radius:14px;background:#171321f2;color:#fff;
+}
+.sl-hero-photo figcaption svg {flex:none;color:#c4b5fd}
+.sl-hero-photo figcaption span {display:block;font-size:.8rem;color:#ded5ed}
+@media(max-width:860px) {
+  .saas-landing .sl-hero {grid-template-columns:1fr}
+  .sl-hero-photo img {aspect-ratio:1.6}
+}

@@ -36,19 +36,20 @@ export default function AdminAppointments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <header className="ba-work-heading">
         <div>
           <h1 className="text-2xl font-bold text-white">Agendamentos</h1>
           <p className="text-white/50 text-sm">Gerencie todos os agendamentos</p>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <section className="ba-work-filters" aria-label="Filtros dos agendamentos">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
             type="text"
+            aria-label="Buscar por cliente ou serviço"
             placeholder="Buscar por cliente ou serviço..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -56,6 +57,7 @@ export default function AdminAppointments() {
           />
         </div>
         <select
+          aria-label="Status"
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
           className="px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none"
@@ -68,6 +70,7 @@ export default function AdminAppointments() {
           <option value="no_show">Não compareceu</option>
         </select>
         <select
+          aria-label="Barbeiro"
           value={filterBarber}
           onChange={e => setFilterBarber(e.target.value)}
           className="px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none"
@@ -75,7 +78,7 @@ export default function AdminAppointments() {
           <option value="all">Todos os barbeiros</option>
           {barbers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
-      </div>
+      </section>
 
       {/* Table */}
       <div className="rounded-xl border border-white/5 bg-[#1f2937] overflow-hidden">

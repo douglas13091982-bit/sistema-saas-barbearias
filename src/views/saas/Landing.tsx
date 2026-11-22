@@ -9,37 +9,31 @@ import { Scissors, ArrowUpRight, Check, Globe, CalendarDays, Users, BarChart3, P
 const features = [
   {
     icon: CalendarDays,
-    number: '01',
     title: 'Agendamento online',
     description: 'Seus clientes escolhem o serviço, o barbeiro e o horário disponível pelo site da barbearia.',
   },
   {
     icon: Globe,
-    number: '02',
     title: 'Site, equipe e clientes em um só lugar',
     description: 'Apresente a barbearia e organize serviços, horários, barbeiros e clientes no mesmo sistema.',
   },
   {
     icon: BarChart3,
-    number: '03',
     title: 'Faturamento por barbeiro',
     description: 'Veja quantos cortes e atendimentos cada profissional concluiu e o faturamento que gerou.',
   },
   {
     icon: Percent,
-    number: '04',
     title: 'Repasse definido por você',
     description: 'Configure um valor fixo por corte ou uma porcentagem para cada barbeiro e acompanhe o repasse do período.',
   },
   {
     icon: Gift,
-    number: '05',
     title: 'Programa de fidelidade',
     description: 'Crie recompensas, divulgue a campanha no site da barbearia e acompanhe o progresso e os resgates dos clientes.',
   },
   {
     icon: CircleDollarSign,
-    number: '06',
     title: 'Visão do faturamento da barbearia',
     description: 'Acompanhe o faturamento dos serviços concluídos e veja a parte da barbearia após o repasse dos cortes.',
   },
@@ -55,21 +49,25 @@ export default function Landing(){
  },[]);
  const formattedPrice=price===null?null:(price/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  return <main className="saas-page saas-landing">
- <div className="sl-cover" aria-hidden="true"><img src="/images/barbearia-capa.webp" alt="" fetchPriority="high" decoding="async" width="1672" height="941" /></div>
  <div className="sl-content">
  <header className="saas-nav sl-nav"><a href="/" className="sl-brand">{logo?<SiteImage src={logo} alt={`Logo ${name}`} className="sl-logo"/>:<Scissors aria-hidden="true"/>}<strong>{name}</strong></a><Link className="sl-login" to="/admin/login">Entrar no painel <ArrowUpRight size={16} aria-hidden="true"/></Link></header>
  <section className="saas-hero sl-hero">
+ <div className="sl-hero-copy">
  <p className="saas-kicker"><span/> GESTÃO COMPLETA PARA BARBEARIAS</p>
  <h1>Mais que agendamento.<br/><em>Gestão para crescer.</em></h1>
  <p className="sl-intro">Organize a agenda e a equipe, acompanhe o faturamento por barbeiro e crie um programa de fidelidade para trazer seus clientes de volta. Seu site e a gestão da barbearia em um só sistema.</p>
  <div className="saas-actions sl-actions"><Link className="saas-button" to="/cadastro">Começar meus 7 dias grátis <ArrowUpRight size={18} aria-hidden="true"/></Link><Link className="sl-model" to="/barbershop-pro">Conhecer o modelo <span aria-hidden="true">→</span></Link></div>
- <div className="sl-assurances"><span><Check size={15} aria-hidden="true"/> 7 dias para experimentar</span><span><Check size={15} aria-hidden="true"/> Seu site com sua identidade</span><span><Check size={15} aria-hidden="true"/> Gestão e relatórios em um só painel</span><span><Check size={15} aria-hidden="true"/> Fidelidade com recompensas configuráveis</span></div>
+ </div>
+ <figure className="sl-hero-photo">
+  <img src="/images/barbearia-capa.webp" alt="Interior de uma barbearia" fetchPriority="high" width="1672" height="941" />
+  <figcaption><CalendarDays size={20} aria-hidden="true" /><div><strong>Seu site de agendamento</strong><span>Serviços, equipe e horários disponíveis para seus clientes.</span></div></figcaption>
+ </figure>
  </section>
 
  <section className="sl-benefits" aria-label="Recursos da plataforma">
  <div className="sl-section-heading"><p className="saas-kicker">DA AGENDA AO FATURAMENTO</p><div><h2>O que a sua barbearia precisa, em um só lugar.</h2><p className="sl-section-intro">Tenha mais clareza sobre a rotina, a equipe e os resultados do negócio.</p></div></div>
  <div className="saas-grid sl-feature-grid">
- {features.map(({icon:Icon,number,title,description})=><article className="saas-card sl-feature-card" key={number}><Icon className="sl-feature-icon" aria-hidden="true"/><span className="sl-number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}
+ {features.map(({icon:Icon,title,description})=><article className="saas-card sl-feature-card" key={title}><Icon className="sl-feature-icon" aria-hidden="true"/><h3>{title}</h3><p>{description}</p></article>)}
  </div>
  </section>
 

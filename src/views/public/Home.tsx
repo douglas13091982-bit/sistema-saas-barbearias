@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '@/contexts/DataContext';
 import { Link } from '@/lib/router-compat';
-import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, UsersRound, ArrowRight, Menu, X, MessageCircle, Youtube, Gift, CreditCard } from 'lucide-react';
+import { Scissors, Star, MapPin, Phone, Clock, Instagram, Facebook, CalendarDays, ArrowRight, Menu, X, MessageCircle, Youtube, Gift, CreditCard } from 'lucide-react';
 import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import '@/styles/barbershop-home.css';
 import { getServiceImage } from '@/lib/service-images';
@@ -119,12 +119,21 @@ export default function Home() {
     </div>{menuOpen && <nav id="bb-mobile-menu" className="bb-mobile-nav" aria-label="Navegação para celular">{links.map(item => <a key={item.id} href={`#${item.anchor}`} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link to="/admin/login" onClick={() => setMenuOpen(false)}>Entrar no painel</Link></nav>}</header>
 
     <main id="bb-main">
-      <section className="bb-hero"><div className="bb-hero-image"><SiteImage src={site.heroImage} fallbackSrc="/images/barbearia-capa.webp" alt="" fetchPriority="high" decoding="async" /></div><div className="bb-hero-shade" />
-        <div className="bb-wrap bb-hero-content"><p className="bb-eyebrow">{site.tagline}</p><h1>{site.heroTitle}</h1><p className="bb-hero-description">{site.heroSubtitle}</p>
-          <div className="bb-hero-actions"><Link to="/agendar" className="bb-button">{site.heroButtonText || 'Agendar meu horário'} <ArrowRight size={17} aria-hidden="true" /></Link><a href="#sobre" className="bb-hero-secondary">Conheça a barbearia <ArrowRight size={15} aria-hidden="true" /></a></div>
+      <section className="bb-hero bb-wrap bb-hero-split">
+        <div className="bb-hero-content">
+          <p className="bb-eyebrow">{site.tagline}</p>
+          <h1>{site.heroTitle}</h1>
+          <p className="bb-hero-description">{site.heroSubtitle}</p>
+          <div className="bb-hero-actions">
+            <Link to="/agendar" className="bb-button">{site.heroButtonText || 'Agendar meu horário'} <ArrowRight size={17} aria-hidden="true" /></Link>
+            {enabled('services') && activeServices.length > 0 && <a href="#servicos" className="bb-text-link">Ver serviços <ArrowRight size={15} aria-hidden="true" /></a>}
+          </div>
         </div>
+        <figure className="bb-hero-portrait">
+          <SiteImage src={site.heroImage} fallbackSrc="/images/barbearia-capa.webp" alt="" fetchPriority="high" decoding="async" />
+          {address && enabled('contact') && <figcaption><a href="#contato"><MapPin size={18} aria-hidden="true" />{address}</a></figcaption>}
+        </figure>
       </section>
-      <div className="bb-benefits"><div className="bb-wrap">{[{ icon: CalendarDays, title: 'Agendamento online', copy: 'Seu horário, em poucos passos.' }, { icon: UsersRound, title: 'Cuidado em cada serviço', copy: 'Atenção a todos os detalhes.' }, { icon: Star, title: 'Atendimento personalizado', copy: 'Seu estilo, do seu jeito.' }].map(item => <div key={item.title}><item.icon aria-hidden="true" /><div><h2>{item.title}</h2><p>{item.copy}</p></div></div>)}</div></div>
       {showLoyaltyProgram && <section id="fidelidade" className="bb-loyalty bb-wrap" aria-label="Programa de fidelidade">
         <div className="bb-loyalty-copy">
           <p className="bb-eyebrow">Programa de fidelidade</p>
