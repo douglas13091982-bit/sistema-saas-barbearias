@@ -1,5 +1,5 @@
-import { useRef, useState, type CSSProperties } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Check, UserX, XCircle } from 'lucide-react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Check, UserX, XCircle } from 'lucide-react';
 import { useData } from '@/contexts/DataContext';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { resolveSiteImage } from '@/lib/site-images';
@@ -60,11 +60,14 @@ function positionBookings(bookings: Booking[]) {
 }
 
 export default function AdminAppointments() {
-  const { appointments, services, barbers, clients, updateAppointment, siteSettings }: {
+  const { appointments, services, barbers, clients, updateAppointment, siteSettings, refresh, tenant }: {
     appointments: Appointment[]; services: Service[]; barbers: Barber[]; clients: Client[]; siteSettings: SiteSettings;
+    refresh: () => Promise<boolean>; tenant: { slug: string } | null;
     updateAppointment: (id: string, data: { status: Status }, expectedStatus: Status) => Promise<unknown>;
   } = useData();
   const [date, setDate] = useState(() => shopDate.format(new Date()));
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -72,6 +75,9 @@ export default function AdminAppointments() {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const updating = useRef(false);
 
+  const recentBookings = useMemo(() => [...appointments]
+    .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0))
+    .slice(0, 5), [appointments]);
   const nextBookingDate = appointments.reduce<string | undefined>((next, appointment) => {
     if (appointment.date <= date || appointment.status === 'cancelled' || appointment.status === 'no_show') return next;
     return !next || appointment.date < next ? appointment.date : next;
@@ -105,6 +111,19 @@ export default function AdminAppointments() {
     setDate(next.toISOString().slice(0, 10));
   }
 
+  async function refreshAgenda() {
+    setRefreshing(true);
+    setRefreshMessage('');
+    try {
+      const updated = await refresh();
+      setRefreshMessage(updated ? 'Agenda atualizada.' : 'Não foi possível atualizar a agenda. Tente novamente.');
+    } catch {
+      setRefreshMessage('Não foi possível atualizar a agenda. Tente novamente.');
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   async function changeStatus(next: StatusAction) {
     if (!selected || !canUpdate || updating.current) return;
     updating.current = true;
@@ -124,6 +143,7 @@ export default function AdminAppointments() {
   return (
     <section className="appointments">
       <h1>Agendamentos</h1>
+      {tenant && <p className="mb-3 text-sm text-white/70">Site da agenda <a className="underline" href={`/${tenant.slug}`} target="_blank" rel="noreferrer">/{tenant.slug}</a></p>}
       <div className="appointments-toolbar">
         <button type="button" aria-label="Dia anterior" onClick={() => moveDay(-1)}><ChevronLeft size={18} /></button>
         <label className="appointments-date">
@@ -133,6 +153,39 @@ export default function AdminAppointments() {
         <button type="button" aria-label="Próximo dia" onClick={() => moveDay(1)}><ChevronRight size={18} /></button>
         <button type="button" onClick={() => setDate(shopDate.format(new Date()))}>Hoje</button>
       </div>
+
+      <section className="appointments-recent" aria-labelledby="recent-bookings-heading">
+        <div className="appointments-toolbar">
+          <h2 id="recent-bookings-heading" className="mr-auto font-semibold">Últimas reservas registradas</h2>
+          <button type="button" disabled={refreshing} onClick={() => void refreshAgenda()}>
+            <RefreshCw size={16} aria-hidden="true" /> {refreshing ? 'Atualizando…' : 'Atualizar agenda'}
+          </button>
+        </div>
+        {refreshMessage && <p role="status" className="mb-2 text-sm">{refreshMessage}</p>}
+        {recentBookings.length ? (
+          <ul className="appointments-recent-list">
+            {recentBookings.map(appointment => {
+              const client = clients.find(item => item.id === appointment.clientId);
+              const bookingDate = new Date(appointment.date + 'T12:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+              return (
+                <li key={appointment.id}>
+                  <button type="button" onClick={event => {
+                    trigger.current = event.currentTarget;
+                    setDate(appointment.date);
+                    setError('');
+                    setPendingAction(null);
+                    setSelectedId(appointment.id);
+                  }}>
+                    <span>{bookingDate} · {appointment.time}</span>
+                    <strong>{client?.name || 'Cliente'}</strong>
+                    <small>{statuses[appointment.status]}</small>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : <p className="text-sm text-white/70">Ainda não há reservas registradas nesta barbearia.</p>}
+      </section>
 
       {bookings.length === 0 && <p className="mb-3 text-sm text-white/70">Nenhum agendamento nesta data.</p>}
       {nextBookingDate && (

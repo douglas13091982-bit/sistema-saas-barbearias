@@ -27,7 +27,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState('');
   const staff = useServerFn(manageStaff);
   const generation = useRef(0);
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (isBackground = false) => {
     const request = ++generation.current;
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -49,7 +49,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
       if(!shop) {
         if(generation.current===request) {setRecords([]);setBusy([]);setTenant(null);setPlatformAdmin(!!platform);setCurrentUser(null);setError('');}
-        return;
+        return false;
       }
       let rows = [], offset = 0;
       for (;;) {
@@ -61,19 +61,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
       const slots = await supabase.rpc('busy_slots_for_shop',{tid:shop.id});
       if (slots.error) throw slots.error;
-      if (generation.current !== request) return;
+      if (generation.current !== request) return false;
       const access=await supabase.rpc('shop_booking_access',{tid:shop.id});
       if(access.error) throw access.error;
-      if(generation.current!==request) return;
+      if(generation.current!==request) return false;
       setTenant(shop);setPlatformAdmin(!!platform);setBookingAccess(Object.fromEntries((access.data || []).map(b=>[b.id,b.allowed])));
       setRecords(rows); setBusy(slots.data ?? []); setError('');
       setCurrentUser(role && isPanel ? { id: auth.user.id, email: auth.user.email, name: auth.user.user_metadata?.name || auth.user.email, role, active: true } : null);
       if (role === 'admin' && isPanel) setUsers(await staff({ data: { action: 'list' } }));
       else setUsers([]);
-    } catch { if (generation.current === request) setError('Não foi possível carregar os dados.'); }
+      return true;
+    } catch {
+      if (generation.current === request && !isBackground) setError('Não foi possível carregar os dados.');
+      return false;
+    }
     finally { if (generation.current === request) setLoading(false); }
   }, [staff,slug,isPanel]);
-  useEffect(() => { void refresh(); const focus = () => void refresh(); window.addEventListener('focus',focus); return () => window.removeEventListener('focus',focus); }, [refresh]);
+  useEffect(() => { void refresh(); const focus = () => void refresh(true); window.addEventListener('focus',focus); return () => window.removeEventListener('focus',focus); }, [refresh]);
   useEffect(() => {
     if (!isPanel || !tenant?.id || !currentUser) return;
     const channel = supabase.channel(`barbershop-appointments-${tenant.id}`)
@@ -81,12 +85,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         event: 'INSERT', schema: 'public', table: 'barbershop_records',
         filter: `tenant_id=eq.${tenant.id}`,
       }, payload => {
-        if (payload.new?.kind === 'appointments') void refresh();
+        if (payload.new?.kind === 'appointments') void refresh(true);
       })
       .subscribe();
-    const fallbackPoll = window.setInterval(() => void refresh(), 30_000);
+    let stopped = false;
+    let fallbackPoll: number;
+    const poll = async () => {
+      if (document.visibilityState === 'visible') await refresh(true);
+      if (!stopped) fallbackPoll = window.setTimeout(poll, 15_000);
+    };
+    fallbackPoll = window.setTimeout(poll, 15_000);
     return () => {
-      window.clearInterval(fallbackPoll);
+      stopped = true;
+      window.clearTimeout(fallbackPoll);
       void supabase.removeChannel(channel);
     };
   }, [isPanel, tenant?.id, currentUser?.id, refresh]);
@@ -144,7 +155,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const logout = async () => { await queryClient.cancelQueries(); queryClient.clear(); ++generation.current; setRecords([]); setUsers([]); setCurrentUser(null); await supabase.auth.signOut(); await refresh(); };
   if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
   if(error) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-background text-foreground"><p role="alert">{error}</p><Button onClick={()=>void refresh()}>Tentar novamente</Button></div>;
-  return <DataContext.Provider value={{...actions,users,currentUser,tenant,bookingAccess,isPlatformAdmin:platformAdmin,isAuthenticated:!!currentUser,login,logout,refresh,
+  return <DataContext.Provider value={{...actions,users,currentUser,tenant,bookingAccess,isPlatformAdmin:platformAdmin,isAuthenticated:!!currentUser,login,logout,refresh: () => refresh(true),
     clients:list('clients'), appointments:currentUser ? list('appointments'):busy, services:list('services'),barbers:list('barbers'),testimonials:list('testimonials'),gallery:list('gallery'),holidays:list('holidays'),
     siteSettings:settings('siteSettings') || defaultSiteSettings, themeSettings:settings('themeSettings') || defaultThemeSettings,
     updateSiteSettings: (data, buttonStyle) => {

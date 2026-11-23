@@ -57,3 +57,16 @@
 .appointments-actions button[data-action="no_show"] {color:#f3c375;border-color:#8f6b39}
 .appointments-actions button:disabled {opacity:.6}
 .appointments-note {font-size:.8rem}
+
+.appointments-recent {
+  margin-bottom:16px;padding:12px;border:1px solid #36312a;border-radius:12px;background:#161514;
+}
+.appointments-recent .appointments-toolbar {margin-bottom:8px}
+.appointments-recent-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:8px;margin:0;padding:0;list-style:none}
+.appointments-recent-list button {
+  display:grid;gap:4px;width:100%;height:100%;padding:8px;text-align:left;
+  border:1px solid #514639;border-radius:8px;background:#191817;overflow-wrap:anywhere;
+}
+.appointments-recent-list button:focus-visible {outline:2px solid #e8c67c;outline-offset:2px}
+.appointments-recent-list :is(span,small) {font-size:.75rem;color:#edd8ae}
+.appointments-recent-list strong {font-size:.875rem}
