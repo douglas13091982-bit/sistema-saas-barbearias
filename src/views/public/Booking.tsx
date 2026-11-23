@@ -14,10 +14,15 @@ export default function Booking() {
   const [searchParams] = useSearchParams();
   const theme = themeSettings;
 
+  // Serviços com link de assinatura são planos: o cliente assina pelo site, não escolhe um horário para eles.
+  const activeServices = services.filter(s => s.active && !safeSubscriptionUrl(s.subscriptionUrl));
+  const requestedService = searchParams.get('service');
+  const initialService = activeServices.find(service => service.id === requestedService)?.id ?? '';
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState(searchParams.get('service') || '');
+  const [step, setStep] = useState(() => initialService ? 2 : 1);
+  const [selectedService, setSelectedService] = useState(initialService);
   const [selectedBarber, setSelectedBarber] = useState(searchParams.get('barber') || 'any');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -26,8 +31,6 @@ export default function Booking() {
   const [clientEmail, setClientEmail] = useState('');
   const [clientNotes, setClientNotes] = useState('');
 
-  // Serviços com link de assinatura são planos: o cliente assina pelo site, não escolhe um horário para eles.
-  const activeServices = services.filter(s => s.active && !safeSubscriptionUrl(s.subscriptionUrl));
   const activeBarbers = barbers.filter(b => b.active && bookingAccess[b.id]).sort((a, b) => a.order - b.order);
 
   const filteredBarbers = useMemo(() => {
@@ -209,9 +212,10 @@ export default function Booking() {
         {step === 2 && (
           <div>
             <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display' }}>Escolha o Barbeiro</h2>
-            <p className="text-white/60 mb-8">Selecione seu barbeiro preferido ou deixe para nós</p>
+            <p className="text-white/60 mb-6">Serviço selecionado: <strong className="text-white">{selectedServiceData?.name}</strong></p>
+            {filteredBarbers.length === 0 && <p role="status" className="mb-4 text-white/70">Nenhum barbeiro disponível para este serviço.</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
+              {filteredBarbers.length > 0 && <button
                 onClick={() => { setSelectedBarber('any'); setStep(3); }}
                 className="text-left p-5 rounded-xl border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02] bg-white/5"
               >
@@ -224,7 +228,7 @@ export default function Booking() {
                     <p className="text-white/60 text-sm">Alocaremos o melhor disponível</p>
                   </div>
                 </div>
-              </button>
+              </button>}
               {filteredBarbers.map(barber => (
                 <button
                   key={barber.id}
@@ -244,7 +248,7 @@ export default function Booking() {
             </div>
             <div className="mt-6 flex justify-start">
               <button onClick={() => setStep(1)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
-                <ArrowLeft className="w-4 h-4" /> Voltar
+                <ArrowLeft className="w-4 h-4" /> Trocar serviço
               </button>
             </div>
           </div>

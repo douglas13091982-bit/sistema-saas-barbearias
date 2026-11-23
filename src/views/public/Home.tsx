@@ -64,8 +64,9 @@ export default function Home() {
       <div className="bb-service-grid">{activeServices.map(service => <article className="bb-service-card" key={service.id}>
         <div className="bb-service-photo"><SiteImage src={servicePhoto(service)} fallbackSrc={getServiceImage(service.name, service.category)} alt={service.name} loading="lazy" decoding="async" />
         </div>
-        <div className="bb-service-body"><h3>{service.name}</h3><div className="bb-service-meta"><strong>{site.currency} {Number(service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><span><Clock size={13} aria-hidden="true" />{service.duration} min</span></div>
-          <p>{service.description}</p>
+        <div className="bb-service-body">
+          <div className="bb-service-heading"><h3>{service.name}</h3><strong>{site.currency} {Number(service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div>
+          <div className="bb-service-duration"><Clock size={13} aria-hidden="true" />{service.duration} min</div>
           <div className="bb-service-actions">
             {safeSubscriptionUrl(service.subscriptionUrl)
               ? <a href={safeSubscriptionUrl(service.subscriptionUrl) as string} target="_blank" rel="noopener noreferrer" className="bb-button bb-service-cta bb-service-subscribe" aria-label={`Assinar plano ${service.name} (abre em nova aba)`}><CreditCard size={16} aria-hidden="true" />Assinar plano</a>
