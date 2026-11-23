@@ -18,22 +18,26 @@ type LinkProps = {
 };
 
 function split(to: string) {
-  const [path, query] = to.split("?");
+  const [url, hash] = to.split("#", 2);
+  const [path, query] = url.split("?", 2);
   const search: Record<string, string> = {};
   if (query) new URLSearchParams(query).forEach((v, k) => (search[k] = v));
-  return { path, search };
+  return { path, search, hash };
 }
 
 function scopedPath(to: string, pathname: string) {
   const segment=pathname.split('/')[1];
   const reserved=['admin','super-admin','cadastro','agendar','confirmacao','api',''];
-  if(!reserved.includes(segment) && (to==='/' || to.startsWith('/agendar') || to.startsWith('/confirmacao/'))) return '/'+segment+(to==='/'?'':to);
+  const path = to.split(/[?#]/, 1)[0];
+  if (!reserved.includes(segment) && (path === '/' || path === '/agendar' || path.startsWith('/confirmacao/'))) {
+    return '/' + segment + (path === '/' ? to.slice(1) : to);
+  }
   return to;
 }
 export function Link({ to, ...rest }: LinkProps) {
   const pathname=useRouterState({select:s=>s.location.pathname});
-  const { path, search } = split(scopedPath(to,pathname));
-  return <TLink to={path as never} search={search as never} {...rest} />;
+  const { path, search, hash } = split(scopedPath(to,pathname));
+  return <TLink to={path as never} search={search as never} hash={hash} {...rest} />;
 }
 
 export function NavLink({
@@ -53,8 +57,8 @@ export function useNavigate() {
   const nav = useTNavigate();
   const pathname=useRouterState({select:s=>s.location.pathname});
   return (to: string, opts?: { replace?: boolean }) => {
-    const { path, search } = split(scopedPath(to,pathname));
-    nav({ to: path as never, search: search as never, replace: opts?.replace });
+    const { path, search, hash } = split(scopedPath(to,pathname));
+    nav({ to: path as never, search: search as never, hash, replace: opts?.replace });
   };
 }
 

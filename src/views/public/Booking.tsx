@@ -5,25 +5,38 @@ import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import { useState, useMemo } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
-import { useNavigate, useSearchParams, Link } from '@/lib/router-compat';
-import { Scissors, Clock, ChevronLeft, ChevronRight, Calendar, User, Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useNavigate, useSearchParams, Link, Navigate } from '@/lib/router-compat';
+import { Scissors, Clock, ChevronLeft, Calendar, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function Booking() {
-  const { tenant, bookingAccess, services, barbers, appointments, siteSettings, themeSettings, holidays, addClient, addAppointment, clients } = useData();
-  const navigate = useNavigate();
+  const { tenant, services } = useData();
   const [searchParams] = useSearchParams();
-  const theme = themeSettings;
-
-  // Serviços com link de assinatura são planos: o cliente assina pelo site, não escolhe um horário para eles.
-  const activeServices = services.filter(s => s.active && !safeSubscriptionUrl(s.subscriptionUrl));
   const requestedService = searchParams.get('service');
-  const initialService = activeServices.find(service => service.id === requestedService)?.id ?? '';
+  const preferredBarber = searchParams.get('barber');
+  const selectedService = services.find(service =>
+    service.id === requestedService && service.active && !safeSubscriptionUrl(service.subscriptionUrl)
+  );
 
+  if (!tenant) return <main className="saas-page"><h1>Barbearia não encontrada ou indisponível.</h1><a href="/">Voltar</a></main>;
+
+  const serviceSection = `/${tenant.slug}?reservar=sim${preferredBarber ? `&barber=${encodeURIComponent(preferredBarber)}` : ''}#servicos`;
+  if (!selectedService) return <Navigate to={serviceSection} replace />;
+
+  return <BookingFlow key={`${tenant.id}:${selectedService.id}:${preferredBarber ?? ''}`} selectedService={selectedService.id} preferredBarber={preferredBarber} serviceSection={serviceSection} />;
+}
+
+function BookingFlow({ selectedService, preferredBarber, serviceSection }: {
+  selectedService: string;
+  preferredBarber: string | null;
+  serviceSection: string;
+}) {
+  const { tenant, bookingAccess, services, barbers, appointments, siteSettings, themeSettings, holidays } = useData();
+  const navigate = useNavigate();
+  const theme = themeSettings;
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [step, setStep] = useState(() => initialService ? 2 : 1);
-  const [selectedService, setSelectedService] = useState(initialService);
-  const [selectedBarber, setSelectedBarber] = useState(searchParams.get('barber') || 'any');
+  const [step, setStep] = useState(1);
+  const [selectedBarber, setSelectedBarber] = useState(preferredBarber || 'any');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [clientName, setClientName] = useState('');
@@ -161,7 +174,7 @@ export default function Booking() {
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-md bg-black/80 border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-white/70 hover:text-white transition">
+          <Link to={serviceSection} className="flex items-center gap-2 text-white/70 hover:text-white transition">
             <ChevronLeft className="w-5 h-5" />
             <span className="text-sm">Voltar</span>
           </Link>
@@ -169,54 +182,25 @@ export default function Booking() {
             <Scissors className="w-5 h-5" style={{ color: theme.accentColor }} />
             <span className="font-bold" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
           </div>
-          <div className="text-sm text-white/50">Passo {step} de 4</div>
+          <div className="text-sm text-white/50">Passo {step} de 3</div>
         </div>
         {/* Progress bar */}
         <div className="h-1 bg-white/10">
-          <div className="h-full transition-all duration-300" style={{ width: `${(step / 4) * 100}%`, backgroundColor: theme.accentColor }} />
+          <div className="h-full transition-all duration-300" style={{ width: `${(step / 3) * 100}%`, backgroundColor: theme.accentColor }} />
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {submitError && <p role="alert" className="text-destructive mb-4">{submitError}</p>}
-        {/* Step 1: Choose Service */}
+        {/* Step 1: Choose Barber */}
         {step === 1 && (
-          <div>
-            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display' }}>Escolha o Serviço</h2>
-            <p className="text-white/60 mb-8">Selecione o serviço que deseja agendar</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeServices.map(service => (
-                <button
-                  key={service.id}
-                  onClick={() => { setSelectedService(service.id); setStep(2); }}
-                  className={`text-left p-5 rounded-xl border transition-all hover:scale-[1.02] ${selectedService === service.id ? 'border-opacity-100' : 'border-white/10 hover:border-white/30'}`}
-                  style={{ borderColor: selectedService === service.id ? theme.accentColor : undefined, backgroundColor: selectedService === service.id ? `${theme.accentColor}15` : 'rgba(255,255,255,0.03)' }}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-lg">{service.name}</h3>
-                    <span className="text-lg font-bold" style={{ color: theme.accentColor }}>{siteSettings.currency} {service.price.toFixed(2)}</span>
-                  </div>
-                  <p className="text-white/60 text-sm mb-3">{service.description}</p>
-                  <div className="flex items-center gap-2 text-sm text-white/50">
-                    <Clock className="w-4 h-4" />
-                    <span>{service.duration} minutos</span>
-                    <span className="ml-auto text-xs px-2 py-1 rounded-full" style={{ backgroundColor: `${theme.accentColor}20`, color: theme.accentColor }}>{service.category}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Choose Barber */}
-        {step === 2 && (
           <div>
             <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display' }}>Escolha o Barbeiro</h2>
             <p className="text-white/60 mb-6">Serviço selecionado: <strong className="text-white">{selectedServiceData?.name}</strong></p>
             {filteredBarbers.length === 0 && <p role="status" className="mb-4 text-white/70">Nenhum barbeiro disponível para este serviço.</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredBarbers.length > 0 && <button
-                onClick={() => { setSelectedBarber('any'); setStep(3); }}
+                onClick={() => { setSelectedBarber('any'); setStep(2); }}
                 className="text-left p-5 rounded-xl border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02] bg-white/5"
               >
                 <div className="flex items-center gap-4">
@@ -232,7 +216,7 @@ export default function Booking() {
               {filteredBarbers.map(barber => (
                 <button
                   key={barber.id}
-                  onClick={() => { setSelectedBarber(barber.id); setStep(3); }}
+                  onClick={() => { setSelectedBarber(barber.id); setStep(2); }}
                   className={`text-left p-5 rounded-xl border transition-all hover:scale-[1.02] ${selectedBarber === barber.id ? 'border-opacity-100' : 'border-white/10 hover:border-white/30'}`}
                   style={{ borderColor: selectedBarber === barber.id ? theme.accentColor : undefined, backgroundColor: selectedBarber === barber.id ? `${theme.accentColor}15` : 'rgba(255,255,255,0.03)' }}
                 >
@@ -247,15 +231,15 @@ export default function Booking() {
               ))}
             </div>
             <div className="mt-6 flex justify-start">
-              <button onClick={() => setStep(1)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
+              <Link to={serviceSection} className="flex items-center gap-2 text-white/60 hover:text-white transition">
                 <ArrowLeft className="w-4 h-4" /> Trocar serviço
-              </button>
+              </Link>
             </div>
           </div>
         )}
 
-        {/* Step 3: Choose Date & Time */}
-        {step === 3 && (
+        {/* Step 2: Choose Date & Time */}
+        {step === 2 && (
           <div>
             <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display' }}>Escolha Data e Horário</h2>
             <p className="text-white/60 mb-8">Selecione o dia e horário disponíveis</p>
@@ -315,7 +299,7 @@ export default function Booking() {
             {selectedTime && (
               <div className="mt-8 flex justify-end">
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(3)}
                   className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all hover:scale-105"
                   style={{ borderRadius: buttonRadius(theme.buttonStyle, '12px'), backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
                 >
@@ -325,15 +309,15 @@ export default function Booking() {
             )}
 
             <div className="mt-6 flex justify-start">
-              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
+              <button onClick={() => setStep(1)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
                 <ArrowLeft className="w-4 h-4" /> Voltar
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 4: Client Info & Confirmation */}
-        {step === 4 && (
+        {/* Step 3: Client Info & Confirmation */}
+        {step === 3 && (
           <div>
             <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display' }}>Seus Dados</h2>
             <p className="text-white/60 mb-8">Preencha suas informações para confirmar o agendamento</p>
@@ -414,7 +398,7 @@ export default function Booking() {
             </div>
 
             <div className="flex items-center justify-between">
-              <button onClick={() => setStep(3)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
+              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
                 <ArrowLeft className="w-4 h-4" /> Voltar
               </button>
               <button
