@@ -34,9 +34,9 @@ type StatusAction = 'completed' | 'cancelled' | 'no_show';
 type Period = 'upcoming' | 'all' | 'date';
 
 export default function AdminAppointments() {
-  const { appointments, services, barbers, clients, updateAppointment, siteSettings, refresh, tenant }: {
+  const { appointments, services, barbers, clients, updateAppointment, siteSettings, refresh }: {
     appointments: Appointment[]; services: Service[]; barbers: Barber[]; clients: Client[]; siteSettings: SiteSettings;
-    refresh: () => Promise<boolean>; tenant: { slug: string } | null;
+    refresh: () => Promise<boolean>;
     updateAppointment: (id: string, data: { status: Status }, expectedStatus: Status) => Promise<unknown>;
   } = useData();
   const today = shopDate.format(new Date());
@@ -112,8 +112,7 @@ export default function AdminAppointments() {
 
   return (
     <section className="appointments">
-      <h1>Agendamentos</h1>
-      {tenant && <p className="mb-3 text-sm text-white/70">Site da agenda <a className="underline" href={`/${tenant.slug}`} target="_blank" rel="noreferrer">/{tenant.slug}</a></p>}
+      <h1 className="sr-only">Agendamentos</h1>
       <div className="appointments-toolbar">
         <label className="appointments-filter">
           <span>Período</span>
