@@ -71,8 +71,14 @@ export function Navigate({ to, replace }: { to: string; replace?: boolean }) {
 }
 
 export function useSearchParams(): [URLSearchParams] {
-  const location = useLocation();
-  return [new URLSearchParams(location.searchStr ?? "")];
+  const search = useLocation({ select: location => location.search });
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(search)) {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      params.set(key, String(value));
+    }
+  }
+  return [params];
 }
 
 export { Outlet };
