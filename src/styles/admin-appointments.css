@@ -1,49 +1,52 @@
 .appointments {min-width:0;color:#f5f1eb}
 .appointments h1 {font:700 2rem/1.2 "Playfair Display",Georgia,serif;margin:0 0 18px}
 .appointments-toolbar {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.appointments-toolbar button,.appointments-date,.appointments-actions button {
+.appointments-toolbar button,.appointments-filter :is(select,input),.appointments-actions button {
   display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;
   padding:8px 12px;border:1px solid #514639;border-radius:8px;background:#191817;color:#edd8ae;
 }
-.appointments-date {position:relative;flex-wrap:wrap;font-size:.875rem}
-.appointments-date input {position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;color-scheme:dark}
-.appointments-date:focus-within {outline:2px solid #e8c67c;outline-offset:2px}
-.appointments-scroll {
-  max-width:100%;max-height:72vh;overflow:auto;border:1px solid #36312a;
-  border-radius:12px;background:#161514;scrollbar-color:#8f7851 #211d19;
+.appointments-filter {display:grid;gap:4px;font-size:.8rem;color:#d4c5ae}
+.appointments-filter :is(select,input) {color-scheme:dark}
+.appointments-refresh {align-self:end}
+.appointments-scroll {max-width:100%;overflow-x:auto;padding-bottom:10px;scrollbar-color:#8f7851 #211d19}
+.appointments-board {display:flex;align-items:flex-start;gap:12px}
+.appointments-column {
+  flex:1 0 clamp(176px,21vw,220px);max-width:310px;min-width:0;
+  border:1px solid #36312a;border-radius:12px;background:#161514;overflow:hidden;
 }
-.appointments-grid {display:grid;grid-template-columns:4rem repeat(var(--barbers),minmax(9rem,1fr))}
-.appointments-axis {position:sticky;left:0;z-index:3;background:#191816;border-right:1px solid #36312a}
 .appointments-heading {
-  position:sticky;top:0;z-index:2;display:flex;flex-direction:column;justify-content:center;
-  align-items:center;gap:5px;height:80px;padding:4px;text-align:center;background:#1a1816;
-  border-bottom:1px solid #36312a;font-size:.83rem;font-weight:650;color:#edd8ae;
+  position:relative;display:grid;justify-items:center;gap:5px;min-height:84px;
+  padding:10px 30px 8px;text-align:center;background:#1a1816;border-bottom:1px solid #36312a;color:#edd8ae;
 }
-.appointments-heading>span:last-child {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appointments-heading h2 {font-size:.86rem;font-weight:650;overflow-wrap:anywhere}
+.appointments-count {
+  position:absolute;top:10px;right:10px;min-width:23px;padding:2px 5px;border-radius:99px;
+  background:#2c251b;color:#eed9b3;font-size:.72rem;
+}
 .appointments-avatar {
   display:grid;place-items:center;width:36px;height:36px;border:1px solid #c9a96e;
-  overflow:hidden;border-radius:50%;background:#292219;
+  overflow:hidden;border-radius:50%;background:#292219;font-size:.76rem;font-weight:650;
 }
 .appointments-avatar img {width:100%;height:100%;object-fit:cover}
-.appointments-hour {
-  height:var(--hour-height);padding-top:5px;text-align:center;
-  border-top:1px solid #36312a;font-size:.8rem;font-variant-numeric:tabular-nums;
-}
-.appointments-column {min-width:0;border-right:1px solid #36312a}
-.appointments-column-slots {
-  position:relative;background:repeating-linear-gradient(to bottom,#36312a 0 1px,transparent 1px var(--hour-height));
-}
+.appointments-cards {display:grid;gap:8px;margin:0;padding:9px;list-style:none}
 .appointments-card {
-  position:absolute;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-  padding:0 6px;overflow:hidden;border:1px solid #91764a;border-radius:6px;background:#332a1b;
-  color:#f5ead6;text-align:left;font-size:.75rem;line-height:1.2;
+  position:relative;display:grid;gap:5px;width:100%;min-height:76px;padding:9px 23px 9px 9px;
+  border:1px solid #7e6843;border-radius:8px;background:#332a1b;color:#f5ead6;text-align:left;overflow-wrap:anywhere;
 }
-.appointments-card :is(span,strong) {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appointments-card:hover {filter:brightness(1.15)}
+.appointments-card strong {font-size:.87rem}
+.appointments-card-date {display:flex;align-items:center;gap:4px;font-size:.72rem;font-variant-numeric:tabular-nums}
+.appointments-card-date svg {flex:none}
+.appointments-card-status {font-size:.72rem;opacity:.88}
+.appointments-card-arrow {position:absolute;right:5px;top:50%;transform:translateY(-50%)}
+.appointments-empty {padding:12px 10px;text-align:center;color:#c9bead;font-size:.8rem}
 .appointments-card[data-status="cancelled"],.appointments-card[data-status="no_show"] {background:#272221;border-color:#6d5e5b;color:#e3c8c3}
-.appointments-card[data-status="cancelled"] strong,.appointments-card[data-status="no_show"] strong {text-decoration:line-through}
 .appointments-card[data-status="completed"] {background:#253026;border-color:#58745d}
-.appointments-card:focus-visible,.appointments-toolbar :is(button,input):focus-visible,.appointments-scroll:focus-visible,.appointments-actions button:focus-visible {
+.appointments-card:focus-visible,.appointments-toolbar :is(button,input,select):focus-visible,.appointments-scroll:focus-visible,.appointments-actions button:focus-visible {
   outline:2px solid #e8c67c;outline-offset:-2px;
+}
+@media(max-width:600px) {
+  .appointments-column {flex-basis:min(220px,76vw)}
 }
 .appointments-dialog {background:#191817;color:#f5f1eb;border-color:#514639;max-height:90dvh;overflow:auto}
 .appointments-dialog dl {display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;font-size:.875rem}
@@ -57,16 +60,3 @@
 .appointments-actions button[data-action="no_show"] {color:#f3c375;border-color:#8f6b39}
 .appointments-actions button:disabled {opacity:.6}
 .appointments-note {font-size:.8rem}
-
-.appointments-recent {
-  margin-bottom:16px;padding:12px;border:1px solid #36312a;border-radius:12px;background:#161514;
-}
-.appointments-recent .appointments-toolbar {margin-bottom:8px}
-.appointments-recent-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:8px;margin:0;padding:0;list-style:none}
-.appointments-recent-list button {
-  display:grid;gap:4px;width:100%;height:100%;padding:8px;text-align:left;
-  border:1px solid #514639;border-radius:8px;background:#191817;overflow-wrap:anywhere;
-}
-.appointments-recent-list button:focus-visible {outline:2px solid #e8c67c;outline-offset:2px}
-.appointments-recent-list :is(span,small) {font-size:.75rem;color:#edd8ae}
-.appointments-recent-list strong {font-size:.875rem}

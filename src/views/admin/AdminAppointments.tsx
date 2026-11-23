@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, type CSSProperties } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Check, UserX, XCircle } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { CalendarDays, ChevronRight, RefreshCw, Check, UserX, XCircle } from 'lucide-react';
 import { useData } from '@/contexts/DataContext';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { resolveSiteImage } from '@/lib/site-images';
@@ -15,10 +15,10 @@ const statuses = {
 };
 
 const shopDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' });
-const dayLabel = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full', timeZone: 'UTC' });
+const dayLabel = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+const formatDay = (date: string) => dayLabel.format(new Date(date + 'T12:00:00Z'));
 const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 const clock = (minute: number) => `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`;
-const rowHeight = 104;
 
 function BarberPhoto({ barber }: { barber: Pick<Barber, 'name' | 'photo'> }) {
   const [failed, setFailed] = useState<string>();
@@ -31,33 +31,7 @@ function BarberPhoto({ barber }: { barber: Pick<Barber, 'name' | 'photo'> }) {
 
 type Status = Appointment['status'];
 type StatusAction = 'completed' | 'cancelled' | 'no_show';
-type Booking = { appointment: Appointment; client?: Client; service?: Service; start: number; end: number };
-
-function positionBookings(bookings: Booking[]) {
-  const sorted = [...bookings].sort((a, b) => a.start - b.start || b.end - a.end);
-  let lanes: number[] = [];
-  let groupEnd = -1;
-  let group: Array<Booking & { lane: number }> = [];
-  const positioned: Array<Booking & { lane: number; laneCount: number }> = [];
-  function flush() {
-    positioned.push(...group.map(booking => ({ ...booking, laneCount: lanes.length })));
-    lanes = [];
-    group = [];
-  }
-  for (const booking of sorted) {
-    if (booking.start >= groupEnd) {
-      flush();
-      groupEnd = booking.end;
-    }
-    const availableLane = lanes.findIndex(end => end <= booking.start);
-    const lane = availableLane < 0 ? lanes.length : availableLane;
-    lanes[lane] = booking.end;
-    groupEnd = Math.max(groupEnd, booking.end);
-    group.push({ ...booking, lane });
-  }
-  flush();
-  return positioned;
-}
+type Period = 'upcoming' | 'all' | 'date';
 
 export default function AdminAppointments() {
   const { appointments, services, barbers, clients, updateAppointment, siteSettings, refresh, tenant }: {
@@ -65,7 +39,9 @@ export default function AdminAppointments() {
     refresh: () => Promise<boolean>; tenant: { slug: string } | null;
     updateAppointment: (id: string, data: { status: Status }, expectedStatus: Status) => Promise<unknown>;
   } = useData();
-  const [date, setDate] = useState(() => shopDate.format(new Date()));
+  const today = shopDate.format(new Date());
+  const [period, setPeriod] = useState<Period>('upcoming');
+  const [date, setDate] = useState(today);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -75,41 +51,35 @@ export default function AdminAppointments() {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const updating = useRef(false);
 
-  const recentBookings = useMemo(() => [...appointments]
-    .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0))
-    .slice(0, 5), [appointments]);
-  const nextBookingDate = appointments.reduce<string | undefined>((next, appointment) => {
-    if (appointment.date <= date || appointment.status === 'cancelled' || appointment.status === 'no_show') return next;
-    return !next || appointment.date < next ? appointment.date : next;
-  }, undefined);
-  const day = new Date(date + 'T12:00:00Z');
-  const bookings = appointments.filter(appointment => appointment.date === date).map(appointment => {
-    const service = services.find(item => item.id === appointment.serviceId);
-    const start = minutes(appointment.time);
-    const end = start + (Number(service?.duration) || 30);
-    return { appointment, service, start, end, client: clients.find(item => item.id === appointment.clientId) };
-  });
-  const bookedBarbers = new Set(bookings.map(({ appointment }) => appointment.barberId));
-  const columns = barbers.filter(barber => barber.active || bookedBarbers.has(barber.id))
-    .sort((a, b) => a.order - b.order);
-  const missingIds = [...bookedBarbers].filter(id => !barbers.some(barber => barber.id === id));
-  const team = [...columns, ...missingIds.map(id => ({ id, name: 'Barbeiro removido', photo: '' }))];
-  const workHours = [
-    ...(siteSettings.businessHours ?? []),
-    ...columns.flatMap(barber => barber.workingHours ?? []),
-  ].filter(hours => hours.active && hours.dayOfWeek === day.getUTCDay());
-  const startHour = Math.floor(Math.min(480, ...workHours.map(hours => minutes(hours.start)), ...bookings.map(booking => booking.start)) / 60);
-  const endHour = Math.ceil(Math.max(1080, ...workHours.map(hours => minutes(hours.end)), ...bookings.map(booking => booking.end)) / 60);
-  const hours = Array.from({ length: endHour - startHour }, (_, index) => startHour + index);
-  const selected = bookings.find(({ appointment }) => appointment.id === selectedId);
-  const status = selected?.appointment.status;
-  const canUpdate = status === 'pending' || status === 'confirmed';
+  const { team, bookingsByBarber } = useMemo(() => {
+    const visible = appointments.filter(appointment => {
+      if (period === 'date') return appointment.date === date;
+      if (period === 'upcoming') return appointment.date >= today;
+      return true;
+    });
+    visible.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    const bookingsByBarber = new Map<string, Appointment[]>();
+    for (const appointment of visible) {
+      const bookings = bookingsByBarber.get(appointment.barberId) ?? [];
+      bookings.push(appointment);
+      bookingsByBarber.set(appointment.barberId, bookings);
+    }
 
-  function moveDay(offset: number) {
-    const next = new Date(day);
-    next.setUTCDate(next.getUTCDate() + offset);
-    setDate(next.toISOString().slice(0, 10));
-  }
+    const team: Pick<Barber, 'id' | 'name' | 'photo'>[] = barbers.filter(barber => barber.active || bookingsByBarber.has(barber.id))
+      .sort((a, b) => a.order - b.order);
+    for (const id of bookingsByBarber.keys()) {
+      if (!barbers.some(barber => barber.id === id)) team.push({ id, name: 'Barbeiro removido', photo: '' });
+    }
+    return { team, bookingsByBarber };
+  }, [appointments, barbers, date, period, today]);
+
+  const clientById = useMemo(() => new Map(clients.map(client => [client.id, client])), [clients]);
+  const selected = appointments.find(appointment => appointment.id === selectedId);
+  const selectedClient = selected && clientById.get(selected.clientId);
+  const selectedService = selected && services.find(service => service.id === selected.serviceId);
+  const selectedBarber = selected && barbers.find(barber => barber.id === selected.barberId);
+  const status = selected?.status;
+  const canUpdate = status === 'pending' || status === 'confirmed';
 
   async function refreshAgenda() {
     setRefreshing(true);
@@ -130,7 +100,7 @@ export default function AdminAppointments() {
     setSaving(true);
     setError('');
     try {
-      await updateAppointment(selected.appointment.id, { status: next }, selected.appointment.status);
+      await updateAppointment(selected.id, { status: next }, selected.status);
       setPendingAction(null);
     } catch {
       setError('Não foi possível atualizar o agendamento. Confira o status e tente novamente.');
@@ -145,95 +115,65 @@ export default function AdminAppointments() {
       <h1>Agendamentos</h1>
       {tenant && <p className="mb-3 text-sm text-white/70">Site da agenda <a className="underline" href={`/${tenant.slug}`} target="_blank" rel="noreferrer">/{tenant.slug}</a></p>}
       <div className="appointments-toolbar">
-        <button type="button" aria-label="Dia anterior" onClick={() => moveDay(-1)}><ChevronLeft size={18} /></button>
-        <label className="appointments-date">
-          <CalendarDays size={16} aria-hidden="true" /><span>{dayLabel.format(day)}</span>
-          <input type="date" aria-label="Escolher data" value={date} onClick={event => { try { event.currentTarget.showPicker?.(); } catch { /* Keep the native date control available. */ } }} onChange={event => { if (event.target.value) setDate(event.target.value); }} />
+        <label className="appointments-filter">
+          <span>Período</span>
+          <select value={period} onChange={event => setPeriod(event.target.value as Period)}>
+            <option value="upcoming">Hoje e próximos dias</option>
+            <option value="date">Escolher data</option>
+            <option value="all">Todas as datas</option>
+          </select>
         </label>
-        <button type="button" aria-label="Próximo dia" onClick={() => moveDay(1)}><ChevronRight size={18} /></button>
-        <button type="button" onClick={() => setDate(shopDate.format(new Date()))}>Hoje</button>
+        {period === 'date' && (
+          <label className="appointments-filter">
+            <span>Data</span>
+            <input type="date" value={date} onChange={event => { if (event.target.value) setDate(event.target.value); }} />
+          </label>
+        )}
+        <button className="appointments-refresh" type="button" disabled={refreshing} onClick={() => void refreshAgenda()}>
+          <RefreshCw size={16} aria-hidden="true" /> {refreshing ? 'Atualizando…' : 'Atualizar agenda'}
+        </button>
       </div>
-
-      <section className="appointments-recent" aria-labelledby="recent-bookings-heading">
-        <div className="appointments-toolbar">
-          <h2 id="recent-bookings-heading" className="mr-auto font-semibold">Últimas reservas registradas</h2>
-          <button type="button" disabled={refreshing} onClick={() => void refreshAgenda()}>
-            <RefreshCw size={16} aria-hidden="true" /> {refreshing ? 'Atualizando…' : 'Atualizar agenda'}
-          </button>
-        </div>
-        {refreshMessage && <p role="status" className="mb-2 text-sm">{refreshMessage}</p>}
-        {recentBookings.length ? (
-          <ul className="appointments-recent-list">
-            {recentBookings.map(appointment => {
-              const client = clients.find(item => item.id === appointment.clientId);
-              const bookingDate = new Date(appointment.date + 'T12:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-              return (
-                <li key={appointment.id}>
-                  <button type="button" onClick={event => {
-                    trigger.current = event.currentTarget;
-                    setDate(appointment.date);
-                    setError('');
-                    setPendingAction(null);
-                    setSelectedId(appointment.id);
-                  }}>
-                    <span>{bookingDate} · {appointment.time}</span>
-                    <strong>{client?.name || 'Cliente'}</strong>
-                    <small>{statuses[appointment.status]}</small>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        ) : <p className="text-sm text-white/70">Ainda não há reservas registradas nesta barbearia.</p>}
-      </section>
-
-      {bookings.length === 0 && <p className="mb-3 text-sm text-white/70">Nenhum agendamento nesta data.</p>}
-      {nextBookingDate && (
-        <div className="appointments-toolbar">
-          <button type="button" onClick={() => setDate(nextBookingDate)}>
-            Ver próximo dia com agendamentos · {new Date(nextBookingDate + 'T12:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-          </button>
-        </div>
-      )}
+      {refreshMessage && <p role="status" className="mb-3 text-sm">{refreshMessage}</p>}
 
       {!team.length ? <p>Nenhum barbeiro cadastrado para exibir na agenda.</p> : (
-        <div className="appointments-scroll" role="region" aria-label="Grade de horários por barbeiro" tabIndex={0}>
-          <div className="appointments-grid" style={{ '--barbers': team.length, '--hour-height': `${rowHeight}px` } as CSSProperties}>
-            <div className="appointments-axis">
-              <div className="appointments-heading">Horário</div>
-              {hours.map(hour => <div key={hour} className="appointments-hour">{clock(hour * 60)}</div>)}
-            </div>
-            {team.map(barber => (
-              <div className="appointments-column" key={barber.id}>
-                <div className="appointments-heading"><BarberPhoto barber={barber} /><span>{barber.name}</span></div>
-                <div className="appointments-column-slots" style={{ height: hours.length * rowHeight }}>
-                  {positionBookings(bookings.filter(booking => booking.appointment.barberId === barber.id)).map(({ appointment, client, start, end, lane, laneCount }) => (
-                    <button
-                      type="button"
-                      className="appointments-card"
-                      key={appointment.id}
-                      data-status={appointment.status}
-                      aria-label={`${client?.name || 'Cliente'}, ${clock(start)} a ${clock(end)}, ${statuses[appointment.status]}`}
-                      style={{
-                        top: (start / 60 - startHour) * rowHeight,
-                        height: Math.max(16, (end - start) / 60 * rowHeight - 2),
-                        left: `calc(${lane / laneCount * 100}% + 2px)`,
-                        width: `calc(${100 / laneCount}% - 4px)`,
-                      }}
-                      onClick={event => {
-                        trigger.current = event.currentTarget;
-                        setError('');
-                        setPendingAction(null);
-                        setSelectedId(appointment.id);
-                      }}
-                    >
-                      <span>{clock(start)}–{clock(end)}</span>
-                      <strong>{client?.name || 'Cliente'}</strong>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+        <div className="appointments-scroll" role="region" aria-label="Quadro de agendamentos por barbeiro" tabIndex={0}>
+          <div className="appointments-board">
+            {team.map(barber => {
+              const bookings = bookingsByBarber.get(barber.id) ?? [];
+              return (
+                <section className="appointments-column" key={barber.id} aria-label={barber.name}>
+                  <header className="appointments-heading">
+                    <BarberPhoto barber={barber} />
+                    <h2>{barber.name}</h2>
+                    <span className="appointments-count" aria-label={`${bookings.length} agendamentos`}>{bookings.length}</span>
+                  </header>
+                  {bookings.length === 0 ? <p className="appointments-empty">Sem agendamentos neste período.</p> : (
+                    <ul className="appointments-cards">
+                      {bookings.map(appointment => (
+                        <li key={appointment.id}>
+                          <button
+                            type="button"
+                            className="appointments-card"
+                            data-status={appointment.status}
+                            onClick={event => {
+                              trigger.current = event.currentTarget;
+                              setError('');
+                              setPendingAction(null);
+                              setSelectedId(appointment.id);
+                            }}
+                          >
+                            <span className="appointments-card-date"><CalendarDays size={14} aria-hidden="true" /> {formatDay(appointment.date)} · {appointment.time.slice(0, 5)}</span>
+                            <strong>{clientById.get(appointment.clientId)?.name || 'Cliente'}</strong>
+                            <span className="appointments-card-status">{statuses[appointment.status]}</span>
+                            <ChevronRight className="appointments-card-arrow" size={17} aria-hidden="true" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              );
+            })}
           </div>
         </div>
       )}
@@ -243,15 +183,16 @@ export default function AdminAppointments() {
           <DialogTitle>Detalhes do agendamento</DialogTitle>
           <DialogDescription className="sr-only">Informações e status da reserva.</DialogDescription>
           <dl>
-            <dt>Cliente</dt><dd>{selected.client?.name || '—'}</dd>
-            <dt>Telefone</dt><dd>{selected.client?.phone || '—'}</dd>
-            <dt>Barbeiro</dt><dd>{team.find(barber => barber.id === selected.appointment.barberId)?.name || '—'}</dd>
-            <dt>Serviço</dt><dd>{selected.service?.name || '—'}</dd>
-            <dt>Horário</dt><dd>{clock(selected.start)}–{clock(selected.end)}</dd>
-            <dt>Valor</dt><dd>{selected.service ? `${siteSettings.currency} ${Number(selected.service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}</dd>
-            {selected.appointment.notes && <><dt>Observações</dt><dd>{selected.appointment.notes}</dd></>}
+            <dt>Cliente</dt><dd>{selectedClient?.name || '—'}</dd>
+            <dt>Telefone</dt><dd>{selectedClient?.phone || '—'}</dd>
+            <dt>Barbeiro</dt><dd>{selectedBarber?.name || 'Barbeiro removido'}</dd>
+            <dt>Serviço</dt><dd>{selectedService?.name || '—'}</dd>
+            <dt>Data</dt><dd>{formatDay(selected.date)}</dd>
+            <dt>Horário</dt><dd>{selected.time.slice(0, 5)}–{clock(minutes(selected.time) + (Number(selectedService?.duration) || 30))}</dd>
+            <dt>Valor</dt><dd>{selectedService ? `${siteSettings.currency} ${Number(selectedService.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}</dd>
+            {selected.notes && <><dt>Observações</dt><dd>{selected.notes}</dd></>}
           </dl>
-          <p className="appointments-status" data-status={status} role="status">{statuses[selected.appointment.status]}</p>
+          <p className="appointments-status" data-status={status} role="status">{statuses[selected.status]}</p>
           {canUpdate && <div className="appointments-actions">
             {pendingAction ? <>
               <p>Registrar como <strong>{statuses[pendingAction].toLowerCase()}</strong>?</p>
