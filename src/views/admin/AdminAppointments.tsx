@@ -72,6 +72,10 @@ export default function AdminAppointments() {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const updating = useRef(false);
 
+  const nextBookingDate = appointments.reduce<string | undefined>((next, appointment) => {
+    if (appointment.date <= date || appointment.status === 'cancelled' || appointment.status === 'no_show') return next;
+    return !next || appointment.date < next ? appointment.date : next;
+  }, undefined);
   const day = new Date(date + 'T12:00:00Z');
   const bookings = appointments.filter(appointment => appointment.date === date).map(appointment => {
     const service = services.find(item => item.id === appointment.serviceId);
@@ -129,6 +133,15 @@ export default function AdminAppointments() {
         <button type="button" aria-label="Próximo dia" onClick={() => moveDay(1)}><ChevronRight size={18} /></button>
         <button type="button" onClick={() => setDate(shopDate.format(new Date()))}>Hoje</button>
       </div>
+
+      {bookings.length === 0 && <p className="mb-3 text-sm text-white/70">Nenhum agendamento nesta data.</p>}
+      {nextBookingDate && (
+        <div className="appointments-toolbar">
+          <button type="button" onClick={() => setDate(nextBookingDate)}>
+            Ver próximo dia com agendamentos · {new Date(nextBookingDate + 'T12:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+          </button>
+        </div>
+      )}
 
       {!team.length ? <p>Nenhum barbeiro cadastrado para exibir na agenda.</p> : (
         <div className="appointments-scroll" role="region" aria-label="Grade de horários por barbeiro" tabIndex={0}>

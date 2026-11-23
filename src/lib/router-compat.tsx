@@ -4,7 +4,7 @@ import {
   Link as TLink,
   Outlet,
   useNavigate as useTNavigate,
-  useLocation,
+  useSearch,
   useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode, type MouseEventHandler } from "react";
@@ -71,7 +71,7 @@ export function Navigate({ to, replace }: { to: string; replace?: boolean }) {
 }
 
 export function useSearchParams(): [URLSearchParams] {
-  const search = useLocation({ select: location => location.search });
+  const search = useSearch({ strict: false });
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(search)) {
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {

@@ -2,10 +2,12 @@
 import { buttonRadius } from '@/lib/button-style';
 import { supabase } from '@/integrations/supabase/client';
 import { safeSubscriptionUrl } from '@/lib/subscription-link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { BookingReceipt } from './BookingConfirmation';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
-import { useNavigate, useSearchParams, Link, Navigate } from '@/lib/router-compat';
+import { useSearchParams, Link, Navigate } from '@/lib/router-compat';
 import { Scissors, Clock, ChevronLeft, Calendar, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function Booking() {
@@ -33,7 +35,9 @@ function BookingFlow({ selectedService, preferredBarber, serviceSection }: {
   const { tenant, bookingAccess, services, barbers, appointments, siteSettings, themeSettings, holidays } = useData();
   const navigate = useNavigate();
   const theme = themeSettings;
+  const submission = useRef(false);
   const [submitting, setSubmitting] = useState(false);
+  const [receiptToken, setReceiptToken] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState('');
   const [step, setStep] = useState(1);
   const [selectedBarber, setSelectedBarber] = useState(preferredBarber || 'any');
@@ -139,20 +143,56 @@ function BookingFlow({ selectedService, preferredBarber, serviceSection }: {
   }, [holidays, siteSettings.businessHours]);
 
   const handleSubmit = async () => {
-    if(submitting) return;
-    if(!tenant || !filteredBarbers.some(b=>b.id===(selectedBarber==='any'?filteredBarbers[0]?.id:selectedBarber))) {setSubmitError('Este barbeiro não está disponível para agendamento.');return;}
-    setSubmitting(true); setSubmitError('');
+    if (submission.current || receiptToken) return;
+    const barber = selectedBarber === 'any' ? filteredBarbers[0] : filteredBarbers.find(item => item.id === selectedBarber);
+    if (!tenant || !barber) {
+      setSubmitError('Este barbeiro não está disponível para agendamento.');
+      return;
+    }
+    if (!clientName.trim() || !clientPhone.trim() || !selectedDate || !selectedTime) {
+      setSubmitError('Confira o nome, o telefone, a data e o horário antes de confirmar.');
+      return;
+    }
+
+    submission.current = true;
+    setSubmitting(true);
+    setSubmitError('');
+    let token: string;
     try {
-      const { data, error } = await supabase.rpc('book_appointment', { input: {
-        tenantId:tenant.id,name:clientName,phone:clientPhone,email:clientEmail,notes:clientNotes,
-        serviceId:selectedService,barberId:selectedBarber === 'any' ? filteredBarbers[0]?.id : selectedBarber,
-        date:selectedDate,time:selectedTime
-      }});
-      if(error) throw error;
-      navigate(`/confirmacao/${data.token}`);
-    } catch(e) { setSubmitError(e.message || 'Não foi possível reservar o horário.'); }
-    finally { setSubmitting(false); }
+      const { data, error } = await supabase.rpc('book_appointment', {
+        input: {
+          tenantId: tenant.id, name: clientName.trim(), phone: clientPhone.trim(), email: clientEmail, notes: clientNotes,
+          serviceId: selectedService, barberId: barber.id, date: selectedDate, time: selectedTime,
+        },
+      });
+      if (error) throw error;
+      if (typeof data?.token !== 'string' || !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(data.token)) {
+        throw new Error('O servidor não enviou um comprovante válido. Consulte a barbearia antes de tentar novamente.');
+      }
+      token = data.token;
+    } catch (error) {
+      setSubmitError(error?.message || 'Não foi possível reservar o horário.');
+      return;
+    } finally {
+      submission.current = false;
+      setSubmitting(false);
+    }
+
+    // Keep the receipt visible even if the router cannot replace the booking URL.
+    setReceiptToken(token);
+    try {
+      await navigate({
+        to: '/$slug/confirmacao/$id',
+        params: { slug: tenant.slug, id: token },
+        search: {},
+        replace: true,
+      });
+    } catch {
+      // The receipt remains available in this view.
+    }
   };
+
+  if (receiptToken) return <BookingReceipt token={receiptToken} />;
 
   const cssVars = {
     '--color-primary': theme.primaryColor,
@@ -397,11 +437,12 @@ function BookingFlow({ selectedService, preferredBarber, serviceSection }: {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <button type="button" onClick={() => setStep(2)} className="flex items-center gap-2 text-white/60 hover:text-white transition">
                 <ArrowLeft className="w-4 h-4" /> Voltar
               </button>
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={submitting || !clientName || !clientPhone}
                 className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"

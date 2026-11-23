@@ -8,30 +8,45 @@ import { Link } from '@/lib/router-compat';
 import { Check, Calendar, Clock, Scissors, User, MessageCircle, Home } from 'lucide-react';
 
 export default function BookingConfirmation() {
-  const { appointments, services, barbers, clients, siteSettings, themeSettings } = useData();
-  const theme = themeSettings;
   const { id } = useParams({ strict: false });
+  return <BookingReceipt key={id} token={id} />;
+}
+
+export function BookingReceipt({ token }: { token: string }) {
+  const { tenant, services, barbers, siteSettings, themeSettings } = useData();
+  const theme = themeSettings;
+  const [attempt, setAttempt] = useState(0);
   const [receipt,setReceipt] = useState(null);
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState('');
   useEffect(()=> {
     let active = true;
     setLoading(true); setError('');
-    supabase.rpc('booking_receipt',{receipt_token:id}).then(({data,error})=> {
-      if (!active) return;
-      setReceipt(data);
-      if (error) setError('Não foi possível consultar o agendamento. Tente novamente.');
-      setLoading(false);
-    });
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc('booking_receipt', { receipt_token: token });
+        if (error) throw error;
+        if (active) setReceipt(data?.tenantId && data.tenantId !== tenant?.id ? null : data);
+      } catch {
+        if (active) setError('Não foi possível consultar o comprovante.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
     return () => { active = false; };
-  },[id]);
+  }, [token, tenant?.id, attempt]);
   const lastAppointment = receipt?.appointment;
   const service = services.find(s => s.id === lastAppointment?.serviceId);
   const barber = barbers.find(b => b.id === lastAppointment?.barberId);
   const client = receipt?.client;
   if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
-  if(error) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><p role="alert">{error}</p></div>;
-  if(!receipt) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><p>Agendamento não encontrado.</p><Link to="/">Voltar ao início</Link></div>;
+  if (error) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background px-4 text-foreground">
+      <p role="alert">{error}</p>
+      <button type="button" className="rounded border px-4 py-2" onClick={() => setAttempt(previous => previous + 1)}>Consultar novamente</button>
+    </div>
+  );
+  if(!lastAppointment) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><p>Agendamento não encontrado.</p><Link to="/">Voltar ao início</Link></div>;
 
   const cssVars = {
     '--color-primary': theme.primaryColor,
