@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { AppointmentBadge } from '@/components/AppointmentBadge';
 import { useState, useEffect } from 'react';
 import { useMatch } from '@tanstack/react-router';
 import { AdminPanelSwitcher } from '@/components/AdminPanelSwitcher';
@@ -72,6 +73,7 @@ export default function AdminLayout() {
               >
                 <item.icon className="w-4 h-4" />
                 <span>{item.label}</span>
+                {item.to === '/admin/agendamentos' && <AppointmentBadge />}
               </NavLink>
             ))}
           </nav>

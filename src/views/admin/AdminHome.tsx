@@ -1,3 +1,4 @@
+import { AppointmentBadge } from '@/components/AppointmentBadge';
 import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
 import { LayoutDashboard, CalendarDays, Calendar, Scissors, Users, UserCircle, MessageSquare, Image, Home, Shield, BarChart3, Settings } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function AdminHome() {
           <Link key={module.route} to={module.route} className="ba-home-module-card">
             <module.icon aria-hidden="true" />
             <span>{module.label}</span>
+            {module.route === '/admin/agendamentos' && <AppointmentBadge />}
           </Link>
         ))}
       </nav>

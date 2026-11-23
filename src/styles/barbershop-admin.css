@@ -41,3 +41,10 @@
 .ba-panel-switcher-meta a:last-child{color:var(--ba-accent)}
 .ba-panel-switcher-meta a:hover{text-decoration:underline}
 @media(max-width:639px){.ba-panel-switcher{gap:8px;padding:11px}.ba-panel-switcher-label{flex:0 0 100%;margin-bottom:1px}.ba-panel-switcher-action{flex:1 1 auto;min-width:0;padding:9px 10px;font-size:12px}.ba-panel-switcher-meta{align-items:flex-start;flex-direction:column;gap:7px;margin-top:3px}.ba-panel-switcher-meta a{overflow-wrap:anywhere}}
+
+.ba-appointment-badge {
+  display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;
+  margin-left:auto;border-radius:999px;background:#b91c1c;color:#fff;
+  font:700 11px/1 system-ui,sans-serif;flex-shrink:0;
+}
+.ba-home-module-card .ba-appointment-badge {position:absolute;top:7px;right:8px}

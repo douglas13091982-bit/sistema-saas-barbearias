@@ -34,9 +34,9 @@ type StatusAction = 'completed' | 'cancelled' | 'no_show';
 type Period = 'upcoming' | 'all' | 'date';
 
 export default function AdminAppointments() {
-  const { appointments, services, barbers, clients, updateAppointment, siteSettings, refresh }: {
+  const { appointments, services, barbers, clients, updateAppointment, siteSettings, refresh, markAppointmentSeen }: {
     appointments: Appointment[]; services: Service[]; barbers: Barber[]; clients: Client[]; siteSettings: SiteSettings;
-    refresh: () => Promise<boolean>;
+    refresh: () => Promise<boolean>; markAppointmentSeen: (id: string) => void;
     updateAppointment: (id: string, data: { status: Status }, expectedStatus: Status) => Promise<unknown>;
   } = useData();
   const today = shopDate.format(new Date());
@@ -158,6 +158,7 @@ export default function AdminAppointments() {
                               trigger.current = event.currentTarget;
                               setError('');
                               setPendingAction(null);
+                              markAppointmentSeen(appointment.id);
                               setSelectedId(appointment.id);
                             }}
                           >

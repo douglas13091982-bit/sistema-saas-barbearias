@@ -4,6 +4,7 @@ import { useRouterState } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAppointmentNotifications } from '@/lib/appointment-notifications';
 import { manageStaff } from '@/lib/staff.functions';
 import { defaultSiteSettings, defaultThemeSettings } from '../data/demoData';
 import { toast } from 'sonner';
@@ -80,6 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => { void refresh(); const focus = () => void refresh(true); window.addEventListener('focus',focus); return () => window.removeEventListener('focus',focus); }, [refresh]);
   useEffect(() => {
     if (!isPanel || !tenant?.id || !currentUser) return;
+    let stopped = false;
     const channel = supabase.channel(`barbershop-appointments-${tenant.id}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'barbershop_records',
@@ -87,8 +89,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }, payload => {
         if (payload.new?.kind === 'appointments') void refresh(true);
       })
-      .subscribe();
-    let stopped = false;
+      .subscribe(status => {
+        // Catch reservations made between the last fetch and a (re)connection.
+        if (!stopped && status === 'SUBSCRIBED') void refresh(true);
+      });
     let fallbackPoll: number;
     const poll = async () => {
       if (document.visibilityState === 'visible') await refresh(true);
@@ -103,6 +107,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [isPanel, tenant?.id, currentUser?.id, refresh]);
   const list = kind => records.filter(r => r.kind === kind).map(r => r.data);
   const settings = kind => records.find(r => r.kind === kind)?.data;
+  const appointments = currentUser ? list('appointments') : busy;
+  const appointmentNotifications = useAppointmentNotifications(tenant?.id, currentUser?.id, appointments);
   const mutate = async operation => {
     try { const result = await operation(); if (result.error) throw result.error; await refresh(); return result.data; }
     catch (e) { toast.error('Não foi possível salvar a alteração.'); throw e; }
@@ -155,8 +161,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const logout = async () => { await queryClient.cancelQueries(); queryClient.clear(); ++generation.current; setRecords([]); setUsers([]); setCurrentUser(null); await supabase.auth.signOut(); await refresh(); };
   if(loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
   if(error) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-background text-foreground"><p role="alert">{error}</p><Button onClick={()=>void refresh()}>Tentar novamente</Button></div>;
-  return <DataContext.Provider value={{...actions,users,currentUser,tenant,bookingAccess,isPlatformAdmin:platformAdmin,isAuthenticated:!!currentUser,login,logout,refresh: () => refresh(true),
-    clients:list('clients'), appointments:currentUser ? list('appointments'):busy, services:list('services'),barbers:list('barbers'),testimonials:list('testimonials'),gallery:list('gallery'),holidays:list('holidays'),
+  return <DataContext.Provider value={{...actions,...appointmentNotifications,users,currentUser,tenant,bookingAccess,isPlatformAdmin:platformAdmin,isAuthenticated:!!currentUser,login,logout,refresh: () => refresh(true),
+    clients:list('clients'), appointments, services:list('services'),barbers:list('barbers'),testimonials:list('testimonials'),gallery:list('gallery'),holidays:list('holidays'),
     siteSettings:settings('siteSettings') || defaultSiteSettings, themeSettings:settings('themeSettings') || defaultThemeSettings,
     updateSiteSettings: (data, buttonStyle) => {
       const site = { ...(settings('siteSettings') || defaultSiteSettings), ...data };
