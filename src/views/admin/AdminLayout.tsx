@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { useMatch } from '@tanstack/react-router';
 import { AppointmentBadge } from '@/components/AppointmentBadge';
 import { useState, useEffect } from 'react';
 import { SiteImage } from '@/components/SiteImage';
@@ -10,6 +11,7 @@ import { LayoutDashboard, Calendar, Scissors, Users, UserCircle, Clock, MessageS
 export default function AdminLayout() {
   const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin } = useData();
   const navigate = useNavigate();
+  const isAgenda = useMatch({ from: '/admin/agendamentos', shouldThrow: false, select: () => true });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const theme = themeSettings;
 
@@ -41,7 +43,7 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="ba-shell min-h-screen flex" style={{ backgroundColor: '#101010', fontFamily: theme.fontFamily, '--ba-accent': theme.accentColor || '#c9a96e' } as React.CSSProperties}>
+    <div className="ba-shell min-h-screen flex" data-agenda={isAgenda ? "" : undefined} style={{ backgroundColor: '#101010', fontFamily: theme.fontFamily, '--ba-accent': theme.accentColor || '#c9a96e' } as React.CSSProperties}>
       {/* Sidebar Overlay */}
       {sidebarOpen && (
         <button type="button" aria-label="Fechar navegação" className="ba-overlay fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -55,12 +57,16 @@ export default function AdminLayout() {
               {siteSettings.logo ? <SiteImage src={siteSettings.logo} alt={`Logo ${siteSettings.barbershopName}`} className="h-10 w-12 shrink-0 object-contain" /> : <Scissors className="w-6 h-6" style={{ color: theme.accentColor }} />}
               <span className="font-bold text-white" style={{ fontFamily: 'Playfair Display' }}>{siteSettings.barbershopName}</span>
             </div>
-            <p className="text-xs text-white/40 mt-1">GESTÃO DA BARBEARIA</p>
+            {!isAgenda && <p className="text-xs text-white/40 mt-1">GESTÃO DA BARBEARIA</p>}
             <button type="button" aria-label="Fechar menu" className="ba-close lg:hidden" onClick={() => setSidebarOpen(false)}><X className="w-4 h-4" /></button>
           </div>
 
           <nav aria-label="Seções do painel" className="ba-nav flex-1 overflow-y-auto py-4 px-3">
-            <p className="ba-nav-label">Seu negócio</p>
+            {isAgenda ? (
+              <NavLink to="/admin" className="ba-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-1 text-white/70">
+                <Home size={16} aria-hidden="true" /> Painel
+              </NavLink>
+            ) : <p className="ba-nav-label">Seu negócio</p>}
             {navItems.map(item => (
               <NavLink
                 key={item.to}
