@@ -147,8 +147,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   return <DataContext.Provider value={{...actions,users,currentUser,tenant,bookingAccess,isPlatformAdmin:platformAdmin,isAuthenticated:!!currentUser,login,logout,refresh,
     clients:list('clients'), appointments:currentUser ? list('appointments'):busy, services:list('services'),barbers:list('barbers'),testimonials:list('testimonials'),gallery:list('gallery'),holidays:list('holidays'),
     siteSettings:settings('siteSettings') || defaultSiteSettings, themeSettings:settings('themeSettings') || defaultThemeSettings,
-    updateSiteSettings:data=>save('siteSettings','main',{...(settings('siteSettings')||defaultSiteSettings),...data}),
-    updateThemeSettings:data=>save('themeSettings','main',{...(settings('themeSettings')||defaultThemeSettings),...data})
+    updateSiteSettings: (data, buttonStyle) => {
+      const site = { ...(settings('siteSettings') || defaultSiteSettings), ...data };
+      if (buttonStyle === undefined) return save('siteSettings', 'main', site);
+      const theme = { ...(settings('themeSettings') || defaultThemeSettings), buttonStyle };
+      return mutate(() => supabase.from('barbershop_records').upsert([
+        { tenant_id: tenant.id, kind: 'siteSettings', id: 'main', data: site },
+        { tenant_id: tenant.id, kind: 'themeSettings', id: 'main', data: theme },
+      ], { onConflict: 'tenant_id,kind,id' }));
+    },
   }}>{children}</DataContext.Provider>;
 }
 export function useData() { const value=useContext(DataContext); if(!value) throw new Error('useData must be used within DataProvider'); return value; }

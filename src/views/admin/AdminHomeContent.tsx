@@ -6,14 +6,17 @@ import { useState } from 'react';
 
 export default function AdminHomeContent() {
   const { siteSettings, updateSiteSettings } = useData();
-  const [form, setForm] = useState(siteSettings);
+  const [form, setForm] = useState(() => {
+    const { tagline, heroTitle, heroSubtitle, heroButtonText, heroImage, phone, whatsapp, email, address, city, state, socialMedia, sections } = siteSettings;
+    return { tagline, heroTitle, heroSubtitle, heroButtonText, heroImage, phone, whatsapp, email, address, city, state, socialMedia, sections };
+  });
   const [saved, setSaved] = useState(false);
   const [imageBusy, setImageBusy] = useState(false);
 
   const handleSave = async () => {
     if (imageBusy) return;
     try {
-    await updateSiteSettings({ ...form, businessHours: siteSettings.businessHours });
+    await updateSiteSettings(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     } catch {}
@@ -35,10 +38,6 @@ export default function AdminHomeContent() {
         {/* General Info */}
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4">
           <h3 className="font-semibold text-white">Informações Gerais</h3>
-          <div>
-            <label className="block text-sm text-white/70 mb-1">Nome da Barbearia</label>
-            <input value={form.barbershopName} onChange={e => setForm({ ...form, barbershopName: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />
-          </div>
           <div>
             <label className="block text-sm text-white/70 mb-1">Tagline</label>
             <input value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-white/30" />

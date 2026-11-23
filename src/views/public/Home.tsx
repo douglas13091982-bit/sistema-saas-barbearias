@@ -1,3 +1,4 @@
+import { buttonRadius } from '@/lib/button-style';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '@/contexts/DataContext';
@@ -42,7 +43,7 @@ export default function Home() {
     '--bb-text': theme.textColor || '#ffffff',
     '--bb-button': theme.buttonColor || accent,
     '--bb-button-text': colorOn(theme.buttonColor || accent),
-    '--bb-radius': theme.buttonStyle === 'pill' ? '999px' : theme.buttonStyle === 'sharp' ? '0px' : '4px',
+    '--bb-radius': buttonRadius(theme.buttonStyle),
     fontFamily: theme.fontFamily || 'Inter, sans-serif',
   } as CSSProperties;
   const links = [

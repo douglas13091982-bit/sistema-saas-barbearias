@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { buttonRadius } from '@/lib/button-style';
 import { useState, useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,12 +108,13 @@ export default function BookingConfirmation() {
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-            style={{ backgroundColor: '#25D366', color: '#fff' }}
+            style={{ borderRadius: buttonRadius(theme.buttonStyle, '12px'), backgroundColor: '#25D366', color: '#fff' }}
           >
             <MessageCircle className="w-5 h-5" /> Confirmar pelo WhatsApp
           </a>
           <Link
             to="/"
+            style={{ borderRadius: buttonRadius(theme.buttonStyle, '12px') }}
             className="w-full py-3 rounded-xl font-semibold border border-white/20 flex items-center justify-center gap-2 transition-all hover:bg-white/5"
           >
             <Home className="w-5 h-5" /> Voltar ao Início

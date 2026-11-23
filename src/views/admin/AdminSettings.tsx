@@ -1,10 +1,11 @@
 // @ts-nocheck -- imported code, kept as written
+import { buttonRadius, buttonStyles } from '@/lib/button-style';
 import { preparePhoto } from '@/lib/prepare-photo';
 import { useState } from 'react';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import { Save, Plus, Trash2, X, Settings as SettingsIcon } from 'lucide-react';
-import { Holiday } from '../../types';
+import type { Holiday, ThemeSettings } from '../../types';
 
 const defaultBusinessHours = Array.from({ length: 7 }, (_, dayOfWeek) => ({
   dayOfWeek,
@@ -19,12 +20,22 @@ const normalizeBusinessHours = (hours = []) => defaultBusinessHours.map(defaultD
 }));
 
 export default function AdminSettings() {
-  const { siteSettings, updateSiteSettings, holidays, addHoliday, deleteHoliday, services } = useData();
+  const { siteSettings, themeSettings, updateSiteSettings, holidays, addHoliday, deleteHoliday, services } = useData();
   const [form, setForm] = useState(() => ({
-    ...siteSettings,
+    barbershopName: siteSettings.barbershopName,
+    logo: siteSettings.logo,
+    cnpj: siteSettings.cnpj,
+    currency: siteSettings.currency,
+    minAdvanceHours: siteSettings.minAdvanceHours,
+    maxAdvanceDays: siteSettings.maxAdvanceDays,
+    intervalMinutes: siteSettings.intervalMinutes,
+    toleranceMinutes: siteSettings.toleranceMinutes,
+    cancelPolicy: siteSettings.cancelPolicy,
     businessHours: normalizeBusinessHours(siteSettings.businessHours),
     loyaltyProgram: { enabled: false, cutsRequired: 5, rewardServiceId: '', rewardName: '', ...(siteSettings.loyaltyProgram || {}) },
   }));
+  const [buttonStyleDraft, setButtonStyleDraft] = useState<ThemeSettings['buttonStyle'] | null>(null);
+  const buttonStyle = buttonStyleDraft ?? themeSettings.buttonStyle ?? 'rounded';
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -63,6 +74,11 @@ export default function AdminSettings() {
   const handleSave = async () => {
     if (saving || readingLogo) return;
     setSaved(false);
+    const barbershopName = (form.barbershopName ?? '').trim();
+    if (!barbershopName) {
+      setFormError('Informe o nome da barbearia.');
+      return;
+    }
     if (form.businessHours.some(day => day.active && (!day.start || !day.end || day.start >= day.end))) {
       setFormError('Confira os horários: a abertura precisa ser anterior ao fechamento em todos os dias abertos.');
       setSaved(false);
@@ -85,7 +101,12 @@ export default function AdminSettings() {
     setFormError('');
     setSaving(true);
     try {
-      await updateSiteSettings({ ...form, loyaltyProgram });
+      await updateSiteSettings(
+        { ...form, barbershopName, loyaltyProgram },
+        buttonStyle === (themeSettings.buttonStyle ?? 'rounded') ? undefined : buttonStyle,
+      );
+      setForm(prev => ({ ...prev, barbershopName: prev.barbershopName === form.barbershopName ? barbershopName : prev.barbershopName }));
+      setButtonStyleDraft(null);
       setLogoError('');
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -119,6 +140,47 @@ export default function AdminSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
+          <h2 className="font-semibold text-white">Identidade da barbearia</h2>
+          <label className="block space-y-1 text-sm text-white/70">
+            <span>Nome da barbearia</span>
+            <input required value={form.barbershopName ?? ''} onChange={event => {
+              setForm(prev => ({ ...prev, barbershopName: event.target.value }));
+              setSaved(false);
+              setFormError('');
+            }} className="block w-full max-w-xl rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-white" />
+          </label>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="w-32 h-24 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center p-2">
+              {form.logo ? <SiteImage src={form.logo} alt="Prévia da logo" className="max-w-full max-h-full object-contain" /> : <span className="text-sm text-white/50">Sem logo</span>}
+            </div>
+            <div className="space-y-2 min-w-0">
+              <label htmlFor="barbershop-logo" className="block text-sm text-white/70">Enviar logo</label>
+              <input id="barbershop-logo" type="file" accept="image/png,image/jpeg,image/webp" disabled={readingLogo} onChange={handleLogo} className="block w-full text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white" />
+              <p className="text-xs text-white/50">{readingLogo ? 'Lendo imagem...' : 'PNG, JPG ou WebP, até 1 MB. Clique em Salvar para aplicar.'}</p>
+              {form.logo && <button type="button" disabled={readingLogo} onClick={() => { setForm(prev => ({ ...prev, logo: '' })); setSaved(false); }} className="text-sm text-red-400 hover:underline">Remover logo</button>}
+            </div>
+          </div>
+          {logoError && <p role="alert" className="text-sm text-red-400">{logoError}</p>}
+          <fieldset disabled={saving} className="space-y-3 border-t border-white/10 pt-4">
+            <legend className="pr-3 text-sm font-medium text-white">Estilo dos botões do site</legend>
+            <div className="flex flex-wrap gap-2">
+              {buttonStyles.map(({ value, label }) => (
+                <label key={value} className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm text-white">
+                  <input type="radio" name="button-style" value={value} checked={buttonStyle === value} onChange={() => {
+                    setButtonStyleDraft(value);
+                    setSaved(false);
+                  }} />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
+              <span>Prévia do formato</span>
+              <span className="border border-white/40 px-4 py-2 text-sm text-white" style={{ borderRadius: buttonRadius(buttonStyle) }}>Agendar horário</span>
+            </div>
+          </fieldset>
+        </div>
+        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
           <div>
             <h3 className="font-semibold text-white">Horário de funcionamento da barbearia</h3>
             <p className="text-xs text-white/50 mt-1">Defina quando a barbearia está aberta. A agenda pública respeitará estes horários e a disponibilidade de cada barbeiro.</p>
@@ -141,21 +203,6 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4 lg:col-span-2">
-          <h3 className="font-semibold text-white">Logo da Barbearia</h3>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="w-32 h-24 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center p-2">
-              {form.logo ? <SiteImage src={form.logo} alt="Prévia da logo" className="max-w-full max-h-full object-contain" /> : <span className="text-sm text-white/50">Sem logo</span>}
-            </div>
-            <div className="space-y-2 min-w-0">
-              <label htmlFor="barbershop-logo" className="block text-sm text-white/70">Enviar logo</label>
-              <input id="barbershop-logo" type="file" accept="image/png,image/jpeg,image/webp" disabled={readingLogo} onChange={handleLogo} className="block w-full text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white" />
-              <p className="text-xs text-white/50">{readingLogo ? 'Lendo imagem...' : 'PNG, JPG ou WebP, até 1 MB. Clique em Salvar para aplicar.'}</p>
-              {form.logo && <button type="button" disabled={readingLogo} onClick={() => { setForm(prev => ({ ...prev, logo: '' })); setSaved(false); }} className="text-sm text-red-400 hover:underline">Remover logo</button>}
-            </div>
-          </div>
-          {logoError && <p role="alert" className="text-sm text-red-400">{logoError}</p>}
-        </div>
         {/* Business Info */}
         <div className="rounded-xl border border-white/5 bg-[#1f2937] p-5 space-y-4">
           <h3 className="font-semibold text-white">Informações do Negócio</h3>

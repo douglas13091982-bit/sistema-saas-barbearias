@@ -5,7 +5,7 @@ import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import '@/styles/barbershop-admin.css';
 import { Outlet, NavLink, useNavigate, Navigate } from '@/lib/router-compat';
-import { LayoutDashboard, Calendar, Scissors, Users, UserCircle, Clock, Palette, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Users, UserCircle, Clock, MessageSquare, Image, Shield, BarChart3, Settings, LogOut, Menu, X, ChevronDown, Home } from 'lucide-react';
 
 export default function AdminLayout() {
   const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin } = useData();
@@ -33,7 +33,6 @@ export default function AdminLayout() {
     { to: '/admin/depoimentos', icon: MessageSquare, label: 'Depoimentos' },
     { to: '/admin/galeria', icon: Image, label: 'Galeria' },
     { to: '/admin/conteudo', icon: Home, label: 'Conteúdo' },
-    { to: '/admin/tema', icon: Palette, label: 'Personalização' },
     { to: '/admin/usuarios', icon: Shield, label: 'Usuários' },
     { to: '/admin/relatorios', icon: BarChart3, label: 'Produção por barbeiro' },
     { to: '/admin/mensalidade', icon: Calendar, label: 'Mensalidade' },

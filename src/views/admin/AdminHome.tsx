@@ -1,6 +1,6 @@
 import { Link } from '@/lib/router-compat';
 import { useData } from '../../contexts/DataContext';
-import { LayoutDashboard, CalendarDays, Calendar, Scissors, Users, UserCircle, MessageSquare, Image, Home, Palette, Shield, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Calendar, Scissors, Users, UserCircle, MessageSquare, Image, Home, Shield, BarChart3, Settings } from 'lucide-react';
 
 export default function AdminHome() {
   const { isPlatformAdmin } = useData();
@@ -13,7 +13,6 @@ export default function AdminHome() {
     { label: 'Depoimentos', icon: MessageSquare, route: '/admin/depoimentos' },
     { label: 'Galeria', icon: Image, route: '/admin/galeria' },
     { label: 'Conteúdo', icon: Home, route: '/admin/conteudo' },
-    { label: 'Personalização', icon: Palette, route: '/admin/tema' },
     { label: 'Usuários', icon: Shield, route: '/admin/usuarios' },
     { label: 'Produção', icon: BarChart3, route: '/admin/relatorios' },
     { label: 'Mensalidade', icon: CalendarDays, route: '/admin/mensalidade' },

@@ -1,4 +1,5 @@
 // @ts-nocheck -- imported code, kept as written
+import { buttonRadius } from '@/lib/button-style';
 import { supabase } from '@/integrations/supabase/client';
 import { safeSubscriptionUrl } from '@/lib/subscription-link';
 import { useState, useMemo } from 'react';
@@ -312,7 +313,7 @@ export default function Booking() {
                 <button
                   onClick={() => setStep(4)}
                   className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all hover:scale-105"
-                  style={{ backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
+                  style={{ borderRadius: buttonRadius(theme.buttonStyle, '12px'), backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
                 >
                   Próximo <ArrowRight className="w-4 h-4" />
                 </button>
@@ -416,7 +417,7 @@ export default function Booking() {
                 onClick={handleSubmit}
                 disabled={submitting || !clientName || !clientPhone}
                 className="px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
+                style={{ borderRadius: buttonRadius(theme.buttonStyle, '12px'), backgroundColor: theme.buttonColor, color: theme.darkMode ? '#000' : '#fff' }}
               >
                 <Check className="w-5 h-5" /> {submitting ? 'Salvando...' : 'Confirmar Agendamento'}
               </button>
