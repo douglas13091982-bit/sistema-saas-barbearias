@@ -1,8 +1,6 @@
 // @ts-nocheck -- imported code, kept as written
 import { AppointmentBadge } from '@/components/AppointmentBadge';
 import { useState, useEffect } from 'react';
-import { useMatch } from '@tanstack/react-router';
-import { AdminPanelSwitcher } from '@/components/AdminPanelSwitcher';
 import { SiteImage } from '@/components/SiteImage';
 import { useData } from '../../contexts/DataContext';
 import '@/styles/barbershop-admin.css';
@@ -12,7 +10,6 @@ import { LayoutDashboard, Calendar, Scissors, Users, UserCircle, Clock, MessageS
 export default function AdminLayout() {
   const { currentUser, isAuthenticated, logout, siteSettings, themeSettings, tenant, isPlatformAdmin } = useData();
   const navigate = useNavigate();
-  const isAppointments = useMatch({ from: '/admin/agendamentos', shouldThrow: false, select: () => true });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const theme = themeSettings;
 
@@ -112,7 +109,6 @@ export default function AdminLayout() {
 
         {/* Page Content */}
         <main id="admin-main" className="ba-content flex-1 p-4 lg:p-6 overflow-y-auto">
-          {!isAppointments && <AdminPanelSwitcher active="shop" />}
 
           <Outlet />
         </main>
